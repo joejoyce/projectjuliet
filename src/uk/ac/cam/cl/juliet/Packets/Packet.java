@@ -22,8 +22,8 @@ public abstract class Packet
 		this.file = file;
 		
 		this.packetSize = readLong(2);
-		this.deliveryFlag = file.read();
-		this.numberMsgs = file.read();
+		this.deliveryFlag = (long)file.readUnsignedByte();
+		this.numberMsgs = (long)file.readUnsignedByte();
 		this.seqNum = readLong(4);
 		this.sendTime = readLong(4);	
 		this.sendTimeNS = readLong(4);		
