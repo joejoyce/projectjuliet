@@ -18,7 +18,6 @@ public class DataProcessor
 	
 	public void start()
 	{
-		int totalPackets = 0;
 		XDPPacket packet = null;
 		do
 		{
@@ -29,18 +28,12 @@ public class DataProcessor
 			catch(IOException e)
 			{
 				System.err.println("Datastream error");
+				break;
 			}
 			
 			//might be a good idea to fire off a thread here:		
 			sendPacket(packet);
-			totalPackets ++;	
-			
-			if(totalPackets % 1000 == 0)
-			{
-				System.out.println("packets: " + totalPackets);
-			}
 		} while(packet != null);
-		System.out.println("Number of packets is!!!!: " + totalPackets);
 	}
 	
 	private void sendPacket(XDPPacket packet)

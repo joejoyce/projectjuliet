@@ -24,10 +24,6 @@ public class SampleXDPDataStream implements XDPDataStream
 	public XDPPacket getPacket() throws IOException
 	{
 		int p1 = sampleData.readUnsignedByte(); 
-		
-		if(p1 == -1)
-			return null;
-			
 		int p2 = sampleData.readUnsignedByte();
 		int packetSize = (p2 << 8) | p1;
 		
