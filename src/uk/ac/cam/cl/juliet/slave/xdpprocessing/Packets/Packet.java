@@ -3,9 +3,10 @@ package uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets;
 import java.io.RandomAccessFile;
 import java.io.IOException;
 
-public abstract class Packet
+public class Packet
 {
-	private RandomAccessFile file;
+	private int[] data;
+	private int dataPointer = 0;
 	
 	protected long packetSize;
 	protected long deliveryFlag;
@@ -17,37 +18,40 @@ public abstract class Packet
 	protected long msgSize;
 	protected long msgType;
 	
-	public Packet(RandomAccessFile file) throws IOException
+	public Packet(int[] data)
 	{
-		this.file = file;
+		this.data = data;
 		
 		this.packetSize = readLong(2);
-		this.deliveryFlag = (long)file.readUnsignedByte();
-		this.numberMsgs = (long)file.readUnsignedByte();
+		this.deliveryFlag = (long)readUnsignedByte();
+		this.numberMsgs = (long)readUnsignedByte();
 		this.seqNum = readLong(4);
 		this.sendTime = readLong(4);	
 		this.sendTimeNS = readLong(4);		
 		
 		this.msgSize = readLong(2);	
-		this.msgSize = readLong(2);
+		this.msgType = readLong(2);
 	}
 	
-	protected long readLong(int length) throws IOException
+	protected long readLong(int length)
 	{
 		int[] unsignedBytes = new int[length];
 		for(int i = 0; i < unsignedBytes.length; i ++)
 		{
-			unsignedBytes[i] = file.readUnsignedByte();
+			unsignedBytes[i] = readUnsignedByte();
 		}
 		
 		return littleEndianToLong(unsignedBytes);
 	}
 	
-	protected String readString(int length) throws IOException
+	protected String readString(int length)
 	{
-		byte[] bytes = new byte[length];
-		file.read(bytes, 0, length);
-		return new String(bytes);
+		StringBuilder sb = new StringBuilder();
+		for(int i = 0; i < length; i ++)
+		{
+			sb.append(readChar());
+		}
+		return sb.toString();
 	}
 	
 	protected long littleEndianToLong(int[] bytes)
@@ -62,4 +66,14 @@ public abstract class Packet
 		
 		return output;
 	}	
+		
+	protected char readChar()
+	{
+		return (char)data[dataPointer++];
+	}
+		
+	protected int readUnsignedByte()
+	{
+		return data[dataPointer++];	
+	}
 }
