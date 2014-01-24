@@ -1,14 +1,16 @@
+package uk.ac.cam.cl.juliet.common;
+
 public class XDPRequest extends XDPPacket
 {
-	private byte[] packetData;
+	private int[] packetData;
 	
-	public XDPRequest(long id, byte[] packetData)
+	public XDPRequest(long id, int[] packetData)
 	{
 		super(id);
 		this.packetData = packetData;
 	}
 	
-	public byte[] getPacketData()
+	public int[] getPacketData()
 	{
 		return this.packetData;
 	}

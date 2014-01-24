@@ -1,3 +1,5 @@
+package uk.ac.cam.cl.juliet.common;
+
 public abstract class Container
 {
 	private long id;
