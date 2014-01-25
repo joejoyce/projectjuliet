@@ -28,17 +28,25 @@ public class SampleXDPDataStream implements XDPDataStream
 		int packetSize = (p2 << 8) | p1;
 		
 		int[] packetData = new int[packetSize];
+		byte[] fileData = new byte[packetSize-2];
 		
 		packetData[0] = p1;
 		packetData[1] = p2;		
 		
+		sampleData.read(fileData, 0, packetSize-2);
+		
 		for(int i = 2; i < packetSize; i ++)
-		{
-			packetData[i] = sampleData.readUnsignedByte();
+		{			
+			packetData[i] = toUnsignedInt(fileData[i-2]);
 		}
 		
 		return new XDPRequest(currentPacketID++, packetData);
 	}
+	
+	private int toUnsignedInt(byte x) 
+	{
+  	return ((int) x) & 0xff;
+  }
 	
 	//Won't be used with the static sample dataset
 	public XDPPacket requestPacket(long packetID) {return null;}
