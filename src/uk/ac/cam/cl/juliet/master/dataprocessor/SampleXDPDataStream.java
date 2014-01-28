@@ -6,48 +6,37 @@ import uk.ac.cam.cl.juliet.common.XDPRequest;
 import java.io.RandomAccessFile;
 import java.io.IOException;
 
-public class SampleXDPDataStream implements XDPDataStream
-{
+public class SampleXDPDataStream implements XDPDataStream {
 	private String dataSetPath = "C:\\20111219-ARCA_XDP_IBF_1.dat";
-	
+
 	private RandomAccessFile sampleData;
-	private long fileLength = 0L;
 	private long currentPacketID = 0L;
-	
-	
-	public SampleXDPDataStream() throws IOException
-	{
+
+	public SampleXDPDataStream() throws IOException {
 		this.sampleData = new RandomAccessFile(dataSetPath, "r");
-		this.fileLength = sampleData.length();
 	}
-	
-	public XDPPacket getPacket() throws IOException
-	{
-		int p1 = sampleData.readUnsignedByte(); 
-		int p2 = sampleData.readUnsignedByte();
-		int packetSize = (p2 << 8) | p1;
-		
-		int[] packetData = new int[packetSize];
-		byte[] fileData = new byte[packetSize-2];
-		
-		packetData[0] = p1;
-		packetData[1] = p2;		
-		
-		sampleData.read(fileData, 0, packetSize-2);
-		
-		for(int i = 2; i < packetSize; i ++)
-		{			
-			packetData[i] = toUnsignedInt(fileData[i-2]);
-		}
-		
-		return new XDPRequest(currentPacketID++, packetData);
+
+	public XDPPacket getPacket() throws IOException {
+		byte p1 = sampleData.readByte();
+		byte p2 = sampleData.readByte();
+		int packetSize = (toUnsignedInt(p2) << 8) | toUnsignedInt(p1);
+
+		byte[] fileData = new byte[packetSize];
+
+		fileData[0] = p1;
+		fileData[1] = p2;
+
+		sampleData.read(fileData, 0, packetSize - 2);
+
+		return new XDPRequest(currentPacketID++, fileData);
 	}
-	
-	private int toUnsignedInt(byte x) 
-	{
-  	return ((int) x) & 0xff;
-  }
-	
-	//Won't be used with the static sample dataset
-	public XDPPacket requestPacket(long packetID) {return null;}
+
+	private int toUnsignedInt(byte x) {
+		return ((int) x) & 0xff;
+	}
+
+	// Won't be used with the static sample dataset
+	public XDPPacket requestPacket(long packetID) {
+		return null;
+	}
 }
