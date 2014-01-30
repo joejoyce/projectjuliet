@@ -1,8 +1,5 @@
 package uk.ac.cam.cl.juliet.slave.xdpprocessing;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets.Message;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets.Packet;
@@ -88,9 +85,27 @@ public class XDPProcessorUnit implements XDPProcessor {
 		return false;
 	}
 
-	private boolean decodeSymbolMappingMessage(Message pMessage) {
+	private boolean decodeSymbolMappingMessage(Message m) {
 		
 		//TODO
+		int symbolIndex = (int) m.readLong(4);
+		String symbol = m.readString(11); 
+		// Jump the filler
+		m.readChar();
+		long marketID = m.readLong(2);
+		long systemID = m.readLong(1);
+		
+		long exchangeCode = m.readChar();
+		long priceScaleCode = m.readLong(1);
+		long securityType = m.readChar();
+		long lotSize = m.readLong(2);
+
+		long prevClosePrice = m.readLong(4);
+		long prevCloseVolume = m.readLong(4);
+		long priceResolution = m.readLong(1);
+		long roundLot = m.readChar();
+		
+		
 		return false;
 	}
 

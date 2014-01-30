@@ -16,14 +16,14 @@ public abstract class DataWrapper {
 		mData = pData;
 	}
 	
-	protected boolean datapointerAtEnd() {
+	public boolean datapointerAtEnd() {
 		return (mDataPointer >= mSize);
 	}
-	protected void resetDataPointer() {
+	public void resetDataPointer() {
 		mDataPointer = 0;
 	}
 	
-	protected long readLong(int length) {
+	public long readLong(int length) {
 		int[] unsignedBytes = new int[length];
 		for (int i = 0; i < unsignedBytes.length; i++) {
 			unsignedBytes[i] = readUnsignedByte();
@@ -32,7 +32,7 @@ public abstract class DataWrapper {
 		return littleEndianToLong(unsignedBytes);
 	}
 
-	protected String readString(int length) {
+	public String readString(int length) {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < length; i++) {
 			sb.append(readChar());
@@ -51,11 +51,11 @@ public abstract class DataWrapper {
 		return output;
 	}
 
-	protected char readChar() {
+	public char readChar() {
 		return (char) mData[mDataPointer++];
 	}
 
-	protected int readUnsignedByte() {
+	public int readUnsignedByte() {
 		return mData[mDataPointer++];
 	}
 	
