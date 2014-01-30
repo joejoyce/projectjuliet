@@ -14,7 +14,7 @@ public class SymbolIndexMappingPacket extends Packet {
 	private long priceResolution;
 	private char roundLot;
 
-	public SymbolIndexMappingPacket(int[] data) {
+	public SymbolIndexMappingPacket(byte[] data) {
 		super(data);
 
 		this.symbolIndex = readLong(4);
