@@ -1,4 +1,4 @@
-package src.uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
+package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -18,29 +18,26 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.InFlightContainer;
 
 
-final class ContainerTimeComparator implements Comparator<InFlightContainer> {
-	public int compare(InFlightContainer o1, InFlightContainer o2){
-		return (int) (o1.getDueTime() - o2.getDueTime() );
+final class ClientLoadComparator implements Comparator<Client> {
+	public int compare(Client o1, Client o2){
+		return (int) (o1.getCurrentWork() - o2.getCurrentWork() );
 	}
 }
-
 
 public class ClusterMaster  {
 	final static long queueFlushInteval = 500;
 	
+	private ClusterMaster me = this;
 	
 	private ServerSocket socket = null;
-	private Thread listner = null; //, cleanup = null;
 	
-	private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>();
+	private ClientLoadComparator clc = new ClientLoadComparator();
+	private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
 	//TODO need to sort out the priorityblocking queue so that it can be efficiently reordered on one update
-	//Make my own queue that also has fast random access so can be used for both
-	public ClusterMaster() {
-		
-	}
+	//Make my own queue that also has fast random access so can be used for both ?
 	
 	private void addClient(Socket skt) {
-		Client c = new Client(skt,this);
+		Client c ter= new Client(skt,this);
 		clientQueue.add(c); 
 		//TODO sort this out
 	}
@@ -50,58 +47,54 @@ public class ClusterMaster  {
 			socket.close();
 		socket = new ServerSocket(port);
 		
-		listner = new Thread () {
+		new Thread () {
 			@Override
 			public void run() {
 				while(true) {
 					try {
 						Socket connection = socket.accept();
-						
+						Client c = new Client(connection,me);
+						clientQueue.add(c);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
+						System.out.println("There was an error establishing a connection and spawning a client");
 						e.printStackTrace();
 					}
 				}
 			}
 		};		
-		
-		
-/*		cleanup = new Thread () {
-			@Override
-			public void run() {
-				while(true) {
-					Iterator<Client> iter = clientQueue.iterator();
-					while(iter.hasNext()) {
-						iter.next().tryFlushQueue();
-					}
-					try {
-						Thread.sleep(queueFlushInteval);
-					} catch (InterruptedException e) {
-						return; //Stop cleaning the queues
-					}
-				}
-			}
-		};*/
 	}
 	
 	public void stop() {
-		if(null != listner)
-			listner.interrupt(); //This should have the effect of cleaning up
-		if(null != cleanup)
-			cleanup.interrupt(); //Should stop it running
+		if(null != socket) {
+			try {
+				socket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} //This should have the effect of cleaning up
+		}
+		socket = null;
 	}
 		
-	public void sendPacket(Container msg) {
+	public void sendPacket(Container msg) throws NoClusterException {
 		//Send the message - the process doesn't care about the reply
 		sendPacket(msg,(Callback)null);
 	}
 	
-	public void sendPacket(Container msg, Callback cb) {
-		
+	public void sendPacket(Container msg, Callback cb) throws NoClusterException {
+		Client c = clientQueue.poll();
+		if(null != c) {
+			throw new NoClusterException("The Pis have all gone :'(");
+		}
+		c.send(msg);
 	}
 	
 	public void removeClient( Client ob) {
-		
+		clientQueue.remove(ob);
+	}
+	
+	public void closeAndRemove( Client ob) {
+		ob.closeClient();
+		removeClient(ob);
 	}
 
 }

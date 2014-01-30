@@ -11,11 +11,11 @@ import java.util.PriorityQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
-
 
 final class ContainerTimeComparator implements Comparator<InFlightContainer> {
 	public int compare(InFlightContainer o1, InFlightContainer o2){
@@ -43,7 +43,7 @@ public class Client implements Runnable{
 	private static long queueFlushTime = 500; //in ms
 	private static ScheduledExecutorService workers = null;
 	
-	private Future cleaner = null;
+	private ScheduledFuture<?> cleaner = null;
 	
 	private static int numberClients = 0;
 	
@@ -72,7 +72,7 @@ public class Client implements Runnable{
 		return cont;
 	}
 	
-	private void closeClient() {
+	public void closeClient() {
 		parent.removeClient(this);
 		//Close the streams
 		if(0 == --numberClients) {
@@ -179,7 +179,12 @@ public class Client implements Runnable{
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.hasReplyRecieved()) {
 						//Reply hasn't been recieved so need to send again on a different node
-						parent.sendPacket(ifc.getContainer(),ifc.getCallback());
+						try {
+							parent.sendPacket(ifc.getContainer(),ifc.getCallback());
+						} catch (NoClusterException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				}
 				break;
