@@ -6,6 +6,12 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterExcept
 
 import java.io.IOException;
 
+/**
+ * @description This class attaches to a XDPDataStream and requests packets.
+ * Only packets with dilveryFlag == 11 are passed on to the Distributor
+ * 
+ * @author Scott Williams
+ */
 public class DataProcessor {
 	private XDPDataStream dataStream;
 	private ClusterMaster clusterMaster;
