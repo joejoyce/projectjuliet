@@ -3,7 +3,7 @@ package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 import uk.ac.cam.cl.juliet.common.Container;
 
 public class InFlightContainer {
-	private static long defaultTimeout = 5000000000L; //5 seconds I think
+	private static long defaultTimeout = 5000000000L; //5 seconds I think - yea it is.
 	private Container container;
 	private long dueTime;
 	private Callback callback = null;

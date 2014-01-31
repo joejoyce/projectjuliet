@@ -1,17 +1,18 @@
 package uk.ac.cam.cl.juliet.master.dataprocessor;
 
 import uk.ac.cam.cl.juliet.common.XDPPacket;
-import uk.ac.cam.cl.juliet.common.XDPRequest;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 
-import java.net.Socket;
 import java.io.IOException;
 
 public class DataProcessor {
 	private XDPDataStream dataStream;
-	private Socket distributor;
-
-	public DataProcessor(XDPDataStream dataStream) {
+	private ClusterMaster clusterMaster;
+	
+	public DataProcessor(XDPDataStream dataStream, ClusterMaster cm) {
 		this.dataStream = dataStream;
+		this.clusterMaster = cm;
 	}
 
 	public void start() {
@@ -19,23 +20,23 @@ public class DataProcessor {
 		do {
 			try {
 				packet = dataStream.getPacket();
+				//clusterMaster.sendPacket(packet);				
 			} catch (IOException e) {
 				System.err.println("Datastream error");
+				e.printStackTrace();
 				break;
-			}
-			// might be a good idea to fire off a thread here:
-			sendPacket(packet);
+			} /*catch (NoClusterException e) {
+				System.err.println("Cluster error");
+				e.printStackTrace();
+				break;
+			}*/
 		} while (packet != null);
-	}
-
-	private void sendPacket(XDPPacket packet) {
-		// timing stuff can go here
-		// might be worth doing this in a separate thread
 	}
 
 	public static void main(String[] args) throws IOException {
 		SampleXDPDataStream ds = new SampleXDPDataStream();
-		DataProcessor dp = new DataProcessor(ds);
+		ClusterMaster cm = new ClusterMaster();
+		DataProcessor dp = new DataProcessor(ds, cm);
 		dp.start();
 	}
 }

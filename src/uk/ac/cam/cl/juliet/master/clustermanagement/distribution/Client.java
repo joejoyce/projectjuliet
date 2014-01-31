@@ -19,7 +19,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 
 final class ContainerTimeComparator implements Comparator<InFlightContainer> {
 	public int compare(InFlightContainer o1, InFlightContainer o2){
-		return (int) (o1.getDueTime() - o2.getDueTime() );
+		return (int) (o1.getDueTime() - o2.getDueTime());
 	}
 }
 
@@ -33,7 +33,7 @@ class ClientCleanup implements Runnable {
 	}
 }
 
-public class Client implements Runnable{
+public class Client implements Runnable {
 	private ObjectOutputStream out = null;
 	private ObjectInputStream in = null;
 	private InetAddress address = null;
@@ -49,8 +49,8 @@ public class Client implements Runnable{
 	
 	private static ContainerTimeComparator comparator = new ContainerTimeComparator();
 	//Keep track of the objects in flight
-	private HashMap<Long,InFlightContainer> hash = new HashMap<Long,InFlightContainer>();
-	private PriorityQueue<InFlightContainer> jobqueue = new PriorityQueue<InFlightContainer>(16,comparator);
+	private HashMap<Long, InFlightContainer> hash = new HashMap<Long, InFlightContainer>();
+	private PriorityQueue<InFlightContainer> jobqueue = new PriorityQueue<InFlightContainer>(16, comparator);
 	
 	private long uniqueId = 0;
 	private int workCount = 0;
