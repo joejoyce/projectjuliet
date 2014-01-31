@@ -1,6 +1,6 @@
 package uk.ac.cam.cl.juliet.master.dataprocessor;
 
-import uk.ac.cam.cl.juliet.common.XDPPacket;
+import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 
@@ -16,11 +16,12 @@ public class DataProcessor {
 	}
 
 	public void start() {
-		XDPPacket packet = null;
+		XDPRequest packet = null;
 		do {
 			try {
 				packet = dataStream.getPacket();
-				//clusterMaster.sendPacket(packet);				
+				//if(packet.getDeliveryFlag() == 11)
+					//clusterMaster.sendPacket(packet);				
 			} catch (IOException e) {
 				System.err.println("Datastream error");
 				e.printStackTrace();
