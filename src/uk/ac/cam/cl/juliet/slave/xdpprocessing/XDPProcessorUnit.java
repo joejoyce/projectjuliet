@@ -13,10 +13,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		Packet currentPacket = new Packet(packet.getPacketData());
 		// Check whether the packet is a new one (deliveryFlag 11)
 		// or a retransmission/error 
-		// TODO: should be pushed into the data processor for performance reasons??
-		if(currentPacket.getDeliveryFlag() != 11) {	
-			return true;
-		}
+		// Data processor will only emit packets with deliveryFlag 11 - Scott
 		
 		Message m = currentPacket.getNextMessage();
 		
