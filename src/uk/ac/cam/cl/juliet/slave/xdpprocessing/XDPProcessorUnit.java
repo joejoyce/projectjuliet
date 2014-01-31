@@ -11,6 +11,12 @@ public class XDPProcessorUnit implements XDPProcessor {
 		boolean result = true;
 		
 		Packet currentPacket = new Packet(packet.getPacketData());
+		// Check whether the packet is a new one (deliveryFlag 11)
+		// or a retransmission/error 
+		// TODO: should be pushed into the data processor for performance reasons??
+		if(currentPacket.getDeliveryFlag() != 11) {	
+			return true;
+		}
 		
 		Message m = currentPacket.getNextMessage();
 		
@@ -87,7 +93,6 @@ public class XDPProcessorUnit implements XDPProcessor {
 
 	private boolean decodeSymbolMappingMessage(Message m) {
 		
-		//TODO
 		int symbolIndex = (int) m.readLong(4);
 		String symbol = m.readString(11); 
 		// Jump the filler
@@ -105,8 +110,9 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long priceResolution = m.readLong(1);
 		long roundLot = m.readChar();
 		
+		//TODO write to the database
 		
-		return false;
+		return true;
 	}
 
 }
