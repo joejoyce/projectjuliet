@@ -38,6 +38,7 @@ public class DataProcessor {
 				break;
 			}*/
 		} while (packet != null);
+		System.out.println("Finished entire stream");
 	}
 
 	public static void main(String[] args) throws IOException {
