@@ -6,5 +6,8 @@
 *.exe
 *.o
 *.so
+*.swp
 
 /bin
+/webserver/node_modules
+
