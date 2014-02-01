@@ -101,7 +101,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 		
 		if(systemDifferenceNS < 0) {
 			// System is falling behind realtime
-			 System.out.println("System is " + (-systemDifferenceMS) + " milliseconds behind realtime stream");
+			System.out.println("System is " + (-systemDifferenceMS) + " milliseconds behind realtime stream");
 		}
 		else {
 			/*initialCallTimeNS -= systemDifferenceNS;
