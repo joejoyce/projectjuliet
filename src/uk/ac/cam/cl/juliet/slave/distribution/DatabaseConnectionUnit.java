@@ -1,4 +1,4 @@
-package uk.ac.cam.cl.juliet.master.distribution;
+package uk.ac.cam.cl.juliet.slave.distribution;
 
 import java.sql.Connection;
 import java.sql.SQLException;
