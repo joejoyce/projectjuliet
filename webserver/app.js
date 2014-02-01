@@ -44,7 +44,9 @@ app.use(express.errorHandler());
 
 app.get('/', homeController.index);
 app.get('/order/:companyId', orderController.getOrder);
+app.get('/order', orderController.getOrder);
 app.get('/stock/:companyId', stockController.getStock);
+app.get('/stock', stockController.getStock);
 app.get('/status', statusController.getStatus);
 app.get('/settings', settingsController.getSettings);
 
