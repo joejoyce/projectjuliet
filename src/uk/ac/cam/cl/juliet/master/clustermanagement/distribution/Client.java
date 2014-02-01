@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -33,34 +33,51 @@ class ClientCleanup implements Runnable {
 	}
 }
 
-public class Client implements Runnable {
+public class Client {
 	private ObjectOutputStream out = null;
 	private ObjectInputStream in = null;
 	private InetAddress address = null;
 	private ClusterMaster parent = null;
 	
-	private int numberPooledThreads = 10;
+	private int numberPooledThreads = 1;
 	private static long queueFlushTime = 500; //in ms
 	private static ScheduledExecutorService workers = null;
 	
 	private ScheduledFuture<?> cleaner = null;
+	private LinkedBlockingQueue<Container> sendQueue = new LinkedBlockingQueue<Container>();
 	
 	private static int numberClients = 0;
 	
 	private static ContainerTimeComparator comparator = new ContainerTimeComparator();
 	//Keep track of the objects in flight
-	private HashMap<Long, InFlightContainer> hash = new HashMap<Long, InFlightContainer>();
-	private PriorityQueue<InFlightContainer> jobqueue = new PriorityQueue<InFlightContainer>(16, comparator);
+	private HashMap<Long,InFlightContainer> hash = new HashMap<Long,InFlightContainer>();
+	private PriorityQueue<InFlightContainer> jobqueue = new PriorityQueue<InFlightContainer>(16,comparator);
 	
-	private long uniqueId = 0;
+	private long totalPackets = 0;
 	private int workCount = 0;
-	
+	/**
+	 *  Get the IP address of the Client that this Client object is connected to.
+	 * @return The InetAAddress of the client
+	 */
+	public InetAddress getClientIP() {
+		return address;
+	}
+	/**
+	 * This increments the work count and logs the container in the relevant lists.
+	 * @param container
+	 */
 	private void checkoutContainer(InFlightContainer container) {
 		workCount++;
 		jobqueue.add(container);
 		hash.put(container.getPacketId(), container);
 	}
 	
+	/**
+	 * This marks the container as back and removes form some lists,
+	 * as well as decrementing the number of active packets on this cluster.
+	 * @param container
+	 * @return The IFC related to this interaction.
+	 */
 	private InFlightContainer checkbackContainer(Container container) {
 		Long l = container.getPacketId();
 		InFlightContainer cont = hash.get(l);
@@ -71,7 +88,11 @@ public class Client implements Runnable {
 		}
 		return cont;
 	}
-	
+	/**
+	 * This method closes the connection to the client and removes it from the associated
+	 * ClusterMaster so that no more work is allocated. It does not salvage the 
+	 * jobs waiting on returns.
+	 */
 	public void closeClient() {
 		parent.removeClient(this);
 		//Close the streams
@@ -82,7 +103,7 @@ public class Client implements Runnable {
 		cleaner.cancel(false); //Try to stop the regular operation flushing my queue
 		try {
 			out.close();
-			in.close();
+			in.close(); //Should also have the effect of closing the threads that read and write on them
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -108,59 +129,97 @@ public class Client implements Runnable {
 		//TODO send configuration packet here
 		
 		//Run myself to start listening for objects being sent my way!
-		new Thread(this);
+		Thread listener = new Thread() {
+			@Override
+			public void run() {
+				//This method needs to use the
+				while(true) {
+					Object recieve = null;
+					try {
+						recieve = in.readObject();
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					if(null == recieve) continue;
+					if(recieve instanceof Container) {
+						//fantastic!
+						//Count the packets back in
+						Container container = (Container)recieve;
+						InFlightContainer record = checkbackContainer(container);
+						if(record != null)
+							record.executeCallback(container);
+						//Packet dealt with
+					}
+					//Otherwise ignore for the moment
+				}
+			}
+		};
+		listener.start();
+		
+		Thread send = new Thread() {
+			@Override
+			public void run() {
+				//This method sends the packets to the client
+				while(true) {
+					try {
+						Container c = sendQueue.take();
+						out.writeObject(c);
+					} catch ( InterruptedException e){
+						return;
+					} catch ( IOException e) {
+						closeClient();
+						return;
+					}
+					if(this.isInterrupted())
+						return; //In case it's not thrown whilst waiting?
+				}
+			}
+		};
+		send.start();
 	}
+	/**
+	 *
+	 * @return The current number of Containers out on this Client
+	 */
 	public int getCurrentWork() {
 		//This is the amount of work which has not been accounted for
 		return workCount;
 	}
+	/**
+	 * @return The number of Containers that have been sent out to this Client,
+	 * since the object was created - the Client itself is not queried.
+	 */
 	public long getTotalWork() {
 		//The total amount of work done since the beginning
-		return uniqueId;
+		return totalPackets;
 	}
-	
-	public void send (Container c) {
-		c.setPacketId(uniqueId++);
+	/**
+	 * This method sends the specified container to the Pi, logging it as it does so.
+	 * @param c
+	 * @return The unique id of the packet being sent
+	 */
+	public long send (Container c) {
+		long uid = parent.getNextId();
+		totalPackets++;
+		c.setPacketId(uid);
 		InFlightContainer container = new InFlightContainer(c);
 		checkoutContainer(container);
-		try {
-			out.writeObject(c);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			//Force close this raspberry pi
-			closeClient();
-			
-		}
+		return uid;
 	}
-
-	@Override
-	public void run() {
-		//This method needs to use the
-		while(true) {
-			Object recieve = null;
-			try {
-				recieve = in.readObject();
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if(null == recieve) continue;
-			if(recieve instanceof Container) {
-				//fantastic!
-				//Count the packets back in
-				Container container = (Container)recieve;
-				InFlightContainer record = checkbackContainer(container);
-				if(record != null)
-					record.executeCallback(container);
-				//Packet dealt with
-			}
-			//Otherwise ignore for the moment
-		}
-	}
+	
+	/**
+	 * This method checks the front of the priority queue ( the timeout that'll expire 
+	 * soonest, if it finds the timeout has passed then the client is closed, removed from
+	 * the master and all jobs that are still out for processing and transferred back to the
+	 * ClusterMaster to attempt sending to another node.
+	 * It's unlikely you'll ever need to call this method as it is automatically run at
+	 * specified intervals - see source code. Also this method is probably NOT THREAD SAFE
+	 * As it's automatically run you never know when it might be running so don't call it!
+	 */
 	
 	public void tryFlushQueue() {
 		long time = System.nanoTime();
@@ -178,7 +237,7 @@ public class Client implements Runnable {
 				closeClient();
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.hasReplyRecieved()) {
-						//Reply hasn't been recieved so need to send again on a different node
+						//Reply hasn't been received so need to send again on a different node
 						try {
 							parent.sendPacket(ifc.getContainer(),ifc.getCallback());
 						} catch (NoClusterException e) {
@@ -190,7 +249,5 @@ public class Client implements Runnable {
 				break;
 			}
 		}
-
 	}
-	
 }
