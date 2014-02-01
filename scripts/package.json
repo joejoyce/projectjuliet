@@ -1,0 +1,7 @@
+{
+  "name": "loadsymbolmapping",
+  "version": "0.0.0",
+  "dependencies": {
+    "mysql": "*"
+  }
+}
