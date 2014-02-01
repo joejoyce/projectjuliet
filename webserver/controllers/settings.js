@@ -1,10 +1,10 @@
 /**
- * GET /contact
- * Contact form page.
+ * GET /settings
+ * System settings page
  */
 
-exports.getStock = function(req, res) {
-  res.render('stock', {
-    title: 'Stock'
+exports.getSettings = function(req, res) {
+  res.render('settings', {
+    title: 'Settings'
   });
 };

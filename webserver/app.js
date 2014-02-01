@@ -14,6 +14,10 @@ var app = express();
 
 var homeController = require('./controllers/home');
 var stockController = require('./controllers/stock');
+var orderController = require('./controllers/order');
+var statusController = require('./controllers/status');
+var settingsController = require('./controllers/settings');
+
 
 
 app.set('port', 3000);
@@ -38,8 +42,10 @@ app.use(express.errorHandler());
  */
 
 app.get('/', homeController.index);
-app.get('/stock', stockController.getStock);
-
+app.get('/order/:companyId', orderController.getOrder);
+app.get('/stock/:companyId', stockController.getStock);
+app.get('/status', statusController.getStatus);
+app.get('/settings', settingsController.getSettings);
 
 
 app.listen(app.get('port'), function() {

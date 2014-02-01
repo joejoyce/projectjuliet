@@ -1,10 +1,10 @@
 /**
- * GET /contact
- * Contact form page.
+ * GET /status
+ * System status page
  */
 
-exports.getStock = function(req, res) {
-  res.render('stock', {
-    title: 'Stock'
+exports.getStatus = function(req, res) {
+  res.render('status', {
+    title: 'Status'
   });
 };

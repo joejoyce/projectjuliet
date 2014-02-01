@@ -1,10 +1,13 @@
 /**
- * GET /contact
- * Contact form page.
+ * GET /order
+ * Gets an order book for a specific company.
  */
 
-exports.getStock = function(req, res) {
-  res.render('stock', {
-    title: 'Stock'
+exports.getOrder = function(req, res) {
+	var companyId = req.param("companyId");
+	console.log(companyId);
+  res.render('order', {
+    title: 'Order',
+    companyId: companyId
   });
 };
