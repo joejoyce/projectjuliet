@@ -4,8 +4,7 @@
  */
 
 exports.index = function(req, res) {
-	console.log("hello");
-  res.render('home', {
+	res.render('home', {
     title: 'Home'
   });
 };
