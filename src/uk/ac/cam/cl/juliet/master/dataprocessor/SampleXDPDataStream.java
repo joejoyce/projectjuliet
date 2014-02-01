@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,6 +27,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 	private RandomAccessFile channelOneFileHandle;
 	private RandomAccessFile channelTwoFileHandle;
 	private RandomAccessFile channelThreeFileHandle;
+	private HashMap<Integer, TimeStamp> timeStampBuffer = new HashMap<Integer, TimeStamp>();
 	
 	private long currentPacketCount = 0L;
 	private long initialCallTimeNS;	
@@ -35,7 +37,14 @@ public class SampleXDPDataStream implements XDPDataStream {
 		this.summaryFileHandle = new RandomAccessFile(summaryFile, "r");
 		this.channelOneFileHandle = new RandomAccessFile(channelOne, "r");
 		this.channelTwoFileHandle = new RandomAccessFile(channelTwo, "r");
-		this.channelThreeFileHandle = new RandomAccessFile(channelThree, "r");		
+		this.channelThreeFileHandle = new RandomAccessFile(channelThree, "r");
+		
+		// Initialise buffer
+		timeStampBuffer.put(new Integer(summaryFileHandle.hashCode()), null);
+		timeStampBuffer.put(new Integer(channelOneFileHandle.hashCode()), null);
+		timeStampBuffer.put(new Integer(channelTwoFileHandle.hashCode()), null);
+		timeStampBuffer.put(new Integer(channelThreeFileHandle.hashCode()), null);
+		
 		this.firstPacketTime = getNextPacketDataStream();
 		this.initialCallTimeNS = System.nanoTime();
 	}
@@ -49,7 +58,17 @@ public class SampleXDPDataStream implements XDPDataStream {
 	 */
 	@SuppressWarnings("static-access")
 	public XDPRequest getPacket() throws IOException {
+		
+		/*if(currentPacketCount % 100 == 0)
+			System.out.println("packet num: " + currentPacketCount);*/
+		
 		TimeStamp nextPacketData = getNextPacketDataStream();
+		
+		if(nextPacketData == null) {
+			// End of all data channels
+			return null;
+		}
+		
 		RandomAccessFile nextPacketDataStream = nextPacketData.f;
 		
 		byte p1 = nextPacketDataStream.readByte();
@@ -71,16 +90,24 @@ public class SampleXDPDataStream implements XDPDataStream {
 		long systemDifferenceNS = packetTimeDifferenceNS - elapsedTimeNS;
 		long systemDifferenceMS = TimeUnit.NANOSECONDS.toMillis(systemDifferenceNS);
 		
-		/*	System.out.println("Elapsed Time: " + elapsedTimeNS);
-		System.out.println("packetTimeDifference: " + packetTimeDifference);
-		System.out.println("packetTimeDifferenceNS: " + (nextPacketData.sendTimeNS - firstPacketTime.sendTimeNS));
-		System.out.println("Current packet time in stream: " + java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(packetTimeDifferenceNS));	*/	
-						
+		// Hacky solution to bursty datastream
+		if(systemDifferenceNS > 500000000L) {
+			// If we have to wait more then 0.5 seconds skip ahead
+			// Need to update internal timings to keep everything in sync
+			initialCallTimeNS -= systemDifferenceNS;
+			currentPacketCount ++;
+			return new XDPRequest(fileData, toUnsignedInt(deliveryFlag));
+		}
+		
 		if(systemDifferenceNS < 0) {
 			// System is falling behind realtime
-			System.out.println("System is " + (-systemDifferenceMS) + " milliseconds behind realtime stream");
+			 System.out.println("System is " + (-systemDifferenceMS) + " milliseconds behind realtime stream");
 		}
 		else {
+			/*initialCallTimeNS -= systemDifferenceNS;
+			currentPacketCount ++;
+			return new XDPRequest(fileData, toUnsignedInt(deliveryFlag));*/
+			
 			// System is ahead of realtime stream - wait for a bit
 			System.out.println("System is " + systemDifferenceMS + " milliseconds ahead of realtime stream");
 			try {
@@ -92,7 +119,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 				Thread.currentThread().sleep(milliSeconds, (int)systemDifferenceNS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}			
+			}		
 		}
 		currentPacketCount ++;
 		return new XDPRequest(fileData, toUnsignedInt(deliveryFlag));
@@ -105,11 +132,12 @@ public class SampleXDPDataStream implements XDPDataStream {
 	 * @return The datastream and timestamp wrapped as a TimeStamp object
 	 */
 	private TimeStamp getNextPacketDataStream() throws IOException {
-		ArrayList<TimeStamp> times = new ArrayList<TimeStamp>();
-		times.add(getTimeStamp(summaryFileHandle));
-		times.add(getTimeStamp(channelOneFileHandle));
-		times.add(getTimeStamp(channelTwoFileHandle));
-		times.add(getTimeStamp(channelThreeFileHandle));
+		ArrayList<TimeStamp> times = new ArrayList<TimeStamp>();		
+		
+		addTimeStamp(times, summaryFileHandle);
+		addTimeStamp(times, channelOneFileHandle);
+		addTimeStamp(times, channelTwoFileHandle);
+		addTimeStamp(times, channelThreeFileHandle);
 		
 		Collections.sort(times, new Comparator<TimeStamp>() {
 		    public int compare(TimeStamp t1, TimeStamp t2) {
@@ -128,7 +156,31 @@ public class SampleXDPDataStream implements XDPDataStream {
 		        return 0;		       
 		    }
 		});
+		
+		// Buffer value is now out of date
+		timeStampBuffer.put(new Integer(times.get(0).f.hashCode()), null);		
+		
+		if(times.get(0).sendTime == Long.MAX_VALUE)
+			return null;
+		
 		return times.get(0);		
+	}
+	
+	/**
+	 * Adds a TimeStamp object to the times ArrayList for a given file handle.
+	 * Utilises the buffer to increase performance.
+	 * @param times - The ArrayList of TimeStamps to add to, handle - the stream to read from
+	 */
+	private void addTimeStamp(ArrayList<TimeStamp> times, RandomAccessFile handle) throws IOException {		
+		TimeStamp t = timeStampBuffer.get(new Integer(handle.hashCode()));
+		if(t != null) {
+			times.add(t);
+		}
+		else {		
+			t = getTimeStamp(handle);
+			timeStampBuffer.put(new Integer(handle.hashCode()), t);
+			times.add(t);
+		}		
 	}
 	
 	/**
@@ -144,8 +196,13 @@ public class SampleXDPDataStream implements XDPDataStream {
 		
 		byte[] sendTimeBytes = new byte[4];
 		byte[] sendTimeNSBytes = new byte[4];		
-		dataChannel.read(sendTimeBytes);
-		dataChannel.read(sendTimeNSBytes);		
+		if(dataChannel.read(sendTimeBytes) == -1) {
+			System.out.println("Datachanel: " + dataChannel.length() + ", reached end of file");
+			// End of stream reached, make this TimeStamp unfavourable
+			return new TimeStamp(Long.MAX_VALUE, Long.MAX_VALUE, dataChannel);
+		}
+		dataChannel.read(sendTimeNSBytes);	
+		
 
 		long sendTime = littleEndianToLong(sendTimeBytes);
 		long sendTimeNS = littleEndianToLong(sendTimeNSBytes);		
