@@ -21,7 +21,7 @@ var settingsController = require('./controllers/settings');
 
 
 app.set('port', 3000);
-app.use(express.favicon(__dirname + '/public/images/favicon.ico')); 
+app.use(express.favicon(__dirname + '/public/img/favicon.ico')); 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.use(express.favicon());
