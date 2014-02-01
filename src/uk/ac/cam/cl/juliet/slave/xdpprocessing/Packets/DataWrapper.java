@@ -60,7 +60,8 @@ public abstract class DataWrapper {
 	 * Only the first four elements of the array are used
 	 * @param bytes the input array
 	 * @return long representation of the input
-	 * @precondition all integers in bytes have to be non-negative
+	 * @precondition 	all integers in bytes[] have to be non-negative and
+	 * 					only their rightmost 8 bits may be non-zero
 	 */
 	protected long littleEndianToLong(int[] bytes) {
 		long output = 0;
