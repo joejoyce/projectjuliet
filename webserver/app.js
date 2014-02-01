@@ -3,7 +3,7 @@
  */
 
 var express = require('express');
-var expressValidator = require('express-validator');
+var path = require('path');
 
 var app = express();
 
@@ -12,12 +12,12 @@ var app = express();
  */
 
 var homeController = require('./controllers/home');
+var contactController = require('./controllers/contact');
 
 
-app.set('port', 1337);
+app.set('port', 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-app.use(express.compress());
 app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.cookieParser());
@@ -36,8 +36,7 @@ app.use(express.errorHandler());
  */
 
 app.get('/', homeController.index);
-aapp.get('/contact', contactController.getContact);
-app.post('/contact', contactController.postContact);
+app.get('/contact', contactController.getContact);
 
 
 app.listen(app.get('port'), function() {
