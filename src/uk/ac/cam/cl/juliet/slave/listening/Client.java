@@ -11,7 +11,7 @@ public class Client {
     public static void main(String[] args) {
     	Listener listener = new Listener();
     	try {
-    		// TODO
+    		listener.listen(args[0], 500, null); // TODO: replace null with XDP processor
 		} catch (IOException e) {
 			System.err.println("An error occurred communicating with the server.");
 			e.printStackTrace();
