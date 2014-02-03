@@ -11,6 +11,7 @@ import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.StringTestPacket;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.common.XDPResponse;
+import uk.ac.cam.cl.juliet.slave.queryprocessing.QueryProcessor;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessor;
 
 /**
@@ -27,6 +28,7 @@ public class Listener {
 	private ObjectOutputStream output;
 	private LinkedBlockingQueue<Container> responseQueue;
 	private XDPProcessor xdp;
+	private QueryProcessor query;
 
 	/**
 	 * Connects to the server and begins to read and process packets.
@@ -37,9 +39,11 @@ public class Listener {
 	 *            The port which packets are being sent from.
 	 * @param xdp
 	 *            An XDP processor to send any XDP packets to.
+	 * @param query
+	 *            A query processor to send any query packets to.
 	 * @throws IOException
 	 */
-	public void listen(String server, int port, XDPProcessor xdp)
+	public void listen(String server, int port, XDPProcessor xdp, QueryProcessor query)
 			throws IOException {
 		this.socket = new Socket(server, port);
 		this.input = new ObjectInputStream(this.socket.getInputStream());
@@ -75,7 +79,7 @@ public class Listener {
 			if (container instanceof XDPRequest) {
 				processXDPRequest((XDPRequest) container);
 			} else if (container instanceof QueryPacket) {
-				// TODO
+				processQueryPacket((QueryPacket)container);
 			} else if (container instanceof StringTestPacket) {
 				System.out.println(container);
 			} else {
@@ -115,5 +119,9 @@ public class Listener {
 		boolean result = this.xdp.decode(container);
 		XDPResponse response = new XDPResponse(container.getPacketId(), result);
 		responseQueue.add(response);
+	}
+	
+	private void processQueryPacket(QueryPacket container) {
+		responseQueue.add(this.query.runQuery(container));
 	}
 }
