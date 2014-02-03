@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 import uk.ac.cam.cl.juliet.common.QueryPacket;
@@ -23,12 +24,19 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
     }
 	
 	public void run() {
-		try {
-			BufferedInputStream in = new BufferedInputStream(server.getInputStream());
-			BufferedReader din  = new BufferedReader(new InputStreamReader(in));
+		try {			
+			BufferedReader din  = new BufferedReader(new InputStreamReader(new BufferedInputStream(server.getInputStream())));
 			String query = din.readLine();
-			System.out.println("Received query: " + query);
-			//TODO decide how to handle the query...
+			System.out.println("Received query from server: " + query);			
+			
+			//TODO: Actually handle the query
+			
+			PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
+			pw.write("GabeN");
+			pw.flush();
+			System.out.println("Written GabeN");			
+			pw.close();
+			server.close();
 		} catch (IOException e) {
 			System.out.println("Error reading query from webserver");
 			e.printStackTrace();

@@ -20,10 +20,12 @@ public class WebServerListener implements Runnable {
 		listener.start();
 	}
 	
-	public void run() {
+	public void run() {		
 		while(true) {
 			try {
+				System.out.println("Waiting for connection");
 				Socket webserver = querySocket.accept();
+				System.out.println("Accepted new connection");
 				WebServerQueryHandler wqh = new WebServerQueryHandler(webserver);
 				Thread t = new Thread(wqh);
 				t.start();
@@ -32,5 +34,9 @@ public class WebServerListener implements Runnable {
 				e.printStackTrace();
 			}
 		}
-	}		
+	}
+	
+	public static void main(String[] args) throws IOException {
+		new WebServerListener(1337);		
+	}
 }
