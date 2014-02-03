@@ -42,7 +42,7 @@ function processLine(line) {
 	var id = elements[2];
 	var price_scale = elements[7];
 
-	connection.query('USE Juliet', function (err) {
+	connection.query('USE juliet', function (err) {
 		if (err) throw err;
 		connection.query('INSERT INTO symbol VALUES (' + id + ',"' + symbol + '",' + 'NULL,' + price_scale + ',NULL)', function (err) {
 			if (err) throw err;

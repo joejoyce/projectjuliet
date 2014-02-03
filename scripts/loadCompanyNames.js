@@ -42,12 +42,9 @@ function processLine(line) {
 	var symbol = elements[0];
 	var name = elements[1];
 	
-	//console.log("Symbol: " + symbol + ", name: " + name);	
-	
-	connection.query('USE Juliet', function (err) {
+	connection.query('USE juliet', function (err) {
 		if (err) throw err;
 		var q = 'UPDATE symbol SET company_name=' + name + ' WHERE symbol=' + symbol;
-		console.log("query: " + q);
 		connection.query(q, function (err) {
 			if (err) throw err;
 			console.log("Inserted: " + name);
