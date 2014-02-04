@@ -36,12 +36,11 @@ public class ClusterMaster  {
 	final static long queueFlushInteval = 500;
 	//private static DHCPCoreServer dhcpServer = null;
 	
-	private ClusterMaster me = this;
 	
 	private ServerSocket socket = null;
 	private AtomicLong nextId = new AtomicLong(0);
 	
-	private ClientLoadComparator clc = new ClientLoadComparator();
+	private static ClientLoadComparator clc = new ClientLoadComparator();
 	private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
 	//TODO need to sort out the priorityblocking queue so that it can be efficiently reordered on one update
 	//Make my own queue that also has fast random access so can be used for both ?
@@ -84,8 +83,7 @@ public class ClusterMaster  {
 				while(true) {
 					try {
 						Socket connection = socket.accept();
-						Client c = new Client(connection,me);
-						clientQueue.add(c);
+						addClient(connection);
 					} catch (IOException e) {
 						System.out.println("There was an error establishing a connection and spawning a client");
 						e.printStackTrace();
@@ -139,7 +137,9 @@ public class ClusterMaster  {
 		if(null == c) {
 			throw new NoClusterException("The Pis have all gone :'(");
 		}
-		return c.send(msg);
+		long l = c.send(msg);
+		clientQueue.put(c);
+		return l;
 	}
 	/**
 	 * Remove the client from this ClusterManager so that no more packets are sent to it
@@ -151,7 +151,8 @@ public class ClusterMaster  {
 	
 	/**
 	 * Remove the client from this ClusterManager so that no more packets are sent to it,
-	 * but also close the connection to the Client.
+	 * but also close the connection to the Client. Out of the two similar methods this is
+	 * probably the one you want
 	 * @param ob The Client to remove
 	 */
 	public void closeAndRemove( Client ob) {
