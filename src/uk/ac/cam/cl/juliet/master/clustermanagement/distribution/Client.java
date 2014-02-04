@@ -13,6 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
@@ -46,7 +47,7 @@ public class Client {
 	private ScheduledFuture<?> cleaner = null;
 	private LinkedBlockingQueue<Container> sendQueue = new LinkedBlockingQueue<Container>();
 	
-	private static int numberClients = 0;
+	private static AtomicInteger numberClients = new AtomicInteger(0);
 	
 	private static ContainerTimeComparator comparator = new ContainerTimeComparator();
 	//Keep track of the objects in flight
@@ -96,7 +97,7 @@ public class Client {
 	public void closeClient() {
 		parent.removeClient(this);
 		//Close the streams
-		if(0 == --numberClients) {
+		if(0 == numberClients.decrementAndGet()) {
 			workers.shutdownNow();
 			workers = null;
 		}
@@ -112,7 +113,7 @@ public class Client {
 	
 	public Client(Socket s,ClusterMaster parent) {
 		this.parent = parent;
-		if( 0 == numberClients++ ) {
+		if( 0 == numberClients.getAndIncrement() ) {
 			workers = Executors.newScheduledThreadPool(numberPooledThreads);
 		}
 		//Schedule queueflush for me
