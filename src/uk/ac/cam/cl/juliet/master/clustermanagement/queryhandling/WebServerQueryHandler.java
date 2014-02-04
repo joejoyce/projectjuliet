@@ -67,6 +67,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			pw.print(jsonResults);
 		} catch(SQLException e) {
 			System.out.println("SQL query exception");
+			e.printStackTrace();
 			pw.print("SQL Query Exception");
 		}
 	}
@@ -77,8 +78,8 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		int columnCount = rsmd.getColumnCount();
 		String[] columnNames = new String[columnCount];
 		
-		for(int i = 0; i < columnCount; i ++) {
-			columnNames[i] = rsmd.getColumnName(i);
+		for(int i = 1; i <= columnCount; i ++) {
+			columnNames[i-1] = rsmd.getColumnName(i);
 		}
 		
 		//String[][] results = new String[rowCount][columnCount];
@@ -106,7 +107,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	private String singleRowToJSON(ArrayList<String> row, String[] columnNames) {
 		String result = "";
 		for(int i = 0; i < row.size(); i ++) {
-			result += columnNames[i] + ": " + "\"" + row.get(i) + "\"" + ",";
+			result += "\"" + columnNames[i] + "\": " + "\"" + row.get(i) + "\"" + ",";
 		}
 		
 		return "{" + result.substring(0, result.length() - 1) + "}";
