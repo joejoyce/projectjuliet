@@ -7,9 +7,9 @@ import java.util.Comparator;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.dhcp4java.DHCPCoreServer;
-import org.dhcp4java.DHCPServerInitException;
-import org.dhcp4java.DHCPServlet;
+//import org.dhcp4java.DHCPCoreServer;
+//import org.dhcp4java.DHCPServerInitException;
+//import org.dhcp4java.DHCPServlet;
 
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
@@ -34,7 +34,7 @@ final class ClientLoadComparator implements Comparator<Client> {
 
 public class ClusterMaster  {
 	final static long queueFlushInteval = 500;
-	private static DHCPCoreServer dhcpServer = null;
+	//private static DHCPCoreServer dhcpServer = null;
 	
 	private ClusterMaster me = this;
 	
@@ -63,7 +63,7 @@ public class ClusterMaster  {
 	 * @throws IOException
 	 */
 	public void start(int port) throws IOException {
-		if(null == dhcpServer) {
+		/*if(null == dhcpServer) {
 		    try {
 		    	dhcpServer = DHCPCoreServer.initServer(new DHCPServlet(), null); //Why not DHCPStaticServlet?
 		        new Thread(dhcpServer).start();
@@ -72,7 +72,7 @@ public class ClusterMaster  {
 		    	System.out.println("Error starting DHCP server");
 		    	e.printStackTrace();
 		    }
-		}
+		}*/
 			
 		if(null != socket)
 			socket.close();
@@ -101,10 +101,10 @@ public class ClusterMaster  {
 	 * throw an exception - the DHCP server is also stopped.
 	 */
 	public void stop() {
-		if(null != dhcpServer) {
+		/*if(null != dhcpServer) {
 			dhcpServer.stopServer();
 			dhcpServer = null;
-		}
+		}*/
 		if(null != socket) {
 			try {
 				socket.close();
