@@ -43,8 +43,8 @@ app.use(express.errorHandler());
  */
 
 app.get('/', homeController.index);
-app.get('/order/:companySymbol', orderController.getOrder);
-app.get('/order', orderController.getOrder);
+app.get('/orderBook', orderController.getOrder);
+app.get('/order', orderController.orderBook);
 app.get('/stock/:companySymbol', stockController.getStock);
 app.get('/stock', stockController.getStock);
 app.get('/status', statusController.getStatus);

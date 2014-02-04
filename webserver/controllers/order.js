@@ -29,3 +29,9 @@ exports.getOrder = function(req, res) {
 
 	client.write('basic|SELECT * FROM symbol WHERE symbol="' + companySymbol + '"');
 };
+
+exports.orderBook = function(req, res) {
+	res.render('orderBook', {
+    	title: 'Order'    	
+    });
+};
