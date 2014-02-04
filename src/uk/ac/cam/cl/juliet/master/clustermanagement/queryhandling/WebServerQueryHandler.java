@@ -6,6 +6,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 /**
@@ -18,23 +23,29 @@ import uk.ac.cam.cl.juliet.common.QueryPacket;
  */
 public class WebServerQueryHandler implements QueryHandler, Runnable {
     private Socket server;
+    private Connection con;
 	
-	public WebServerQueryHandler(Socket server) {
+	public WebServerQueryHandler(Socket server, Connection con) {
 		this.server = server;
+		this.con = con;
     }
 	
 	public void run() {
 		try {			
 			BufferedReader din  = new BufferedReader(new InputStreamReader(new BufferedInputStream(server.getInputStream())));
-			String query = din.readLine();
-			System.out.println("Received query from server: " + query);			
-			
-			//TODO: Actually handle the query
-			
 			PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
-			pw.write("GabeN");
+			
+			String query = din.readLine();
+			String[] splitQuery = query.split("|");
+			
+			
+			switch(splitQuery[0]) {
+				case "basic": runBasicQuery(splitQuery[1], pw);
+							  break;
+				default: System.out.println("Unsupported query type");
+			}
+			
 			pw.flush();
-			System.out.println("Written GabeN");			
 			pw.close();
 			server.close();
 		} catch (IOException e) {
@@ -46,4 +57,57 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	public void runQuery(QueryPacket p, int id) {
     	
     }
+	
+	public void runBasicQuery(String query, PrintWriter pw) {
+		try {			
+			Statement s = con.createStatement();
+			ResultSet res = s.executeQuery(query);
+			String jsonResults = toJSON(res);
+			pw.print(jsonResults);
+		} catch(SQLException e) {
+			System.out.println("SQL query exception");
+			pw.print("SQL Query Exception");
+		}
+	}
+	
+	// {results: [{name: "scott", age: 20},{name: "greg", age: 19}]}
+	private String toJSON(ResultSet r) throws SQLException {
+		ResultSetMetaData rsmd = r.getMetaData();
+		int columnCount = rsmd.getColumnCount();
+		int rowCount = r.getRow();
+		String[] columnNames = new String[columnCount];
+		
+		for(int i = 0; i < columnCount; i ++) {
+			columnNames[i] = rsmd.getColumnName(i);
+		}
+		
+		String[][] results = new String[rowCount][columnCount];
+		
+		int row = 0;
+		
+		while(r.next()) {
+			for(int i = 0; i < columnCount; i ++) {
+				results[row++][i] = r.getString(i);
+			}			
+		}		
+		
+		String result = "";
+		
+		for(int i = 0; i < results.length; i ++) {
+			String rowJSON = singleRowToJSON(results[i], columnNames);
+			result += rowJSON + ",";
+		}
+		
+		return "[" + result.substring(0, result.length() - 1) + "]";
+	}
+	
+	private String singleRowToJSON(String[] row, String[] columnNames) {
+		String result = "";
+		for(int i = 0; i < row.length; i ++) {
+			result += columnNames[i] + ": " + "\"" + row[i] + "\"" + ",";
+		}
+		
+		return "{" + result.substring(0, result.length() - 1) + "}";
+	}	
+	
 }
