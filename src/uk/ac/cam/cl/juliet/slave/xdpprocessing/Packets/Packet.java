@@ -8,6 +8,12 @@ public class Packet extends DataWrapper{
 	protected long sendTime;
 	protected long sendTimeNS;
 
+	/**
+	 * create a packet object that wraps the data of a packet. It will read the
+	 * header of the packet from the data, the datapointer will then be at
+	 * position 16 in the data array.
+	 * @param data
+	 */
 	public Packet(byte[] data) {
 		super(data);
 		
@@ -37,6 +43,6 @@ public class Packet extends DataWrapper{
 			return null;
 		} 
 		int msgSize = (int) readLong(2);
-		return new Message(msgSize, readBytes(msgSize));
+		return new Message(msgSize, readBytes(msgSize-2));
 	}
 }

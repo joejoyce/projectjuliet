@@ -3,15 +3,15 @@ package uk.ac.cam.cl.juliet.slave.xdpprocessing;
 import java.sql.SQLException;
 
 import uk.ac.cam.cl.juliet.common.XDPRequest;
-import uk.ac.cam.cl.juliet.master.distribution.DatabaseConnectionUnit;
+import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets.Message;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets.Packet;
 
 public class XDPProcessorUnit implements XDPProcessor {
 	
-	private DatabaseConnectionUnit mDB;
+	private DatabaseConnection mDB;
 	
-	public XDPProcessorUnit(DatabaseConnectionUnit pDBConnection) {
+	public XDPProcessorUnit(DatabaseConnection pDBConnection) {
 		mDB = pDBConnection;
 	}
 
@@ -20,13 +20,13 @@ public class XDPProcessorUnit implements XDPProcessor {
 		boolean result = true;
 		
 		Packet currentPacket = new Packet(packet.getPacketData());
-		
 		Message m = currentPacket.getNextMessage();
 		
 		while(m != null) {
 			switch( m.getMessageType()) {
 			case 2:
 				result &= decodeSourceTimeReferenceMessage(m);
+				break;
 			case 3:
 				result &= decodeSymbolMappingMessage(m);
 				break;
@@ -241,6 +241,13 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long symbolSequenceNumber = m.readLong(4);
 		int tradingSession = m.readUnsignedByte();
 		// TODO update database
+		try {
+			mDB.changeTradeSession(symbolIndex, sourceTime_s, sourceTime_ns,
+					symbolSequenceNumber, tradingSession);
+		} catch (SQLException e) {
+			// TODO write to error-log or something?
+						return false;
+		}
 		return false;
 	}
 

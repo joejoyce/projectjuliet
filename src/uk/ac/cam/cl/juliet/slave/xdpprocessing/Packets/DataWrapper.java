@@ -2,7 +2,7 @@ package uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets;
 
 public abstract class DataWrapper {
 	private byte[] mData;
-	private int mDataPointer = 0;
+	protected int mDataPointer = 0;
 	
 	protected int mSize;
 	
@@ -105,5 +105,7 @@ public abstract class DataWrapper {
 			result[i] = mData[mDataPointer++];
 		return result;
 	}
+	
+	public int getSize() { return this.mSize; }
 	
 }

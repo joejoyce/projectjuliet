@@ -83,4 +83,11 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public void changeTradeSession(long symbolIndex, long time_s, long time_ns,
+			long symbolSeqNumber, int tradingSession) throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -82,4 +82,18 @@ public interface DatabaseConnection {
 	public void cancelTrade(long tradeID, long symbolIndex, long time_s, 
 			long time_ns, long symbolSeqNumber) throws SQLException;
 	
+	/**
+	 * Change the current trade session for the symbol specified
+	 * all open orders that are not valid for the new trading session have
+	 * have to be deleted
+	 * @param symbolIndex
+	 * @param time_s
+	 * @param time_ns
+	 * @param symbolSeqNumber
+	 * @param tradingSession
+	 * @throws SQLException
+	 */
+	public void changeTradeSession(long symbolIndex, long time_s, long time_ns,
+			long symbolSeqNumber, int tradingSession) throws SQLException;
+	
 }
