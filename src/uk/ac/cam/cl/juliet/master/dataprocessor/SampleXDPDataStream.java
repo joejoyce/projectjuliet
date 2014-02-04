@@ -18,10 +18,7 @@ import java.util.concurrent.TimeUnit;
  * @author Scott Williams
  */
 public class SampleXDPDataStream implements XDPDataStream {
-	private String summaryFile = "C:\\20111219-ARCA_XDP_IBF_1.dat";
-	private String channelOne = "E:\\Juliet\\20111219-ARCA_XDP_IBF_2.dat";
-	private String channelTwo = "E:\\Juliet\\20111219-ARCA_XDP_IBF_3.dat";
-	private String channelThree = "E:\\Juliet\\20111219-ARCA_XDP_IBF_4.dat";	
+	private long skipBoundary;
 
 	private RandomAccessFile summaryFileHandle;
 	private RandomAccessFile channelOneFileHandle;
@@ -33,7 +30,23 @@ public class SampleXDPDataStream implements XDPDataStream {
 	private long initialCallTimeNS;	
 	private TimeStamp firstPacketTime;
 	
-	public SampleXDPDataStream() throws IOException {
+	/**
+	 * create and return a new SampleSDPDataStream to read in the four files of 
+	 * sample data specified in the arguments.
+	 * @param summaryFile		first file
+	 * @param channelOne		second file
+	 * @param channelTwo		third file
+	 * @param channelThree		fourth file
+	 * @param pSkipBoundary		If there is a time difference of more than 
+	 * 			skipBoundary seconds between two consecutive packet timestamps,
+	 * 			then the time between them is skipped to get a throughput and to 
+	 * 			skip large periods of inactivity
+	 * @throws IOException
+	 */
+	public SampleXDPDataStream(String summaryFile, String channelOne, 
+			String channelTwo, String channelThree, float pSkipBoundary) 
+					throws IOException {
+		this.skipBoundary = (long) (1000000000*pSkipBoundary); //convert to nanoseconds
 		this.summaryFileHandle = new RandomAccessFile(summaryFile, "r");
 		this.channelOneFileHandle = new RandomAccessFile(channelOne, "r");
 		this.channelTwoFileHandle = new RandomAccessFile(channelTwo, "r");
@@ -91,8 +104,8 @@ public class SampleXDPDataStream implements XDPDataStream {
 		long systemDifferenceMS = TimeUnit.NANOSECONDS.toMillis(systemDifferenceNS);
 		
 		// Hacky solution to bursty datastream
-		if(systemDifferenceNS > 500000000L) {
-			// If we have to wait more then 0.5 seconds skip ahead
+		if(systemDifferenceNS > skipBoundary) {
+			// If we have to wait more then the skipBoundary, skip ahead
 			// Need to update internal timings to keep everything in sync
 			initialCallTimeNS -= systemDifferenceNS;
 			currentPacketCount ++;

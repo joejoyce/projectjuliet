@@ -1,12 +1,10 @@
 package uk.ac.cam.cl.juliet.test.messagedecoding;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.dataprocessor.SampleXDPDataStream;
 import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
-import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessor;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 
@@ -27,12 +25,25 @@ public class PacketStatisticsCollector {
 	 * 			The first argument is the path where the .csv-files will be stored.
 	 * 			The second argument is the symbolIndex of the stock you want a 
 	 * 			detailed log of.
+	 * try {
+			
+		} catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
+			System.err.println("Usage: <file1> <files2> <file3> <file4> <skipBoundary>");
+			return;
+		}
+	 * 
+	 * 
 	 */
 	public static void main(String[] args) {
 		try {
 			String path = args[0];
 			long symbolIndex = Integer.parseInt(args[1]);
-			sXDPStream = new SampleXDPDataStream();
+			String file1 = args[2];
+			String file2 = args[3];
+			String file3 = args[4];
+			String file4 = args[5];
+			float skipBoundary = Float.parseFloat(args[6]);
+			sXDPStream = new SampleXDPDataStream(file1, file2, file3, file4, skipBoundary);
 			sMockDB = 
 					new MockDatabaseConnection(path, symbolIndex);
 			
@@ -40,9 +51,12 @@ public class PacketStatisticsCollector {
 			System.err.println("Could not create XDPStream or MockDB");
 			ioe.printStackTrace();
 			return;
-		} catch (ArrayIndexOutOfBoundsException e) {
+		} catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
 			System.err.println("usage: PacketStatisticsCollection "
-					+ "<path for output files> <symbolIndex>");
+					+ "<path for output files> <symbolIndex> "
+					+ "<file1> <files2> <file3> <file4> <skipBoundary>");
+			e.printStackTrace();
+			return;
 		}
 		sXDPProcessor = new XDPProcessorUnit(sMockDB);
 		
