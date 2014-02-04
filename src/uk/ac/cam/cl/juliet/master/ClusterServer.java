@@ -1,4 +1,4 @@
-package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
+package uk.ac.cam.cl.juliet.master;
 
 import java.io.IOException;
 
