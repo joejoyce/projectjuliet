@@ -14,9 +14,9 @@ exports.getOrder = function(req, res) {
 		console.log("Got data from server: " + data);
 
 		var dataObj = JSON.parse(data);
-		var companyName = dataObj.company_name;
-		var companyId = dataObj.id;
-		var priceScale = dataObj.price_scale;
+		var companyName = dataObj[0].company_name;
+		var companyId = dataObj[0].id;
+		var priceScale = dataObj[0].price_scale;
 		
 		res.render('order', {
     	title: 'Order',
@@ -27,5 +27,5 @@ exports.getOrder = function(req, res) {
     });
 	});
 
-	client.write('basic|SELECT * FROM symbol WHERE symbol="' + companySymbol + '"');
+	client.write('basic|SELECT * FROM symbol WHERE symbol="' + companySymbol + '"\n');
 };
