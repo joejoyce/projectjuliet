@@ -45,9 +45,6 @@ public class XDPProcessorUnit implements XDPProcessor {
 			case 103:
 				result &= decodeOrderBookExecutionMessage(m);
 				break;
-			case 220:
-				result &= decodeTradeMessage(m);
-				break;
 			case 221:
 				result &= decodeTradeCancelOrBustMessage(m);
 				break;
@@ -63,36 +60,21 @@ public class XDPProcessorUnit implements XDPProcessor {
 			}
 			m = currentPacket.getNextMessage();
 		}
-
 		return result;
-	}
-	
-	private boolean decodeTradeMessage(Message m) {
-		long sourceTime_s = m.readLong(4);
-		long sourceTime_ns = m.readLong(4);
-		long symbolIndex = m.readLong(4);
-		long symbolSequenceNumber = m.readLong(4);
-		long tradeID = m.readLong(4);
-		long price = m.readLong(4);
-		long volume = m.readLong(4);
-		// there are several more field for trade conditions and latest
-		// bid/ask price and volume we don't read in at the moment
-		
-		//TODO write to database
-		
-		return false;
 	}
 
 	private boolean decodeSourceTimeReferenceMessage(Message m) {
 		long symbolIndex = m.readLong(4);
 		long symbolSequenceNumber = m.readLong(4);
 		long timeReference = m.readLong(4);
+		
 		try {
 			mDB.addSourceTimeReference(symbolIndex, symbolSequenceNumber, timeReference);
 		} catch (SQLException e) {
 			// TODO write to log?
 			return false;
 		}
+		
 		return true;
 	}
 
