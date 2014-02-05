@@ -47,6 +47,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 				break;
 			case 221:
 				result &= decodeTradeCancelOrBustMessage(m);
+				break;
 			case 222:
 				result &= decodeTradeCorrectionMessage(m);
 				break;
@@ -59,20 +60,21 @@ public class XDPProcessorUnit implements XDPProcessor {
 			}
 			m = currentPacket.getNextMessage();
 		}
-
 		return result;
 	}
-	
+
 	private boolean decodeSourceTimeReferenceMessage(Message m) {
 		long symbolIndex = m.readLong(4);
 		long symbolSequenceNumber = m.readLong(4);
 		long timeReference = m.readLong(4);
+		
 		try {
 			mDB.addSourceTimeReference(symbolIndex, symbolSequenceNumber, timeReference);
 		} catch (SQLException e) {
 			// TODO write to log?
 			return false;
 		}
+		
 		return true;
 	}
 

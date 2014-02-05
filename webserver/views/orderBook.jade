@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  .page-header
+    h3 Order Book 
+    center
+      p Please enter company symbol:
+      form(name="input", action="/orderBook/", method="get")
+        input.input-large(title="Company Symbol", name="companySymbol")
+        input(type="submit", value="Go!")

@@ -42,7 +42,21 @@ public class DataProcessor {
 	}
 
 	public static void main(String[] args) throws IOException {
-		SampleXDPDataStream ds = new SampleXDPDataStream();
+		String file1, file2, file3, file4;
+		float skipBoundary;
+		try {
+			file1 = args[0];
+			file2 = args[1];
+			file3 = args[2];
+			file4 = args[3];
+			skipBoundary = Float.parseFloat(args[4]);
+		} catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
+			System.err.println("Usage: <file1> <files2> <file3> "
+					+ "<file4> <skipBoundary>");
+			return;
+		}
+		SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4,
+				skipBoundary);
 		ClusterMaster cm = new ClusterMaster();
 		DataProcessor dp = new DataProcessor(ds, cm);
 		dp.start();

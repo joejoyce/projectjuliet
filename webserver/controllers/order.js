@@ -6,18 +6,32 @@ var net = require('net');
  */
 
 exports.getOrder = function(req, res) {
-	var companyId = req.param("companyId");
+	var companySymbol = req.param("companySymbol");
 	var client = net.connect(1337, 'localhost');
 	client.setEncoding('utf8');
 	
 	client.on('data', function(data) {
 		console.log("Got data from server: " + data);
+
+		var dataObj = JSON.parse(data);
+		var companyName = dataObj[0].company_name;
+		var companyId = dataObj[0].id;
+		var priceScale = dataObj[0].price_scale;
+		
 		res.render('order', {
     	title: 'Order',
-    	companyId: companyId,
-    	response: data
-  	});
+    	companySymbol: companySymbol,
+    	companyName: companyName,
+    	priceScale: priceScale,
+    	companyId: companyId
+    });
 	});
 
-	client.write(companyId + "\n");
+	client.write('basic|SELECT * FROM symbol WHERE symbol="' + companySymbol + '"\n');
+};
+
+exports.orderBook = function(req, res) {
+	res.render('orderBook', {
+    	title: 'Order'    	
+    });
 };

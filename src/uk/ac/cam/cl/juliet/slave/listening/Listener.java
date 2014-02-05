@@ -22,13 +22,17 @@ import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessor;
  * 
  */
 public class Listener {
+	private static final int numProcessingThreads = 4;
+
 	private Socket socket;
 	private Thread receiveThread;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
-	private LinkedBlockingQueue<Container> responseQueue;
+	private LinkedBlockingQueue<Container> responseQueue = new LinkedBlockingQueue<Container>();
+	private LinkedBlockingQueue<Container> requestQueue = new LinkedBlockingQueue<Container>();
 	private XDPProcessor xdp;
 	private QueryProcessor query;
+	private Thread[] processingThreads = new Thread[numProcessingThreads];
 
 	/**
 	 * Connects to the server and begins to read and process packets.
@@ -43,18 +47,30 @@ public class Listener {
 	 *            A query processor to send any query packets to.
 	 * @throws IOException
 	 */
-	public void listen(String server, int port, XDPProcessor xdp, QueryProcessor query)
-			throws IOException {
+	public void listen(String server, int port, XDPProcessor xdp,
+			QueryProcessor query) throws IOException {
 		this.socket = new Socket(server, port);
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());
 		this.xdp = xdp;
+		this.query = query;
+
+		for (int i = 0; i < numProcessingThreads; i++) {
+			this.processingThreads[i] = new Thread() {
+				@Override
+				public void run() {
+					while (true)
+						processPacket();
+				}
+			};
+			this.processingThreads[i].start();
+		}
 
 		this.receiveThread = new Thread() {
 			@Override
 			public void run() {
 				while (true)
-					processPacket();
+					readPacket();
 			}
 		};
 		this.receiveThread.start();
@@ -72,19 +88,10 @@ public class Listener {
 		}
 	}
 
-	private void processPacket() {
+	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
-
-			if (container instanceof XDPRequest) {
-				processXDPRequest((XDPRequest) container);
-			} else if (container instanceof QueryPacket) {
-				processQueryPacket((QueryPacket)container);
-			} else if (container instanceof StringTestPacket) {
-				System.out.println(container);
-			} else {
-				// TODO: unknown packet - throw exception?
-			}
+			this.requestQueue.add(container);
 		} catch (ClassNotFoundException | ClassCastException e) {
 			System.err
 					.println("An unexpected object was recieved from the server.");
@@ -96,9 +103,26 @@ public class Listener {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+
+	private void processPacket() {
+		try {
+			Container container = this.requestQueue.take();
+
+			if (container instanceof XDPRequest) {
+				processXDPRequest((XDPRequest) container);
+			} else if (container instanceof QueryPacket) {
+				processQueryPacket((QueryPacket) container);
+			} else if (container instanceof StringTestPacket) {
+				System.out.println(container);
+			} else {
+				// TODO: unknown packet - throw exception?
+			}
+		} catch (InterruptedException e) {
+		}
 
 		// If the response queue is getting too big, send all responses
-		if (this.responseQueue.size() > 10) { 
+		if (this.responseQueue.size() > 20) {
 			synchronized (output) {
 				try {
 					Container response;
@@ -120,7 +144,7 @@ public class Listener {
 		XDPResponse response = new XDPResponse(container.getPacketId(), result);
 		responseQueue.add(response);
 	}
-	
+
 	private void processQueryPacket(QueryPacket container) {
 		responseQueue.add(this.query.runQuery(container));
 	}

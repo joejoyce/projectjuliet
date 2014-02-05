@@ -1,8 +1,10 @@
-package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
+package uk.ac.cam.cl.juliet.master;
 
 import java.io.IOException;
 
 import uk.ac.cam.cl.juliet.common.StringTestPacket;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 
 /**
  * Prepare the ClusterServer for operation - also run some tests?
