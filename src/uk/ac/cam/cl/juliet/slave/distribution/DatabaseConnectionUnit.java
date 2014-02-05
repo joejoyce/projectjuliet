@@ -1,10 +1,13 @@
 package uk.ac.cam.cl.juliet.slave.distribution;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class DatabaseConnectionUnit implements DatabaseConnection {
-	private Connection connection; 
+	private Connection connection;
+	private ArrayList<PreparedStatement> batchQuery;
 	
 	public DatabaseConnectionUnit() throws SQLException {
 		//TODO create/or pass on connection to Database
@@ -14,8 +17,21 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	public void addOrder(long orderID, long symbolIndex, long time_ns, 
 			long symbolSeqNumber, long price, long volume, boolean isSell, 
 			int tradeSession) throws SQLException {
-		//TODO add a new order to the order-book of the stock 
-		// indexed by symbolIndex
+		PreparedStatement statement = this.connection.prepareStatement(
+				"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s,"
+			  + "placed_seq_num, updated_s, updated_seq_num)"
+			  + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		);
+		statement.setLong(1, orderID);
+		statement.setLong(2, symbolIndex);
+		statement.setLong(3, price);
+		statement.setLong(4, volume);
+		statement.setBoolean(5, isSell);
+		statement.setLong(7, 0); //TODO use timestamp in secs from latest Source Time Reference msg
+		statement.setLong(8, symbolSeqNumber);
+		statement.setLong(9, 0); //TODO use timestamp in secs from latest Source Time Reference msg
+		statement.setLong(10, symbolSeqNumber);
+		batchQuery.add(statement);
 	}
 	
 	@Override
