@@ -9,8 +9,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private Connection connection;
 	private ArrayList<PreparedStatement> batchQuery;
 	
-	public DatabaseConnectionUnit() throws SQLException {
-		//TODO create/or pass on connection to Database
+	public DatabaseConnectionUnit(Connection c) throws SQLException {
+		this.connection = c;
 	}
 	
 	@Override

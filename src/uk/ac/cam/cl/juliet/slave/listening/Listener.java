@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import uk.ac.cam.cl.juliet.common.Container;
@@ -11,8 +13,11 @@ import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.StringTestPacket;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.common.XDPResponse;
+import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
+import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnectionUnit;
 import uk.ac.cam.cl.juliet.slave.queryprocessing.QueryProcessor;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessor;
+import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 
 /**
  * The listener reads packets send from the master PC and passes them on to
@@ -30,6 +35,7 @@ public class Listener {
 	private ObjectOutputStream output;
 	private LinkedBlockingQueue<Container> responseQueue = new LinkedBlockingQueue<Container>();
 	private LinkedBlockingQueue<Container> requestQueue = new LinkedBlockingQueue<Container>();
+	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
 	private QueryProcessor query;
 	private Thread[] processingThreads = new Thread[numProcessingThreads];
@@ -41,19 +47,19 @@ public class Listener {
 	 *            The server to connect to.
 	 * @param port
 	 *            The port which packets are being sent from.
-	 * @param xdp
-	 *            An XDP processor to send any XDP packets to.
-	 * @param query
-	 *            A query processor to send any query packets to.
 	 * @throws IOException
 	 */
-	public void listen(String server, int port, XDPProcessor xdp,
-			QueryProcessor query) throws IOException {
+	public void listen(String server, int port) throws IOException,
+			SQLException {
 		this.socket = new Socket(server, port);
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());
-		this.xdp = xdp;
-		this.query = query;
+
+		this.databaseConnection = new DatabaseConnectionUnit(
+				DriverManager.getConnection("jdbc:mysql://" + server
+						+ ":3306/juliet", "root", "rootword"));
+		this.xdp = new XDPProcessorUnit(this.databaseConnection);
+		// TODO Create query processor
 
 		for (int i = 0; i < numProcessingThreads; i++) {
 			this.processingThreads[i] = new Thread() {
