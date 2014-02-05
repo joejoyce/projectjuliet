@@ -37,12 +37,17 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
 			
 			String query = din.readLine();			
-			String[] splitQuery = query.split("\\|");
-			
+			String[] splitQuery = query.split("\\|");			
 			
 			switch(splitQuery[0]) {
-				case "basic": runBasicQuery(splitQuery[1], pw);
-							  break;
+				case "basic": 	runBasicQuery(splitQuery[1], pw);
+							  	break;
+				case "status": 	runStatusQuery(splitQuery[1], pw);
+							   	break;
+				case "config":	runConfigQuery(splitQuery[1], pw);
+							   	break;
+				case "cluster": runClusterQuery(splitQuery[1], pw);
+								break;
 				default: System.out.println("Unsupported query type");
 			}
 			
@@ -52,13 +57,23 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		} catch (IOException e) {
 			System.out.println("Error reading query from webserver");
 			e.printStackTrace();
-		}
+		} 
     }
 	
-	public void runQuery(QueryPacket p, int id) {
-    	
-    }
+	public void runQuery(QueryPacket p, int id) {}
 	
+	public void runStatusQuery(String query, PrintWriter pw) {}
+	public void runConfigQuery(String query, PrintWriter pw) {}
+	public void runClusterQuery(String query, PrintWriter pw) {}	
+	
+	/**
+	 * Runs a basic query.
+	 * Executes the SQL query string received from the webserver
+	 * The result of the query is written to the webserver socket
+	 * as a JSON string
+	 * @param query	The SQL query to run
+	 * @param pw PrintWriter to the webserver socket
+	 */
 	public void runBasicQuery(String query, PrintWriter pw) {
 		try {			
 			Statement s = con.createStatement();
@@ -72,7 +87,12 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 	}
 	
-	// {results: [{name: "scott", age: 20},{name: "greg", age: 19}]}
+	/**
+	 * Converts a ResultSet object to a JSON string
+	 * Example: {results: [{name: "scott", age: 20},{name: "greg", age: 19}]}
+	 * @param r	The ResultSet to convert
+	 * @return The JSON String
+	 */
 	private String toJSON(ResultSet r) throws SQLException {
 		ResultSetMetaData rsmd = r.getMetaData();
 		int columnCount = rsmd.getColumnCount();
@@ -82,9 +102,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			columnNames[i-1] = rsmd.getColumnName(i);
 		}
 		
-		//String[][] results = new String[rowCount][columnCount];
 		ArrayList<ArrayList<String>> results = new ArrayList<ArrayList<String>>();
-		
 		
 		while(r.next()) {
 			ArrayList<String> a = new ArrayList<String>();
@@ -104,6 +122,15 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		return "[" + result.substring(0, result.length() - 1) + "]";
 	}
 	
+	/**
+	 * Converts a single result row to JSON string
+	 * Example: row=["scott", 20, "Christ's"], columnNames=["Name", "Age", "College"]
+	 * Output: {"name":"scott", "age":"20", "college":"Christ's"} 
+	 * 
+	 * @param row The row data
+	 * @param columnNames Table column names
+	 * @return A JSON string for the row
+	 */
 	private String singleRowToJSON(ArrayList<String> row, String[] columnNames) {
 		String result = "";
 		for(int i = 0; i < row.size(); i ++) {
@@ -111,6 +138,5 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 		
 		return "{" + result.substring(0, result.length() - 1) + "}";
-	}	
-	
+	}		
 }

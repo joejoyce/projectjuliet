@@ -27,7 +27,9 @@ exports.getOrder = function(req, res) {
     });
 	});
 
-	client.write('basic|SELECT * FROM symbol WHERE symbol="' + companySymbol + '"\n');
+	var escapedCompanySymbol = companySymbol.replace("\"", "");
+	escapedCompanySymbol = escapedCompanySymbol.replace("\'", "");
+	client.write('basic|SELECT * FROM symbol WHERE symbol="' + escapedCompanySymbol + '"\n');
 };
 
 exports.orderBook = function(req, res) {
