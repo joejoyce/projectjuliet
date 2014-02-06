@@ -204,5 +204,9 @@ public class ClusterMaster  {
 	public ConfigurationPacket getConfiguration() {
 		return cp;
 	}
+	
+	public Client[] listClients() {
+		return (Client[]) clientQueue.toArray();
+	}
 
 }
