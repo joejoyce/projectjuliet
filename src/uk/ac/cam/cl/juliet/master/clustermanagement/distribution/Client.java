@@ -168,6 +168,8 @@ public class Client {
 				while(true) {
 					try {
 						Container c = sendQueue.take();
+						InFlightContainer container = new InFlightContainer(c);
+						checkoutContainer(container);
 						out.writeObject(c);
 					} catch ( InterruptedException e){
 						return;
@@ -198,17 +200,10 @@ public class Client {
 		//The total amount of work done since the beginning
 		return totalPackets;
 	}
-	/**
-	 * This method sends the specified container to the Pi, logging it as it does so.
-	 * @param c
-	 * @return The unique id of the packet being sent
-	 */
-	public long send (Container c) {
-		long uid = parent.getNextId();
-		totalPackets++;
+	
+	private long send(Container c,long uid) {
+		totalPackets++; //TODO threadsafe?
 		c.setPacketId(uid);
-		InFlightContainer container = new InFlightContainer(c);
-		checkoutContainer(container);
 		try {
 			sendQueue.put(c);
 		} catch (InterruptedException e) {
@@ -216,6 +211,20 @@ public class Client {
 		}
 		return uid;
 	}
+	/**
+	 * This method sends the specified container to the Pi, logging it as it does so.
+	 * @param c
+	 * @return The unique id of the packet being sent
+	 */
+	public long send (Container c) {
+		long uid = parent.getNextId();
+		return send(c,uid);
+	}
+	
+	public long broadcast(Container c) {
+		return send(c,c.getPacketId());
+	}
+	//TODO mark a broadcast one as a message that it doesn't cascade on failure
 	
 	/**
 	 * This method checks the front of the priority queue ( the timeout that'll expire 
