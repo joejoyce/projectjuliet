@@ -68,12 +68,10 @@ public class XDPProcessorUnit implements XDPProcessor {
 		}
 		try {
 			if(result == true) { 
-				System.out.println("commiting");
 				mDB.commit();
 				return true;
 			}
 		} catch (SQLException e) {
-			System.out.println("SQLEXCEPTION========");
 			e.printStackTrace();
 			return false;
 		}

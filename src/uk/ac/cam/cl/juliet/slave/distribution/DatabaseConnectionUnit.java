@@ -110,9 +110,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	@Override
 	public void commit() throws SQLException{
 		PreparedStatement ps;
-		System.out.println("About to comit");
 		while( (ps = batchQuery.poll()) != null) {
-			System.out.println("Commiting one part----------");
+			System.out.println("Commiting to Database");
 			ps.execute();
 		}
 	}
