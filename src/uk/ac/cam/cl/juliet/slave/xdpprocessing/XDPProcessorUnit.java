@@ -65,7 +65,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 			m = currentPacket.getNextMessage();
 		}
 		try {
-			if(result = true) { 
+			if(result == true) { 
 				mDB.commit();
 				return true;
 			}

@@ -125,7 +125,7 @@ public class MockDatabaseConnection implements DatabaseConnection{
 	@Override
 	public void addOrder(long orderID, long symbolIndex, long time_ns,
 			long symbolSeqNumber, long price, long volume,
-			boolean isSell, int tradeSession) throws SQLException {
+			boolean isSell, int tradeSession, long timestamp) throws SQLException {
 		if(!sMessageStatistics.containsKey(symbolIndex)) {
 			MessageStatisticsDatum newDatum = new MessageStatisticsDatum();
 			newDatum.noMsgsAddOrder++;
@@ -141,7 +141,7 @@ public class MockDatabaseConnection implements DatabaseConnection{
 	@Override
 	public void modifyOrder(long orderID, long symbolIndex,
 			long time_ns, long symbolSeqNumber, long price,
-			long volume, boolean isSell) throws SQLException {
+			long volume, boolean isSell, long timestamp) throws SQLException {
 		if(!sMessageStatistics.containsKey(symbolIndex)) {
 			MessageStatisticsDatum newDatum = new MessageStatisticsDatum();
 			newDatum.noMsgsModifyOrder++;
@@ -164,7 +164,7 @@ public class MockDatabaseConnection implements DatabaseConnection{
 
 	@Override
 	public void deleteOrder(long orderID, long symbolIndex,
-			long time_ns, long symbolSeqNumber) throws SQLException {
+			long time_ns, long symbolSeqNumber,  long timestamp) throws SQLException {
 		if(!sMessageStatistics.containsKey(symbolIndex)) {
 			MessageStatisticsDatum newDatum = new MessageStatisticsDatum();
 			newDatum.noMsgsDeleteOrder++;
@@ -299,5 +299,11 @@ public class MockDatabaseConnection implements DatabaseConnection{
 		if(symbolIndex == singleStockSymbolIndex)
 			singleStockMessageLog.add("changeTradeSession,"+"-"+","+"-"+","+time_s+","+time_ns+","+
 					symbolSeqNumber+","+"-"+","+"-"+","+"-"+","+tradingSession);
+	}
+
+	@Override
+	public void commit() throws SQLException {
+		// not needed for this test database connection
+		
 	}
 }
