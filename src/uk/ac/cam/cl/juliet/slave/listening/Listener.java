@@ -56,7 +56,8 @@ public class Listener {
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());
 
-		this.xdp = new XDPProcessorUnit(null);
+		this.databaseConnection = new DatabaseConnectionUnit(null);
+		this.xdp = new XDPProcessorUnit(this.databaseConnection);
 		// TODO Create query processor
 
 		for (int i = 0; i < numProcessingThreads; i++) {
@@ -159,10 +160,9 @@ public class Listener {
 		String ip = packet.getSetting("db.addr");
 		if (ip != null) {
 			try {
-				this.databaseConnection = new DatabaseConnectionUnit(
-						DriverManager.getConnection("jdbc:mysql://" + ip
-								+ ":3306/juliet", "root", "rootword"));
-				this.xdp.setDatabaseConnection(this.databaseConnection);
+				this.databaseConnection.setConnection(DriverManager
+						.getConnection("jdbc:mysql://" + ip + ":3306/juliet",
+								"root", "rootword"));
 
 			} catch (SQLException e) {
 				System.err

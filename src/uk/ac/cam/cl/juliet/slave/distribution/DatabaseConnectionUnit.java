@@ -3,11 +3,11 @@ package uk.ac.cam.cl.juliet.slave.distribution;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DatabaseConnectionUnit implements DatabaseConnection {
 	private Connection connection;
-	private ArrayList<PreparedStatement> batchQuery;
+	private ConcurrentLinkedQueue<PreparedStatement> batchQuery = new ConcurrentLinkedQueue<PreparedStatement>();
 	
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
@@ -109,9 +109,13 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 	@Override
 	public void commit() throws SQLException{
-		for(PreparedStatement ps : batchQuery) {
+		PreparedStatement ps;
+		while ((ps = batchQuery.poll())!=null) {
 			ps.execute();
-			
 		}
+	}
+	
+	public void setConnection(Connection connection) {
+		this.connection = connection;
 	}
 }

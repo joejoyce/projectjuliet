@@ -295,8 +295,4 @@ public class XDPProcessorUnit implements XDPProcessor {
 		}
 		return true;
 	}
-
-	public void setDatabaseConnection(DatabaseConnection c){
-		this.mDB = c;
-	}
 }

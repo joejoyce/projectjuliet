@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.test.messagedecoding;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -305,5 +306,9 @@ public class MockDatabaseConnection implements DatabaseConnection{
 	public void commit() throws SQLException {
 		// not needed for this test database connection
 		
+	}
+	
+	public void setConnection(Connection connection) {
+		// not needed
 	}
 }
