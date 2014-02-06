@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS symbol (
   company_name varchar(100) NOT NULL,
   price_scale int(10) unsigned NOT NULL,
   open_price int(10) unsigned NOT NULL,
-  PRIMARY KEY(id)
+  PRIMARY KEY(symbol_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
 DROP TABLE IF EXISTS buffer;
