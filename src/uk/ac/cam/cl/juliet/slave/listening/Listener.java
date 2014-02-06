@@ -67,7 +67,6 @@ public class Listener {
 						processPacket();
 				}
 			};
-			this.processingThreads[i].start();
 		}
 
 		this.receiveThread = new Thread() {
@@ -164,13 +163,18 @@ public class Listener {
 						DriverManager.getConnection("jdbc:mysql://" + ip
 								+ ":3306/juliet", "root", "rootword"));
 				this.xdp.setDatabaseConnection(this.databaseConnection);
-				
+
 			} catch (SQLException e) {
 				System.err
 						.println("An error occurred connecting to the database");
 				e.printStackTrace();
 				System.exit(1);
 			}
+		}
+
+		if (!this.processingThreads[0].isAlive()) {
+			for (int i = 0; i < numProcessingThreads; i++)
+				this.processingThreads[i].start();
 		}
 	}
 }
