@@ -1,9 +1,10 @@
+DROP DATABASE Juliet IF EXISTS;
 CREATE DATABASE Juliet DEFAULT CHARACTER SET UTF8 COLLATE utf8_general_ci;
 USE Juliet;
 
 DROP TABLE IF EXISTS symbol;
 CREATE TABLE IF NOT EXISTS symbol (
-  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+  symbol_id int(10) unsigned NOT NULL,
   symbol varchar(16) NOT NULL,
   company_name varchar(100) NOT NULL,
   price_scale int(10) unsigned NOT NULL,
