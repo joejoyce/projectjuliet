@@ -8,6 +8,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.StringTestPacket;
@@ -55,10 +56,7 @@ public class Listener {
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());
 
-		this.databaseConnection = new DatabaseConnectionUnit(
-				DriverManager.getConnection("jdbc:mysql://" + server
-						+ ":3306/juliet", "root", "rootword"));
-		this.xdp = new XDPProcessorUnit(this.databaseConnection);
+		this.xdp = new XDPProcessorUnit(null);
 		// TODO Create query processor
 
 		for (int i = 0; i < numProcessingThreads; i++) {
@@ -97,7 +95,10 @@ public class Listener {
 	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
-			this.requestQueue.add(container);
+			if (container instanceof ConfigurationPacket)
+				handleConfigurationPacket((ConfigurationPacket) container);
+			else
+				this.requestQueue.add(container);
 		} catch (ClassNotFoundException | ClassCastException e) {
 			System.err
 					.println("An unexpected object was recieved from the server.");
@@ -153,5 +154,23 @@ public class Listener {
 
 	private void processQueryPacket(QueryPacket container) {
 		responseQueue.add(this.query.runQuery(container));
+	}
+
+	private void handleConfigurationPacket(ConfigurationPacket packet) {
+		String ip = packet.getSetting("db.addr");
+		if (ip != null) {
+			try {
+				this.databaseConnection = new DatabaseConnectionUnit(
+						DriverManager.getConnection("jdbc:mysql://" + ip
+								+ ":3306/juliet", "root", "rootword"));
+				this.xdp.setDatabaseConnection(this.databaseConnection);
+				
+			} catch (SQLException e) {
+				System.err
+						.println("An error occurred connecting to the database");
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}
 	}
 }
