@@ -95,6 +95,7 @@ public class Listener {
 	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
+			System.out.println("Got new raw packet");
 			if (container instanceof ConfigurationPacket)
 				handleConfigurationPacket((ConfigurationPacket) container);
 			else
@@ -117,7 +118,9 @@ public class Listener {
 			Container container = this.requestQueue.take();
 
 			if (container instanceof XDPRequest) {
+				System.out.println("Processing XDPRequestpacket");				
 				processXDPRequest((XDPRequest) container);
+				System.out.println("finished procesing packet");				
 			} else if (container instanceof QueryPacket) {
 				processQueryPacket((QueryPacket) container);
 			} else if (container instanceof StringTestPacket) {

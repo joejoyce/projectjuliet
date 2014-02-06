@@ -15,8 +15,7 @@ public class Client {
 		try {
 			listener.listen(args[0], 5000);
 		} catch (IOException e) {
-			System.err
-					.println("An error occurred communicating with the server.");
+			System.err.println("An error occurred communicating with the server.");
 			e.printStackTrace();
 			System.exit(1);
 		} catch (SQLException e) {

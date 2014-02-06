@@ -38,8 +38,7 @@ final class ClientLoadComparator implements Comparator<Client> {
 
 public class ClusterMaster  {
 	final static long queueFlushInteval = 500;
-	//private static DHCPCoreServer dhcpServer = null;
-	
+
 	private ConfigurationPacket cp = new ConfigurationPacket();
 	
 	private ServerSocket socket = null;
@@ -50,7 +49,7 @@ public class ClusterMaster  {
 	//TODO need to sort out the priorityblocking queue so that it can be efficiently reordered on one update
 	//Make my own queue that also has fast random access so can be used for both ?
 	
-	public ClusterMaster ( String filename) {
+	public ClusterMaster(String filename) {
 		StringReader r = new StringReader(filename);
 		BufferedReader bf = new BufferedReader(r);
 		try {
@@ -106,6 +105,7 @@ public class ClusterMaster  {
 					try {
 						Socket connection = socket.accept();
 						addClient(connection);
+						System.out.println("Added a new client!");
 					} catch (IOException e) {
 						System.out.println("There was an error establishing a connection and spawning a client");
 						e.printStackTrace();

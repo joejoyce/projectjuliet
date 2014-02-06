@@ -1,11 +1,14 @@
 package uk.ac.cam.cl.juliet.common;
+
+import java.io.Serializable;
+
 /**
  * @description Sent by the cluster to indicate a specific
  * XDPRequest has been completed 
  * 
  * @author Scott Williams
  */
-public class XDPResponse extends XDPPacket {
+public class XDPResponse extends XDPPacket implements Serializable {
 	boolean result;
 	
 	public XDPResponse(long id, boolean result) {
