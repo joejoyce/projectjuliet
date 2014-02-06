@@ -209,6 +209,11 @@ public class Client {
 		c.setPacketId(uid);
 		InFlightContainer container = new InFlightContainer(c);
 		checkoutContainer(container);
+		try {
+			sendQueue.put(c);
+		} catch (InterruptedException e) {
+			return -1;
+		}
 		return uid;
 	}
 	
