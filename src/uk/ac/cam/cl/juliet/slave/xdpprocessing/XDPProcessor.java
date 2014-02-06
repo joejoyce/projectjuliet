@@ -1,6 +1,7 @@
 package uk.ac.cam.cl.juliet.slave.xdpprocessing;
 
 import uk.ac.cam.cl.juliet.common.XDPRequest;
+import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
 
 public interface XDPProcessor {
 	/**
@@ -11,4 +12,6 @@ public interface XDPProcessor {
 	 * 			returns false otherwise
 	 */
 	public boolean decode (XDPRequest packet);
+	
+	public void setDatabaseConnection(DatabaseConnection  c);
 }
