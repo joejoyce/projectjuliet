@@ -14,7 +14,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterExcept
 public class ClusterServer {
 	
 	public static void main(String args[]) throws IOException {
-		ClusterMaster m = new ClusterMaster();
+		ClusterMaster m = new ClusterMaster("");
 		m.start(5000);
 		try {
 			m.sendPacket(new StringTestPacket("Is this working?"));
@@ -23,6 +23,7 @@ public class ClusterServer {
 			e.printStackTrace();
 		}
 		//Run all tests: - include delay to bring Raspberry Pis up?
+		
 		System.in.read();
 		m.stop();
 	}

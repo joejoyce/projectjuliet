@@ -70,6 +70,7 @@ public class Client {
 	private void checkoutContainer(InFlightContainer container) {
 		workCount++;
 		jobqueue.add(container);
+		System.out.println("Added to job queue");		
 		hash.put(container.getPacketId(), container);
 	}
 	
@@ -170,10 +171,14 @@ public class Client {
 						Container c = sendQueue.take();
 						InFlightContainer container = new InFlightContainer(c);
 						checkoutContainer(container);
+						System.out.println("Client taken packet, avbout to write object to out");
 						out.writeObject(c);
+						System.out.println("Written obj");
 					} catch ( InterruptedException e){
+						e.printStackTrace();
 						return;
 					} catch ( IOException e) {
+						e.printStackTrace();
 						closeClient();
 						return;
 					}

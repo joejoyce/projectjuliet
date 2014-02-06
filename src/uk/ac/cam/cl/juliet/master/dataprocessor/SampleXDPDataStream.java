@@ -72,8 +72,8 @@ public class SampleXDPDataStream implements XDPDataStream {
 	@SuppressWarnings("static-access")
 	public XDPRequest getPacket() throws IOException {
 		
-		/*if(currentPacketCount % 100 == 0)
-			System.out.println("packet num: " + currentPacketCount);*/
+		if(currentPacketCount % 100 == 0)
+			System.out.println("packet num: " + currentPacketCount);
 		
 		TimeStamp nextPacketData = getNextPacketDataStream();
 		

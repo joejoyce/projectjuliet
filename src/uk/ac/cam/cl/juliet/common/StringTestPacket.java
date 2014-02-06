@@ -1,6 +1,8 @@
 package uk.ac.cam.cl.juliet.common;
 
-public class StringTestPacket extends Container {
+import java.io.Serializable;
+
+public class StringTestPacket extends Container implements Serializable {
 	private String msg;
 	public StringTestPacket(String msg) {
 		this.msg = msg;

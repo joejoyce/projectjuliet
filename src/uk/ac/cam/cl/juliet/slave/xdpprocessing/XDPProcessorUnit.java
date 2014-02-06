@@ -64,7 +64,15 @@ public class XDPProcessorUnit implements XDPProcessor {
 			}
 			m = currentPacket.getNextMessage();
 		}
-		return result;
+		try {
+			if(result == true) { 
+				mDB.commit();
+				return true;
+			}
+		} catch (SQLException e) {
+			return false;
+		}
+		return false;
 	}
 
 	private boolean decodeSourceTimeReferenceMessage(Message m) {
@@ -168,7 +176,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 			} else if (reasonCode == 3) {
 				//an order is fully executed
 				mDB.deleteOrder(orderID, symbolIndex, sourcetime_ns,
-						symbolSequenceNumber);
+						symbolSequenceNumber, timestamp);
 			} else {
 				//the reasonCode is invalid
 				//TODO throw an exception or have an error log!
@@ -191,7 +199,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 		// but we don't need them now
 
 		try {
-			mDB.deleteOrder(orderID, symbolIndex, sourceTime_ns, symbolSequenceNumber);
+			mDB.deleteOrder(orderID, symbolIndex, sourceTime_ns, symbolSequenceNumber,
+					timestamp);
 		} catch (SQLException sqle) {
 			//TODO print to an error log?
 			return false;
@@ -211,7 +220,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		
 		try {
 			mDB.modifyOrder(orderID, symbolIndex, sourceTime_ns,
-					SymbolSequenceNumber, price, volume, isSell);
+					SymbolSequenceNumber, price, volume, isSell, timestamp);
 		} catch (SQLException e) {
 			// TODO write to an error log?
 			return false;
@@ -232,7 +241,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 		
 		try {
 			mDB.addOrder(orderID, symbolIndex, sourceTime_ns, 
-					symbolSequenceNumber, price, volume, isSell, tradeSession);
+					symbolSequenceNumber, price, volume, isSell, tradeSession, 
+					timestamp);
 		} catch (SQLException e) {
 			// TODO print to error log?
 			return false;
@@ -284,9 +294,5 @@ public class XDPProcessorUnit implements XDPProcessor {
 			return false;
 		}
 		return true;
-	}
-
-	public void setDatabaseConnection(DatabaseConnection c){
-		this.mDB = c;
 	}
 }

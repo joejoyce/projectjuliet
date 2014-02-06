@@ -5,6 +5,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 
 import java.io.IOException;
+import java.util.Scanner;
 
 /**
  * @description This class attaches to a XDPDataStream and requests packets.
@@ -26,17 +27,19 @@ public class DataProcessor {
 		do {
 			try {
 				packet = dataStream.getPacket();
-				//if(packet.getDeliveryFlag() == 11)
-					//clusterMaster.sendPacket(packet);				
+				if(packet.getDeliveryFlag() == 11) {
+					clusterMaster.sendPacket(packet);
+					System.out.println("Sent packet");
+				}
 			} catch (IOException e) {
 				System.err.println("Datastream error");
 				e.printStackTrace();
 				break;
-			} /*catch (NoClusterException e) {
+			} catch (NoClusterException e) {
 				System.err.println("Cluster error");
 				e.printStackTrace();
 				break;
-			}*/
+			}
 		} while (packet != null);
 		System.out.println("Finished entire stream");
 	}
@@ -51,14 +54,17 @@ public class DataProcessor {
 			file4 = args[3];
 			skipBoundary = Float.parseFloat(args[4]);
 		} catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
-			System.err.println("Usage: <file1> <files2> <file3> "
-					+ "<file4> <skipBoundary>");
+			System.err.println("Usage: <file1> <files2> <file3> <file4> <skipBoundary>");
 			return;
 		}
-		SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4,
-				skipBoundary);
-		ClusterMaster cm = new ClusterMaster();
-		DataProcessor dp = new DataProcessor(ds, cm);
+		SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4, skipBoundary);
+		ClusterMaster m = new ClusterMaster("");
+		m.start(5000);
+		DataProcessor dp = new DataProcessor(ds, m);
+		Scanner s = new Scanner(System.in);
+		System.out.println("GO?");
+		s.nextLine();
 		dp.start();
+		s.close();
 	}
 }

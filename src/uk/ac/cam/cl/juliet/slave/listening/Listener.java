@@ -56,7 +56,8 @@ public class Listener {
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());
 
-		this.xdp = new XDPProcessorUnit(null);
+		this.databaseConnection = new DatabaseConnectionUnit(null);
+		this.xdp = new XDPProcessorUnit(this.databaseConnection);
 		// TODO Create query processor
 
 		for (int i = 0; i < numProcessingThreads; i++) {
@@ -67,7 +68,6 @@ public class Listener {
 						processPacket();
 				}
 			};
-			this.processingThreads[i].start();
 		}
 
 		this.receiveThread = new Thread() {
@@ -95,6 +95,7 @@ public class Listener {
 	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
+			System.out.println("Got new raw packet");
 			if (container instanceof ConfigurationPacket)
 				handleConfigurationPacket((ConfigurationPacket) container);
 			else
@@ -117,7 +118,9 @@ public class Listener {
 			Container container = this.requestQueue.take();
 
 			if (container instanceof XDPRequest) {
+				System.out.println("Processing XDPRequestpacket");				
 				processXDPRequest((XDPRequest) container);
+				System.out.println("finished procesing packet");				
 			} else if (container instanceof QueryPacket) {
 				processQueryPacket((QueryPacket) container);
 			} else if (container instanceof StringTestPacket) {
@@ -160,17 +163,21 @@ public class Listener {
 		String ip = packet.getSetting("db.addr");
 		if (ip != null) {
 			try {
-				this.databaseConnection = new DatabaseConnectionUnit(
-						DriverManager.getConnection("jdbc:mysql://" + ip
-								+ ":3306/juliet", "root", "rootword"));
-				this.xdp.setDatabaseConnection(this.databaseConnection);
-				
+				this.databaseConnection.setConnection(DriverManager
+						.getConnection("jdbc:mysql://" + ip + ":3306/juliet",
+								"root", "rootword"));
+
 			} catch (SQLException e) {
 				System.err
 						.println("An error occurred connecting to the database");
 				e.printStackTrace();
 				System.exit(1);
 			}
+		}
+
+		if (!this.processingThreads[0].isAlive()) {
+			for (int i = 0; i < numProcessingThreads; i++)
+				this.processingThreads[i].start();
 		}
 	}
 }

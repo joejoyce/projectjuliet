@@ -1,14 +1,15 @@
+DROP DATABASE IF EXISTS Juliet;
 CREATE DATABASE Juliet DEFAULT CHARACTER SET UTF8 COLLATE utf8_general_ci;
 USE Juliet;
 
 DROP TABLE IF EXISTS symbol;
 CREATE TABLE IF NOT EXISTS symbol (
-  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+  symbol_id int(10) unsigned NOT NULL,
   symbol varchar(16) NOT NULL,
   company_name varchar(100) NOT NULL,
   price_scale int(10) unsigned NOT NULL,
   open_price int(10) unsigned NOT NULL,
-  PRIMARY KEY(id)
+  PRIMARY KEY(symbol_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
 DROP TABLE IF EXISTS buffer;

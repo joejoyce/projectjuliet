@@ -4,7 +4,10 @@ block content
   .page-header
     h3 Order Book 
     center
-      p Please enter company symbol:
-      form(name="input", action="/orderBook/", method="get")
-        input.input-large(title="Company Symbol", name="companySymbol")
-        input(type="submit", value="Go!")
+      h4 Please enter company symbol:
+      form(role='form', name="input", action="/orderBook/", method="get")
+        #row
+          .input-group        
+            input.form-control(type="text", title="Company Symbol", name="companySymbol")
+            span.input-group-btn
+              button.btn.btn-primary Go!
