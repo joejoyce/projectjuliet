@@ -1,9 +1,12 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -11,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 //import org.dhcp4java.DHCPServerInitException;
 //import org.dhcp4java.DHCPServlet;
 
+import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
@@ -36,6 +40,7 @@ public class ClusterMaster  {
 	final static long queueFlushInteval = 500;
 	//private static DHCPCoreServer dhcpServer = null;
 	
+	private ConfigurationPacket cp = new ConfigurationPacket();
 	
 	private ServerSocket socket = null;
 	private AtomicLong nextId = new AtomicLong(0);
@@ -44,6 +49,23 @@ public class ClusterMaster  {
 	private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
 	//TODO need to sort out the priorityblocking queue so that it can be efficiently reordered on one update
 	//Make my own queue that also has fast random access so can be used for both ?
+	
+	public ClusterMaster ( String filename) {
+		StringReader r = new StringReader(filename);
+		BufferedReader bf = new BufferedReader(r);
+		try {
+			bf.readLine();
+			String line = null;
+			while(null != (line = bf.readLine())) {
+				String arr[] = line.split(" ");
+				if(arr.length > 1)
+					cp.setSetting(arr[0],arr[1]);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	/**
 	 *  Add the client to the Cluster so that it can begin to recieve work
@@ -162,6 +184,25 @@ public class ClusterMaster  {
 	
 	public long getNextId() {
 		return nextId.incrementAndGet();
+	}
+	
+	public String getSetting( String key ) {
+		return cp.getSetting(key);
+	}
+	
+	public void setSetting ( String key, String value) {
+		cp.setSetting(key,value);
+		//Push out to all clients
+		Iterator<Client> iter = clientQueue.iterator();
+		while(iter.hasNext())
+			iter.next().send(cp);
+	}
+	/**
+	 * Returns the configuration packet that this ClusterMaster uses to 
+	 * @return
+	 */
+	public ConfigurationPacket getConfiguration() {
+		return cp;
 	}
 
 }

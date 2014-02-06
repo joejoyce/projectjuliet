@@ -45,4 +45,7 @@ public class Packet extends DataWrapper{
 		int msgSize = (int) readLong(2);
 		return new Message(msgSize, readBytes(msgSize-2));
 	}
+	public long getTimestamp() {
+		return this.sendTime;
+	}
 }

@@ -123,11 +123,11 @@ public class Client {
 		try {
 			out = new ObjectOutputStream(s.getOutputStream());
 			in = new ObjectInputStream(s.getInputStream());
+			out.writeObject(parent.getConfiguration());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//TODO send configuration packet here
 		
 		//Run myself to start listening for objects being sent my way!
 		Thread listener = new Thread() {

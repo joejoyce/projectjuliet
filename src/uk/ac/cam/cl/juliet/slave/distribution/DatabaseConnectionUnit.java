@@ -3,11 +3,11 @@ package uk.ac.cam.cl.juliet.slave.distribution;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DatabaseConnectionUnit implements DatabaseConnection {
 	private Connection connection;
-	private ArrayList<PreparedStatement> batchQuery;
+	private ConcurrentLinkedQueue<PreparedStatement> batchQuery = new ConcurrentLinkedQueue<PreparedStatement>();
 	
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
@@ -16,7 +16,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	@Override
 	public void addOrder(long orderID, long symbolIndex, long time_ns, 
 			long symbolSeqNumber, long price, long volume, boolean isSell, 
-			int tradeSession) throws SQLException {
+			int tradeSession, long packetTimestamp) throws SQLException {
 		PreparedStatement statement = this.connection.prepareStatement(
 				"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s,"
 			  + "placed_seq_num, updated_s, updated_seq_num)"
@@ -27,16 +27,17 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(3, price);
 		statement.setLong(4, volume);
 		statement.setBoolean(5, isSell);
-		statement.setLong(7, 0); //TODO use timestamp in secs from latest Source Time Reference msg
+		statement.setLong(7, packetTimestamp); //use timestamp in secs from packet
 		statement.setLong(8, symbolSeqNumber);
-		statement.setLong(9, 0); //TODO use timestamp in secs from latest Source Time Reference msg
+		statement.setLong(9, packetTimestamp); //use timestamp in secs from packet
 		statement.setLong(10, symbolSeqNumber);
 		batchQuery.add(statement);
 	}
 	
 	@Override
 	public void modifyOrder(long orderID, long symbolIndex, long time_ns, 
-			long symbolSeqNumber, long price, long volume, boolean isSell) 
+			long symbolSeqNumber, long price, long volume, boolean isSell,
+			long packetTimestamp) 
 					throws SQLException {
 		//TODO update the order in the order-book 
 		// specified by orderID and symbolIndex
@@ -51,7 +52,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	
 	@Override
 	public void deleteOrder(long orderID, long symbolIndex, long time_ns, 
-			long symbolSeqNumber) throws SQLException {
+			long symbolSeqNumber, long packetTimestamp) throws SQLException {
 		//TODO delete the order from the order book 
 		// specified by orderID and symbolIndex
 	}
@@ -105,5 +106,16 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			long symbolSeqNumber, int tradingSession) throws SQLException {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public void commit() throws SQLException{
+		PreparedStatement ps;
+		while ((ps = batchQuery.poll())!=null) {
+			ps.execute();
+		}
+	}
+	
+	public void setConnection(Connection connection) {
+		this.connection = connection;
 	}
 }
