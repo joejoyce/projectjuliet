@@ -23,7 +23,7 @@ public interface DatabaseConnection {
 	 */
 	public void addOrder(long orderID, long symbolIndex, long time_ns, 
 			long symbolSeqNumber, long price, long volume, boolean isSell, 
-			int tradeSession) throws SQLException;
+			int tradeSession, long packetTimestamp) throws SQLException;
 	/**
 	 * modifies an existing active order-entry in the database by overwriting
 	 * its attributes price, volume, isSell and the time.
@@ -41,14 +41,14 @@ public interface DatabaseConnection {
 	 * @throws SQLException
 	 */
 	public void modifyOrder(long orderID, long symbolIndex, long time_ns, 
-			long symbolSeqNumber, long price, long volume, boolean isSell) 
+			long symbolSeqNumber, long price, long volume, boolean isSell, long packetTimestamp) 
 					throws SQLException;
 	
 	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns,
 			long symbolSeqNumber, long volumeReduction);
 	
 	public void deleteOrder(long orderID, long symbolIndex, long time_ns, 
-			long symbolSeqNumber) throws SQLException;
+			long symbolSeqNumber,long packetTimestamp) throws SQLException;
 	
 	public void addTrade(long tradeID, long symbolIndex, long time_ns, 
 			long symbolSeqNumber, long prize, long volume) throws SQLException;
