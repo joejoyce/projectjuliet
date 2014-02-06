@@ -96,4 +96,10 @@ public interface DatabaseConnection {
 	public void changeTradeSession(long symbolIndex, long time_s, long time_ns,
 			long symbolSeqNumber, int tradingSession) throws SQLException;
 	
+	/**
+	 * Commits the database changes that have been accumulated
+	 * @throws SQLException
+	 */
+	public void commit() throws SQLException;
+	
 }

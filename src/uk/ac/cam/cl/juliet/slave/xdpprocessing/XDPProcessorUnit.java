@@ -64,7 +64,15 @@ public class XDPProcessorUnit implements XDPProcessor {
 			}
 			m = currentPacket.getNextMessage();
 		}
-		return result;
+		try {
+			if(result = true) { 
+				mDB.commit();
+				return true;
+			}
+		} catch (SQLException e) {
+			return false;
+		}
+		return false;
 	}
 
 	private boolean decodeSourceTimeReferenceMessage(Message m) {
