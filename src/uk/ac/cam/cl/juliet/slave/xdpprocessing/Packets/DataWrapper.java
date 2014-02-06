@@ -79,7 +79,7 @@ public abstract class DataWrapper {
 	 * @return The char
 	 */
 	public char readChar() {
-		//use a bitmask to turn negative values into corresponding positive values
+		// No need for bit masking - char is unsigned
 		return (char) mData[mDataPointer++];
 	}
 	/**

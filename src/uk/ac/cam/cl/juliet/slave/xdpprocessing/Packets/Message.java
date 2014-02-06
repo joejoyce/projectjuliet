@@ -15,7 +15,7 @@ public class Message extends DataWrapper{
 	public Message(int pSize, byte[] pData) {
 		super(pData);
 		mSize = pSize;
-		mMessageType = (int) readLong(2);
+		mMessageType = (int) readLong(2);		
 	}
 	
 	/**

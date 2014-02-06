@@ -236,9 +236,10 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long symbolIndex = m.readLong(4);
 		long symbolSequenceNumber = m.readLong(4);
 		long orderID = m.readLong(4);
+		System.out.println("OrderID: " + orderID);
 		long price = m.readLong(4);
 		long volume = m.readLong(4);
-		boolean isSell = m.readChar()== 'S';
+		boolean isSell = (m.readChar() == 'S');
 		boolean isGTC = (m.readUnsignedByte()== 1);
 		int tradeSession = m.readUnsignedByte();
 		

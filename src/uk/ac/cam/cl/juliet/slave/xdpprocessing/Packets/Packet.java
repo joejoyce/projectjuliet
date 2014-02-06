@@ -1,6 +1,6 @@
 package uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets;
 
-public class Packet extends DataWrapper{
+public class Packet extends DataWrapper {
 
 	protected int deliveryFlag;
 	protected int numberMsgs;
