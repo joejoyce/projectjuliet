@@ -34,16 +34,20 @@ public class XDPProcessorUnit implements XDPProcessor {
 				result &= decodeTradeSessionChangeMessage(m);
 				break;
 			case 100:
-				result &= decodeOrderBookAddOrderMessage(m);
+				result &= decodeOrderBookAddOrderMessage(m, 
+						currentPacket.getTimestamp());
 				break;
 			case 101:
-				result &= decodeOrderBookModifyOrderMessage(m);
+				result &= decodeOrderBookModifyOrderMessage(m, 
+						currentPacket.getTimestamp());
 				break;
 			case 102:
-				result &= decodeOrderBookDeleteOrderMessage(m);
+				result &= decodeOrderBookDeleteOrderMessage(m,
+						currentPacket.getTimestamp());
 				break;
 			case 103:
-				result &= decodeOrderBookExecutionMessage(m);
+				result &= decodeOrderBookExecutionMessage(m,
+						currentPacket.getTimestamp());
 				break;
 			case 221:
 				result &= decodeTradeCancelOrBustMessage(m);
@@ -141,7 +145,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		return true;
 	}
 
-	private boolean decodeOrderBookExecutionMessage(Message m) {
+	private boolean decodeOrderBookExecutionMessage(Message m, long timestamp) {
 		long sourcetime_ns = m.readLong(4);
 		long symbolIndex = m.readLong(4);
 		long symbolSequenceNumber = m.readLong(4);
@@ -177,7 +181,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		return true;
 	}
 
-	private boolean decodeOrderBookDeleteOrderMessage(Message m) {
+	private boolean decodeOrderBookDeleteOrderMessage(Message m, long timestamp) {
 		long sourceTime_ns = m.readLong(4);
 		long symbolIndex = m.readLong(4);
 		long symbolSequenceNumber = m.readLong(4);
@@ -195,7 +199,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		return true;
 	}
 
-	private boolean decodeOrderBookModifyOrderMessage(Message m) {
+	private boolean decodeOrderBookModifyOrderMessage(Message m, long timestamp) {
 		long sourceTime_ns = m.readLong(4);
 		long symbolIndex = m.readLong(4);
 		long SymbolSequenceNumber = m.readLong(4);
@@ -215,7 +219,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		return true;
 	}
 
-	private boolean decodeOrderBookAddOrderMessage(Message m) {
+	private boolean decodeOrderBookAddOrderMessage(Message m, long timestamp) {
 		long sourceTime_ns = m.readLong(4);
 		long symbolIndex = m.readLong(4);
 		long symbolSequenceNumber = m.readLong(4);
