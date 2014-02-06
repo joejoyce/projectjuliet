@@ -76,11 +76,11 @@ public abstract class DataWrapper {
 	/**
 	 * Read a single unsigned byte and return it as a char.
 	 * The datapointer advances by one.
-	 * @return
+	 * @return The char
 	 */
 	public char readChar() {
 		//use a bitmask to turn negative values into corresponding positive values
-		return (char) ((int) mData[mDataPointer++] & 0xFF);
+		return (char) mData[mDataPointer++];
 	}
 	/**
 	 * read a single unsigned byte and return it as an int.
@@ -89,7 +89,7 @@ public abstract class DataWrapper {
 	 */
 	public int readUnsignedByte() {
 		//use a bitmask to turn negative values into corresponding positive values
-		return mData[mDataPointer++] & 0xFF;
+		return ((int)mData[mDataPointer++]) & 0xFF;
 	}
 	/**
 	 * Reads the next size of bytes and returns them as an array and

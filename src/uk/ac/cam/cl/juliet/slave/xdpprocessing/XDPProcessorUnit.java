@@ -22,6 +22,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 		Packet currentPacket = new Packet(packet.getPacketData());
 		Message m = currentPacket.getNextMessage();
 		
+		System.out.println("Got message type: " + m.getMessageType());
+		
 		while(m != null) {
 			switch( m.getMessageType()) {
 			case 2:
@@ -66,10 +68,13 @@ public class XDPProcessorUnit implements XDPProcessor {
 		}
 		try {
 			if(result == true) { 
+				System.out.println("commiting");
 				mDB.commit();
 				return true;
 			}
 		} catch (SQLException e) {
+			System.out.println("SQLEXCEPTION========");
+			e.printStackTrace();
 			return false;
 		}
 		return false;
@@ -244,7 +249,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 					symbolSequenceNumber, price, volume, isSell, tradeSession, 
 					timestamp);
 		} catch (SQLException e) {
-			// TODO print to error log?
+			System.out.println("SQL EXCEPTION decodeOrderBookAddOrderMessage");
+			e.printStackTrace();
 			return false;
 		}
 		return true;

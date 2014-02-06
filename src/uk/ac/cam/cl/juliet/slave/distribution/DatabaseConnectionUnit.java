@@ -27,10 +27,10 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(3, price);
 		statement.setLong(4, volume);
 		statement.setBoolean(5, isSell);
-		statement.setLong(7, packetTimestamp); //use timestamp in secs from packet
-		statement.setLong(8, symbolSeqNumber);
-		statement.setLong(9, packetTimestamp); //use timestamp in secs from packet
-		statement.setLong(10, symbolSeqNumber);
+		statement.setLong(6, packetTimestamp); //use timestamp in secs from packet
+		statement.setLong(7, symbolSeqNumber);
+		statement.setLong(8, packetTimestamp); //use timestamp in secs from packet
+		statement.setLong(9, symbolSeqNumber);
 		batchQuery.add(statement);
 	}
 	
@@ -110,7 +110,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	@Override
 	public void commit() throws SQLException{
 		PreparedStatement ps;
-		while ((ps = batchQuery.poll())!=null) {
+		System.out.println("About to comit");
+		while( (ps = batchQuery.poll()) != null) {
+			System.out.println("Commiting one part----------");
 			ps.execute();
 		}
 	}

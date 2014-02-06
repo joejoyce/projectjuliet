@@ -53,14 +53,14 @@ CREATE TABLE IF NOT EXISTS trade (
 
 DROP TABLE IF EXISTS order_book;
 CREATE TABLE IF NOT EXISTS order_book (
-  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+  order_id int(10) unsigned NOT NULL,
   symbol_id int(10) unsigned NOT NULL,
   price int(10) unsigned NOT NULL,
   volume int(10) unsigned NOT NULL,
-  is_ask bit(1) NOT NULL,
+  is_ask bit(1) NOT NULL, 
   placed_s int(10) unsigned NOT NULL,
   placed_seq_num int(10) unsigned NOT NULL,
   updated_s int(10) unsigned NOT NULL,
   updated_seq_num int(10) unsigned NOT NULL,
-  PRIMARY KEY(id)
+  PRIMARY KEY(order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;

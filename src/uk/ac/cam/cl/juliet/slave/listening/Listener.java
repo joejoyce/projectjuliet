@@ -54,9 +54,9 @@ public class Listener {
 			SQLException {
 		this.socket = new Socket(server, port);
 		this.input = new ObjectInputStream(this.socket.getInputStream());
-		this.output = new ObjectOutputStream(this.socket.getOutputStream());
-
-		this.databaseConnection = new DatabaseConnectionUnit(null);
+		this.output = new ObjectOutputStream(this.socket.getOutputStream());		
+		
+		this.databaseConnection = new DatabaseConnectionUnit(DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword"));
 		this.xdp = new XDPProcessorUnit(this.databaseConnection);
 		// TODO Create query processor
 
@@ -95,19 +95,16 @@ public class Listener {
 	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
-			System.out.println("Got new raw packet");
 			if (container instanceof ConfigurationPacket)
 				handleConfigurationPacket((ConfigurationPacket) container);
 			else
 				this.requestQueue.add(container);
 		} catch (ClassNotFoundException | ClassCastException e) {
-			System.err
-					.println("An unexpected object was recieved from the server.");
+			System.err.println("An unexpected object was recieved from the server.");
 			e.printStackTrace();
 			System.exit(1);
 		} catch (IOException e) {
-			System.err
-					.println("An error occurred communicating with the server.");
+			System.err.println("An error occurred communicating with the server.");
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -118,9 +115,7 @@ public class Listener {
 			Container container = this.requestQueue.take();
 
 			if (container instanceof XDPRequest) {
-				System.out.println("Processing XDPRequestpacket");				
 				processXDPRequest((XDPRequest) container);
-				System.out.println("finished procesing packet");				
 			} else if (container instanceof QueryPacket) {
 				processQueryPacket((QueryPacket) container);
 			} else if (container instanceof StringTestPacket) {
