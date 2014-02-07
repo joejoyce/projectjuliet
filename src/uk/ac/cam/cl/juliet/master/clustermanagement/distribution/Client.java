@@ -70,7 +70,7 @@ public class Client {
 	private void checkoutContainer(InFlightContainer container) {
 		workCount++;
 		jobqueue.add(container);
-		System.out.println("Added to job queue");		
+		System.out.println("Added to job queue: " + jobqueue.size());		
 		hash.put(container.getPacketId(), container);
 	}
 	
@@ -83,9 +83,13 @@ public class Client {
 	private InFlightContainer checkbackContainer(Container container) {
 		Long l = container.getPacketId();
 		InFlightContainer cont = hash.get(l);
+		System.out.println("About to get backing: " + l);
 		if(null != cont) {
 			cont.setReplyRecieved();
 			hash.remove(l);
+			// Pretty sure this should be here? - Scott
+			jobqueue.remove(cont);
+			System.out.println("Removed from job queue: " + l);
 			workCount--;
 		}
 		return cont;
@@ -139,6 +143,7 @@ public class Client {
 					Object recieve = null;
 					try {
 						recieve = in.readObject();
+						System.out.println("Boom");
 					} catch (ClassNotFoundException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -151,6 +156,8 @@ public class Client {
 						//fantastic!
 						//Count the packets back in
 						Container container = (Container)recieve;
+						System.out.println("recieved ack for: " + container.getPacketId());
+						
 						InFlightContainer record = checkbackContainer(container);
 						if(record != null)
 							record.executeCallback(container);
@@ -171,9 +178,8 @@ public class Client {
 						Container c = sendQueue.take();
 						InFlightContainer container = new InFlightContainer(c);
 						checkoutContainer(container);
-						System.out.println("Client taken packet, avbout to write object to out");
 						out.writeObject(c);
-						System.out.println("Written obj");
+						System.out.println("Written obj to client");
 					} catch ( InterruptedException e){
 						e.printStackTrace();
 						return;
@@ -211,6 +217,7 @@ public class Client {
 		c.setPacketId(uid);
 		try {
 			sendQueue.put(c);
+			System.out.println("Added to send queue: " + sendQueue.size());
 		} catch (InterruptedException e) {
 			return -1;
 		}
@@ -258,6 +265,7 @@ public class Client {
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.hasReplyRecieved()) {
 						//Reply hasn't been received so need to send again on a different node
+						System.out.println("Resending packet");
 						try {
 							parent.sendPacket(ifc.getContainer(),ifc.getCallback());
 						} catch (NoClusterException e) {

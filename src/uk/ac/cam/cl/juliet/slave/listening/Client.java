@@ -17,11 +17,11 @@ public class Client {
 		} catch (IOException e) {
 			System.err.println("An error occurred communicating with the server.");
 			e.printStackTrace();
-			System.exit(1);
+			System.exit(0);
 		} catch (SQLException e) {
 			System.err.println("A database error occurred.");
 			e.printStackTrace();
-			System.exit(1);
+			System.exit(0);
 		}
 	}
 }

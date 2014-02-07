@@ -25,7 +25,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		System.out.println("Got message type: " + m.getMessageType());
 		
 		while(m != null) {
-			switch( m.getMessageType()) {
+			switch(m.getMessageType()) {
 			case 2:
 				result &= decodeSourceTimeReferenceMessage(m);
 				break;
@@ -36,20 +36,16 @@ public class XDPProcessorUnit implements XDPProcessor {
 				result &= decodeTradeSessionChangeMessage(m);
 				break;
 			case 100:
-				result &= decodeOrderBookAddOrderMessage(m, 
-						currentPacket.getTimestamp());
+				result &= decodeOrderBookAddOrderMessage(m, currentPacket.getTimestamp());
 				break;
 			case 101:
-				result &= decodeOrderBookModifyOrderMessage(m, 
-						currentPacket.getTimestamp());
+				result &= decodeOrderBookModifyOrderMessage(m, currentPacket.getTimestamp());
 				break;
 			case 102:
-				result &= decodeOrderBookDeleteOrderMessage(m,
-						currentPacket.getTimestamp());
+				result &= decodeOrderBookDeleteOrderMessage(m, currentPacket.getTimestamp());
 				break;
 			case 103:
-				result &= decodeOrderBookExecutionMessage(m,
-						currentPacket.getTimestamp());
+				result &= decodeOrderBookExecutionMessage(m, currentPacket.getTimestamp());
 				break;
 			case 221:
 				result &= decodeTradeCancelOrBustMessage(m);
@@ -61,13 +57,15 @@ public class XDPProcessorUnit implements XDPProcessor {
 				result &= StockSummaryMessage(m);
 				break;
 			default:
-				// An unsupported message has been seen,
-				// therefore, do nothing
+				System.out.println("XDPProcessor unknown message type");
 			}
 			m = currentPacket.getNextMessage();
 		}
+		//TODO: Remove this
+		result = true;
 		try {
 			if(result == true) { 
+				System.out.println("Result was true");
 				mDB.commit();
 				return true;
 			}
@@ -86,7 +84,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 		try {
 			mDB.addSourceTimeReference(symbolIndex, symbolSequenceNumber, timeReference);
 		} catch (SQLException e) {
-			// TODO write to log?
+			System.out.println("SQL EXCEPTION decodeSourceTimeReferenceMessage");
+			e.printStackTrace();
 			return false;
 		}
 		
@@ -112,7 +111,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 					sourceTime_s, sourceTime_ns, symbolSequenceNumber,
 					price, volume);
 		} catch (SQLException e) {
-			// TODO write to log?
+			System.out.println("SQL EXCEPTION decodeTradeCorrectionMessage");
+			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -132,7 +132,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 			mDB.addStockSummary(symbolIndex, sourceTime_s, sourceTime_ns,
 					highPrice, lowPrice, openPrice, closePrice, totalVolume);
 		} catch (SQLException e) {
-			// TODO write to error log
+			System.out.println("SQL EXCEPTION StockSummaryMessage");
+			e.printStackTrace();
 			return false;
 		}
 		
@@ -150,7 +151,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 		try {
 			mDB.cancelTrade(originalTradeID, symbolIndex, sourceTime_s, sourceTime_ns, SymbolSequenceNumber);
 		} catch (SQLException e) {
-			// TODO write to error log or something similar?
+			System.out.println("SQL EXCEPTION decodeTradeCancelOrBustMessage");
+			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -186,7 +188,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 			}
 			
 		} catch (SQLException e) {
-			// TODO write to error log?
+			System.out.println("SQL EXCEPTION decodeOrderBookExecutionMessage");
+			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -204,8 +207,9 @@ public class XDPProcessorUnit implements XDPProcessor {
 		try {
 			mDB.deleteOrder(orderID, symbolIndex, sourceTime_ns, symbolSequenceNumber,
 					timestamp);
-		} catch (SQLException sqle) {
-			//TODO print to an error log?
+		} catch (SQLException e) {
+			System.out.println("SQL EXCEPTION decodeOrderBookDeleteOrderMessage");
+			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -225,7 +229,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 			mDB.modifyOrder(orderID, symbolIndex, sourceTime_ns,
 					SymbolSequenceNumber, price, volume, isSell, timestamp);
 		} catch (SQLException e) {
-			// TODO write to an error log?
+			System.out.println("SQL EXCEPTION decodeOrderBookModifyOrderMessage");
+			e.printStackTrace();
 			return false;
 		}
 		return true;
@@ -252,6 +257,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 			e.printStackTrace();
 			return false;
 		}
+		System.out.println("returning true");
 		return true;
 	}
 
@@ -266,14 +272,14 @@ public class XDPProcessorUnit implements XDPProcessor {
 			mDB.changeTradeSession(symbolIndex, sourceTime_s, sourceTime_ns,
 					symbolSequenceNumber, tradingSession);
 		} catch (SQLException e) {
-			// TODO write to error-log or something?
-						return false;
+			System.out.println("SQL EXCEPTION decodeTradeSessionChangeMessage");
+			e.printStackTrace();
+			return false;
 		}
 		return false;
 	}
 
-	private boolean decodeSymbolMappingMessage(Message m) {
-		
+	private boolean decodeSymbolMappingMessage(Message m) {		
 		long symbolIndex = m.readLong(4);
 		String symbol = m.readString(11); 
 		// Jump the filler
@@ -295,7 +301,8 @@ public class XDPProcessorUnit implements XDPProcessor {
 			mDB.addSymbolMappingEntry(symbolIndex, symbol, priceScaleCode, 
 					prevClosePrice, prevCloseVolume);
 		} catch (SQLException e) {
-			// TODO write to error-log or something?
+			System.out.println("SQL EXCEPTION decodeSymbolMappingMessage");
+			e.printStackTrace();
 			return false;
 		}
 		return true;

@@ -50,8 +50,7 @@ public class Listener {
 	 *            The port which packets are being sent from.
 	 * @throws IOException
 	 */
-	public void listen(String server, int port) throws IOException,
-			SQLException {
+	public void listen(String server, int port) throws IOException, SQLException {
 		this.socket = new Socket(server, port);
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());		
@@ -64,8 +63,9 @@ public class Listener {
 			this.processingThreads[i] = new Thread() {
 				@Override
 				public void run() {
-					while (true)
+					while (true) {
 						processPacket();
+					}
 				}
 			};
 		}
@@ -82,12 +82,18 @@ public class Listener {
 		// Sends any waiting responses back to the server.
 		while (true) {
 			try {
-				Container response = responseQueue.take();
-				synchronized (output) {
-					output.writeObject(response);
-					output.flush();
+				Container response = this.responseQueue.poll();
+				if(response == null) {
+					System.out.println("null!!!");
+					System.out.println("resqueue size: " + responseQueue.size());
+					continue;
 				}
-			} catch (InterruptedException e) {
+				System.out.println("---- took respone off the queuu to send back: " + response.getPacketId());
+				output.writeObject(response);
+				System.out.println("---- Sending packet ack back for : " + response.getPacketId());
+				output.flush();
+			} catch(IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -95,10 +101,14 @@ public class Listener {
 	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
-			if (container instanceof ConfigurationPacket)
+			System.out.println("Got new object");
+			if (container instanceof ConfigurationPacket) {
 				handleConfigurationPacket((ConfigurationPacket) container);
-			else
+			}
+			else {
 				this.requestQueue.add(container);
+				System.out.println("added to requestQueue: " + container.getPacketId());
+			}
 		} catch (ClassNotFoundException | ClassCastException e) {
 			System.err.println("An unexpected object was recieved from the server.");
 			e.printStackTrace();
@@ -112,8 +122,9 @@ public class Listener {
 
 	private void processPacket() {
 		try {
+			System.out.println("About to take of request queue");
 			Container container = this.requestQueue.take();
-
+			
 			if (container instanceof XDPRequest) {
 				processXDPRequest((XDPRequest) container);
 			} else if (container instanceof QueryPacket) {
@@ -121,13 +132,14 @@ public class Listener {
 			} else if (container instanceof StringTestPacket) {
 				System.out.println(container);
 			} else {
-				// TODO: unknown packet - throw exception?
+				System.out.println("Unknown packet");
 			}
 		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 
 		// If the response queue is getting too big, send all responses
-		if (this.responseQueue.size() > 20) {
+	/*	if (this.responseQueue.size() > 20) {
 			synchronized (output) {
 				try {
 					Container response;
@@ -135,19 +147,23 @@ public class Listener {
 						output.writeObject(response);
 					output.flush();
 				} catch (IOException e) {
-					System.err
-							.println("An error occurred sending a response to the server");
+					System.err.println("An error occurred sending a response to the server");
 					e.printStackTrace();
 					System.exit(1);
 				}
 			}
-		}
+		}*/
 	}
 
 	private void processXDPRequest(XDPRequest container) {
 		boolean result = this.xdp.decode(container);
 		XDPResponse response = new XDPResponse(container.getPacketId(), result);
-		responseQueue.add(response);
+		try {
+			this.responseQueue.put(response);			
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Added response: " + response.getPacketId() + ", to respoinsequeue, queue size: " + responseQueue.size());
 	}
 
 	private void processQueryPacket(QueryPacket container) {
@@ -163,8 +179,7 @@ public class Listener {
 								"root", "rootword"));
 
 			} catch (SQLException e) {
-				System.err
-						.println("An error occurred connecting to the database");
+				System.err.println("An error occurred connecting to the database");
 				e.printStackTrace();
 				System.exit(1);
 			}
