@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
@@ -34,7 +35,7 @@ public class Listener {
 	private Thread receiveThread;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
-	private LinkedBlockingQueue<Container> responseQueue = new LinkedBlockingQueue<Container>();
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(20);
 	private LinkedBlockingQueue<Container> requestQueue = new LinkedBlockingQueue<Container>();
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
@@ -54,9 +55,12 @@ public class Listener {
 			SQLException {
 		this.socket = new Socket(server, port);
 		this.input = new ObjectInputStream(this.socket.getInputStream());
-		this.output = new ObjectOutputStream(this.socket.getOutputStream());		
-		
-		this.databaseConnection = new DatabaseConnectionUnit(DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword"));
+		this.output = new ObjectOutputStream(this.socket.getOutputStream());
+
+		this.databaseConnection = new DatabaseConnectionUnit(
+				DriverManager.getConnection(
+						"jdbc:mysql://localhost:3306/juliet", "root",
+						"rootword"));
 		this.xdp = new XDPProcessorUnit(this.databaseConnection);
 		// TODO Create query processor
 
@@ -83,10 +87,8 @@ public class Listener {
 		while (true) {
 			try {
 				Container response = responseQueue.take();
-				synchronized (output) {
-					output.writeObject(response);
-					output.flush();
-				}
+				output.writeObject(response);
+				output.flush();
 			} catch (InterruptedException e) {
 			}
 		}
@@ -100,11 +102,13 @@ public class Listener {
 			else
 				this.requestQueue.add(container);
 		} catch (ClassNotFoundException | ClassCastException e) {
-			System.err.println("An unexpected object was recieved from the server.");
+			System.err
+					.println("An unexpected object was recieved from the server.");
 			e.printStackTrace();
 			System.exit(1);
 		} catch (IOException e) {
-			System.err.println("An error occurred communicating with the server.");
+			System.err
+					.println("An error occurred communicating with the server.");
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -125,33 +129,28 @@ public class Listener {
 			}
 		} catch (InterruptedException e) {
 		}
-
-		// If the response queue is getting too big, send all responses
-		if (this.responseQueue.size() > 20) {
-			synchronized (output) {
-				try {
-					Container response;
-					while ((response = this.responseQueue.poll()) != null)
-						output.writeObject(response);
-					output.flush();
-				} catch (IOException e) {
-					System.err
-							.println("An error occurred sending a response to the server");
-					e.printStackTrace();
-					System.exit(1);
-				}
-			}
-		}
 	}
 
 	private void processXDPRequest(XDPRequest container) {
 		boolean result = this.xdp.decode(container);
 		XDPResponse response = new XDPResponse(container.getPacketId(), result);
-		responseQueue.add(response);
+		while (true) {
+			try {
+				responseQueue.put(response);
+				return;
+			} catch (InterruptedException e) {
+			}
+		}
 	}
 
 	private void processQueryPacket(QueryPacket container) {
-		responseQueue.add(this.query.runQuery(container));
+		while (true) {
+			try {
+				responseQueue.put(this.query.runQuery(container));
+				return;
+			} catch (InterruptedException e) {
+			}
+		}
 	}
 
 	private void handleConfigurationPacket(ConfigurationPacket packet) {
