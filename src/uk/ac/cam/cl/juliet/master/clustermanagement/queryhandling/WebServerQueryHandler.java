@@ -79,6 +79,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			Statement s = con.createStatement();
 			ResultSet res = s.executeQuery(query);
 			String jsonResults = toJSON(res);
+			System.out.println("Writing: " + jsonResults);
 			pw.print(jsonResults);
 		} catch(SQLException e) {
 			System.out.println("SQL query exception");
