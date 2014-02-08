@@ -6,10 +6,10 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.InetAddress;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.PriorityQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -51,8 +51,8 @@ public class Client {
 	
 	private static ContainerTimeComparator comparator = new ContainerTimeComparator();
 	//Keep track of the objects in flight
-	private HashMap<Long,InFlightContainer> hash = new HashMap<Long,InFlightContainer>();
-	private PriorityQueue<InFlightContainer> jobqueue = new PriorityQueue<InFlightContainer>(16,comparator);
+	private ConcurrentHashMap<Long,InFlightContainer> hash = new ConcurrentHashMap<Long,InFlightContainer>();
+	private PriorityBlockingQueue<InFlightContainer> jobqueue = new PriorityBlockingQueue<InFlightContainer>(16,comparator);
 	
 	private long totalPackets = 0;
 	private int workCount = 0;
@@ -91,6 +91,8 @@ public class Client {
 			jobqueue.remove(cont);
 			System.out.println("Removed from job queue: " + l);
 			workCount--;
+		} else {
+			System.out.println("Null InFlightContainer recieved from hash");
 		}
 		return cont;
 	}
