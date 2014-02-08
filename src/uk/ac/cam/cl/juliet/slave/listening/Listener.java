@@ -7,7 +7,6 @@ import java.net.Socket;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
@@ -36,7 +35,7 @@ public class Listener {
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
 	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(20);
-	private LinkedBlockingQueue<Container> requestQueue = new LinkedBlockingQueue<Container>();
+private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Container>(20);
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
 	private QueryProcessor query;
@@ -57,8 +56,7 @@ public class Listener {
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());
 
-		this.databaseConnection = new DatabaseConnectionUnit(DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root",
-						"rootword"));
+		this.databaseConnection = new DatabaseConnectionUnit(DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword"));
 		this.xdp = new XDPProcessorUnit(this.databaseConnection);
 		// TODO Create query processor
 
@@ -97,21 +95,24 @@ public class Listener {
 	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
-			System.out.println("Got obj");
 			if (container instanceof ConfigurationPacket)
 				handleConfigurationPacket((ConfigurationPacket) container);
 			else {
-				this.requestQueue.add(container);
-				System.out.println("added to request queue: " + requestQueue.size());
+				while (true) {
+					try {
+						this.requestQueue.put(container);
+						break;
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
 			}
 		} catch (ClassNotFoundException | ClassCastException e) {
-			System.err
-					.println("An unexpected object was recieved from the server.");
+			System.err.println("An unexpected object was recieved from the server.");
 			e.printStackTrace();
 			System.exit(1);
 		} catch (IOException e) {
-			System.err
-					.println("An error occurred communicating with the server.");
+			System.err.println("An error occurred communicating with the server.");
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -163,9 +164,7 @@ public class Listener {
 		String ip = packet.getSetting("db.addr");
 		if (ip != null) {
 			try {
-				this.databaseConnection.setConnection(DriverManager
-						.getConnection("jdbc:mysql://" + ip + ":3306/juliet",
-								"root", "rootword"));
+				this.databaseConnection.setConnection(DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/juliet", "root", "rootword"));
 
 			} catch (SQLException e) {
 				System.err.println("An error occurred connecting to the database");
