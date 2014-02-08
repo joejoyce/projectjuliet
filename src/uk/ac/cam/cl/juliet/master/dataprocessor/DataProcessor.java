@@ -29,7 +29,6 @@ public class DataProcessor {
 				packet = dataStream.getPacket();
 				if(packet.getDeliveryFlag() == 11) {
 					clusterMaster.sendPacket(packet);
-					System.out.println("Sent packet");
 				}
 			} catch (IOException e) {
 				System.err.println("Datastream error");

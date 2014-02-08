@@ -35,8 +35,7 @@ public class Listener {
 	private Thread receiveThread;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
-	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(
-			20);
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(20);
 	private LinkedBlockingQueue<Container> requestQueue = new LinkedBlockingQueue<Container>();
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
@@ -58,9 +57,7 @@ public class Listener {
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());
 
-		this.databaseConnection = new DatabaseConnectionUnit(
-				DriverManager.getConnection(
-						"jdbc:mysql://localhost:3306/juliet", "root",
+		this.databaseConnection = new DatabaseConnectionUnit(DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root",
 						"rootword"));
 		this.xdp = new XDPProcessorUnit(this.databaseConnection);
 		// TODO Create query processor
@@ -90,7 +87,9 @@ public class Listener {
 				Container response = responseQueue.take();
 				output.writeObject(response);
 				output.flush();
+				System.out.println("sent: size: " + responseQueue.size());
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -98,10 +97,13 @@ public class Listener {
 	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
+			System.out.println("Got obj");
 			if (container instanceof ConfigurationPacket)
 				handleConfigurationPacket((ConfigurationPacket) container);
-			else
+			else {
 				this.requestQueue.add(container);
+				System.out.println("added to request queue: " + requestQueue.size());
+			}
 		} catch (ClassNotFoundException | ClassCastException e) {
 			System.err
 					.println("An unexpected object was recieved from the server.");
@@ -118,7 +120,7 @@ public class Listener {
 	private void processPacket() {
 		try {
 			Container container = this.requestQueue.take();
-
+			System.out.println("Adde new packet to requestQueure");
 			if (container instanceof XDPRequest) {
 				processXDPRequest((XDPRequest) container);
 			} else if (container instanceof QueryPacket) {
@@ -129,6 +131,7 @@ public class Listener {
 				// TODO: unknown packet - throw exception?
 			}
 		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -140,6 +143,7 @@ public class Listener {
 				responseQueue.put(response);
 				return;
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -150,6 +154,7 @@ public class Listener {
 				responseQueue.put(this.query.runQuery(container));
 				return;
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -163,8 +168,7 @@ public class Listener {
 								"root", "rootword"));
 
 			} catch (SQLException e) {
-				System.err
-						.println("An error occurred connecting to the database");
+				System.err.println("An error occurred connecting to the database");
 				e.printStackTrace();
 				System.exit(1);
 			}

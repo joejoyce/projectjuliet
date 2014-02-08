@@ -188,8 +188,10 @@ public class Client {
 						closeClient();
 						return;
 					}
-					if(this.isInterrupted())
+					if(this.isInterrupted()) {
+						System.out.println("BAD----------------");
 						return; //In case it's not thrown whilst waiting?
+					}
 				}
 			}
 		};
