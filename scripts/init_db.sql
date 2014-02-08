@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS Juliet;
-CREATE DATABASE Juliet DEFAULT CHARACTER SET UTF8 COLLATE utf8_general_ci;
-USE Juliet;
+DROP DATABASE IF EXISTS juliet;
+CREATE DATABASE juliet DEFAULT CHARACTER SET UTF8 COLLATE utf8_general_ci;
+USE juliet;
 
 DROP TABLE IF EXISTS symbol;
 CREATE TABLE IF NOT EXISTS symbol (
@@ -62,5 +62,5 @@ CREATE TABLE IF NOT EXISTS order_book (
   placed_seq_num int(10) unsigned NOT NULL,
   updated_s int(10) unsigned NOT NULL,
   updated_seq_num int(10) unsigned NOT NULL,
-  PRIMARY KEY(order_id)
+  PRIMARY KEY(order_id, symbol_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;

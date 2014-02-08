@@ -164,14 +164,14 @@ private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Cont
 	private void handleConfigurationPacket(ConfigurationPacket packet) {
 		String ip = packet.getSetting("db.addr");
 		if (ip != null) {
-			try {
+			/*try {
 				this.databaseConnection.setConnection(DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/juliet", "root", "rootword"));
 
 			} catch (SQLException e) {
 				System.err.println("An error occurred connecting to the database");
 				e.printStackTrace();
 				System.exit(1);
-			}
+			}*/
 		}
 
 		if (!this.processingThreads[0].isAlive()) {
