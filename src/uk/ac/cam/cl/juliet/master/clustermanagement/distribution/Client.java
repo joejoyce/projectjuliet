@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.InetAddress;
 import java.util.Comparator;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -45,7 +46,7 @@ public class Client {
 	private static ScheduledExecutorService workers = null;
 	
 	private ScheduledFuture<?> cleaner = null;
-	private LinkedBlockingQueue<Container> sendQueue = new LinkedBlockingQueue<Container>();
+	private ArrayBlockingQueue<Container> sendQueue = new ArrayBlockingQueue<Container>(20);
 	
 	private static AtomicInteger numberClients = new AtomicInteger(0);
 	
@@ -191,7 +192,7 @@ public class Client {
 						return;
 					}
 					if(this.isInterrupted()) {
-						System.out.println("BAD----------------");
+						System.out.println("BAD");
 						return; //In case it's not thrown whilst waiting?
 					}
 				}

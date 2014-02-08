@@ -95,6 +95,7 @@ private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Cont
 	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
+			System.out.println("Got new object");
 			if (container instanceof ConfigurationPacket)
 				handleConfigurationPacket((ConfigurationPacket) container);
 			else {
