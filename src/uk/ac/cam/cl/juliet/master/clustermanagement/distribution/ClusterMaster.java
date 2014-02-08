@@ -182,31 +182,59 @@ public class ClusterMaster  {
 		removeClient(ob);
 	}
 	
+	/**
+	 * 
+	 * @return The next unique id that should be used for sending packets to the cluster
+	 */
 	public long getNextId() {
 		return nextId.incrementAndGet();
 	}
 	
+	/**
+	 * 
+	 * @param key
+	 * @return A String with the value of that setting
+	 */
 	public String getSetting( String key ) {
 		return cp.getSetting(key);
 	}
 	
+	/**
+	 * This method will set the key to the value specified and then broadcast the new
+	 * configuration out to all the connected Clients
+	 * @param key The string key 
+	 * @param value The value to set it to
+	 */
 	public void setSetting ( String key, String value) {
 		cp.setSetting(key,value);
 		//Push out to all clients
-		Iterator<Client> iter = clientQueue.iterator();
-		while(iter.hasNext())
-			iter.next().send(cp);
+		broadcast(cp);
 	}
 	/**
-	 * Returns the configuration packet that this ClusterMaster uses to 
-	 * @return
+	 * Do not set properties on the object that this returns as it will cause a broadcast 
+	 * of the update to the clients. That will only occur if you use the methods directly
+	 * On the clusterMaster.
+	 * @return The configurationPacket that this ClusterMaster uses to keep track of config
 	 */
 	public ConfigurationPacket getConfiguration() {
 		return cp;
 	}
 	
+	/**
+	 * 
+	 * @return An array of currently connected Clients
+	 */
 	public Client[] listClients() {
 		return (Client[]) clientQueue.toArray();
 	}
-
+	/**
+	 * Sends the Container c out to all currently connected clients
+	 * @param c
+	 */
+	public void broadcast(Container c) {
+		c.setPacketId(getNextId());
+		Iterator<Client> iter = clientQueue.iterator();
+		while(iter.hasNext())
+			iter.next().broadcast(c);
+	}
 }

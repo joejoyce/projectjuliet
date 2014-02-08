@@ -182,6 +182,7 @@ public class Client {
 						InFlightContainer container = new InFlightContainer(c);
 						checkoutContainer(container);
 						out.writeObject(c);
+						totalPackets++; //TODO this means it won't count objects in the queue
 						System.out.println("Written obj to client");
 					} catch ( InterruptedException e){
 						e.printStackTrace();
@@ -218,7 +219,6 @@ public class Client {
 	}
 	
 	private long send(Container c,long uid) {
-		totalPackets++; //TODO threadsafe?
 		c.setPacketId(uid);
 		try {
 			sendQueue.put(c);
