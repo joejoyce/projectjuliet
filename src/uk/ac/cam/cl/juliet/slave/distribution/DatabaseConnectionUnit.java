@@ -98,17 +98,18 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	@Override
 	public void addStockSummary(long symbolIndex, long time_s, long time_ns,
 			long highPrice, long lowPrice, long openPrice, long closePrice,
-			long totalVolume, long packetTimestamp) throws SQLException {
+			long totalVolume) throws SQLException {
 		PreparedStatement statement = this.connection.prepareStatement(
 				"INSERT INTO stock_summary (symbol_id, high_price, low_price, total_volume, "
-			  +                            "updated_s) "
-			  + "VALUES (?, ?, ?, ?, ?)"
+			  +                            "updated_s, updated_ns) "
+			  + "VALUES (?, ?, ?, ?, ?, ?)"
 		);
 		statement.setLong(1, symbolIndex);
 		statement.setLong(2, highPrice);
 		statement.setLong(3, lowPrice);
 		statement.setLong(4, totalVolume);
-		statement.setLong(5, packetTimestamp);
+		statement.setLong(5, time_s);
+		statement.setLong(6, time_ns);
 		batchQuery.add(statement);
 	}
 
