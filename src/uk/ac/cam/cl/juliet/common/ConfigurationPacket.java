@@ -1,10 +1,10 @@
 package uk.ac.cam.cl.juliet.common;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigurationPacket extends Container implements Serializable {
-	HashMap <String,String>h = new HashMap<String,String>();
+	ConcurrentHashMap <String,String>h = new ConcurrentHashMap<String,String>();
 	public String getSetting(String name) {
 		return h.get(name);
 	}

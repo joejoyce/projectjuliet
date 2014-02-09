@@ -13,7 +13,7 @@ public class InFlightContainer {
 	private Container container;
 	private long dueTime;
 	private Callback callback = null;
-	private boolean replyRecieved = false;
+	private boolean broadcast = false;
 	
 	/**
 	 * 
@@ -31,19 +31,19 @@ public class InFlightContainer {
 		return container.getPacketId();
 	}
 	
-	/**
+	 /**
 	 * 
-	 * @return returns true if a reply from the cluster to this Container has been recieved already
+	 * @return returns true if a message was broadcast
 	 */
-	public boolean hasReplyRecieved() {
-		return replyRecieved;
+	public boolean getBroadcast() {
+		return broadcast;
 	}
 	
 	/**
-	 * This tells the IFC that a reply has been received
+	 * This tells the IFC that this will be broadcast
 	 */
-	public void setReplyRecieved() {
-		replyRecieved = true;
+	public void setBroadcast(boolean bcast) {
+		broadcast = bcast;
 	}
 	
 	/**

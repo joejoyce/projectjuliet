@@ -159,7 +159,7 @@ public class ClusterMaster  {
 		if(null == c) {
 			throw new NoClusterException("The Pis have all gone :'(");
 		}
-		long l = c.send(msg);
+		long l = c.send(msg,cb);
 		clientQueue.put(c);
 		return l;
 	}

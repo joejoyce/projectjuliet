@@ -45,7 +45,7 @@ public class Client {
 	private static ScheduledExecutorService workers = null;
 	
 	private ScheduledFuture<?> cleaner = null;
-	private ArrayBlockingQueue<Container> sendQueue = new ArrayBlockingQueue<Container>(20);
+	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(40);
 	
 	private static AtomicInteger numberClients = new AtomicInteger(0);
 	
@@ -85,10 +85,8 @@ public class Client {
 		InFlightContainer cont = hash.get(l);
 		System.out.println("About to get backing: " + l);
 		if(null != cont) {
-			cont.setReplyRecieved();
-			hash.remove(l);
-			// Pretty sure this should be here? - Scott
 			jobqueue.remove(cont);
+			hash.remove(l);
 			System.out.println("Removed from job queue: " + l);
 			workCount--;
 		} else {
@@ -108,7 +106,7 @@ public class Client {
 			workers.shutdownNow();
 			workers = null;
 		}
-		cleaner.cancel(false); //Try to stop the regular operation flushing my queue
+		cleaner.cancel(false); //Try to stop the regular operation flushing my queue, waiting until finished
 		try {
 			out.close();
 			in.close(); //Should also have the effect of closing the threads that read and write on them
@@ -177,10 +175,9 @@ public class Client {
 				//This method sends the packets to the client
 				while(true) {
 					try {
-						Container c = sendQueue.take();
-						InFlightContainer container = new InFlightContainer(c);
+						InFlightContainer container = sendQueue.take();
 						checkoutContainer(container);
-						out.writeObject(c);
+						out.writeObject(container.getContainer());
 						totalPackets++; //TODO this means it won't count objects in the queue
 						System.out.println("Written obj to client");
 					} catch ( InterruptedException e){
@@ -217,10 +214,12 @@ public class Client {
 		return totalPackets;
 	}
 	
-	private long send(Container c,long uid) {
+	private long send(Container c, Callback cb, long uid,boolean bcast) {
 		c.setPacketId(uid);
+		InFlightContainer ifc = new InFlightContainer(c,cb);
+		ifc.setBroadcast(bcast);
 		try {
-			sendQueue.put(c);
+			sendQueue.put(ifc);
 			System.out.println("Added to send queue: " + sendQueue.size());
 		} catch (InterruptedException e) {
 			return -1;
@@ -229,16 +228,31 @@ public class Client {
 	}
 	/**
 	 * This method sends the specified container to the Pi, logging it as it does so.
-	 * @param c
+	 * @param c The container to send
 	 * @return The unique id of the packet being sent
 	 */
 	public long send (Container c) {
 		long uid = parent.getNextId();
-		return send(c,uid);
+		return send(c,null,uid,false);
+	}
+	/**
+	 * This method sends the specified container to the Pi, logging it as it does so.
+	 * @param c The Container to send
+	 * @param cb The callback to be run
+	 * @return The unique id of the packet being sent
+	 */	
+	public long send (Container c,Callback cb) {
+		long uid = parent.getNextId();
+		return send(c,cb,uid,false);
 	}
 	
+	/**
+	 * Send the packet to this Client ensuring that it knows that on failure resend should not be attempted
+	 * @param c The container to broadcast
+	 * @return The id of the broadcast packet
+	 */
 	public long broadcast(Container c) {
-		return send(c,c.getPacketId());
+		return send(c,null,c.getPacketId(),true);
 	}
 	//TODO mark a broadcast one as a message that it doesn't cascade on failure
 	
@@ -255,20 +269,13 @@ public class Client {
 	public void tryFlushQueue() {
 		long time = System.nanoTime();
 		InFlightContainer ifc;
-		while( null != (ifc = jobqueue.peek())) {
-			if(ifc.hasReplyRecieved()) {
-				ifc = jobqueue.poll();
-				if(null == ifc) break;
-				if(!ifc.hasReplyRecieved()) {
-					jobqueue.add(ifc);
-					break;
-				}
-			} else if( ifc.getDueTime() <= time ) {
+		if( null != (ifc = jobqueue.peek())) {
+			if( ifc.getDueTime() <= time ) {
 				//Remove and flush the rest of the queue
 				closeClient();
 				while(null != (ifc = jobqueue.poll())) {
-					if(!ifc.hasReplyRecieved()) {
-						//Reply hasn't been received so need to send again on a different node
+					if(!ifc.getBroadcast()) {
+						//Reply hasn't been received and not broadcast so resend
 						System.out.println("Resending packet");
 						try {
 							parent.sendPacket(ifc.getContainer(),ifc.getCallback());
@@ -278,7 +285,6 @@ public class Client {
 						}
 					}
 				}
-				break;
 			}
 		}
 	}
