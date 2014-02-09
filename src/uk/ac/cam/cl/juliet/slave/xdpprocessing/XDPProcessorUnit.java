@@ -54,7 +54,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 				result &= decodeTradeCorrectionMessage(m);
 				break;
 			case 223:
-				result &= StockSummaryMessage(m);
+				result &= StockSummaryMessage(m, currentPacket.getTimestamp());
 				break;
 			default:
 				System.out.println("XDPProcessor unknown message type");
@@ -118,7 +118,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		return true;
 	}
 
-	private boolean StockSummaryMessage(Message m) {
+	private boolean StockSummaryMessage(Message m, long timestamp) {
 		long sourceTime_s = m.readLong(4);
 		long sourceTime_ns = m.readLong(4);
 		long symbolIndex = m.readLong(4);
@@ -130,7 +130,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		
 		try {
 			mDB.addStockSummary(symbolIndex, sourceTime_s, sourceTime_ns,
-					highPrice, lowPrice, openPrice, closePrice, totalVolume);
+					highPrice, lowPrice, openPrice, closePrice, totalVolume, timestamp);
 		} catch (SQLException e) {
 			System.out.println("SQL EXCEPTION StockSummaryMessage");
 			e.printStackTrace();
@@ -171,7 +171,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		
 		try {
 			mDB.addTrade(tradeID, symbolIndex, sourcetime_ns, 
-					symbolSequenceNumber, price, volume);
+					symbolSequenceNumber, price, volume, timestamp);
 			// if the reasonCode is not zero, no extra modify or delete message 
 			//will be sent for that order:
 			if (reasonCode == 7) {

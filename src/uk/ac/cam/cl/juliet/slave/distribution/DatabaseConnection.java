@@ -13,7 +13,7 @@ import java.sql.Connection;
  */
 public interface DatabaseConnection {
 	/**
-	 * Add a new order to the order-book specified by the symbolIndex
+	 * Add a new order to the order book specified by the symbolIndex
 	 * 
 	 * @param orderID
 	 *            unique orderID of the new order
@@ -39,10 +39,10 @@ public interface DatabaseConnection {
 			int tradeSession, long packetTimestamp) throws SQLException;
 
 	/**
-	 * modifies an existing active order-entry in the database by overwriting
-	 * its attributes price, volume, isSell and the time. It has no effect to
-	 * the database in case the order does not exists any more in the active
-	 * order book.
+	 * Modify an existing active order book database entry
+	 * 
+	 * This method overwrites the order book entry's attributes of price, volume, isSell and time.
+	 * It has no effect to the database if the order no longer exists in the order book.
 	 * 
 	 * @param orderID
 	 *            order ID of the order to be modified
@@ -66,27 +66,93 @@ public interface DatabaseConnection {
 			long symbolSeqNumber, long price, long volume, boolean isSell,
 			long packetTimestamp) throws SQLException;
 
+	
+	/**
+	 * Reduce the volume of an order's order book database entry
+	 * 
+	 * @param orderID
+	 * @param symbolIndex
+	 * @param time_ns
+	 * @param symbolSeqNumber
+	 * @param volumeReduction
+	 * @throws SQLException
+	 */
 	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns,
-			long symbolSeqNumber, long volumeReduction);
+			long symbolSeqNumber, long volumeReduction) throws SQLException;
 
+	/**
+	 * Delete an order from the database order book
+	 * 
+	 * Note this method will delete an order book entry specified by both orderID and symbolIndex.
+	 * 
+	 * @param orderID
+	 * @param symbolIndex
+	 * @param time_ns
+	 * @param symbolSeqNumber
+	 * @param packetTimestamp
+	 * @throws SQLException
+	 */
 	public void deleteOrder(long orderID, long symbolIndex, long time_ns,
 			long symbolSeqNumber, long packetTimestamp) throws SQLException;
 
+	/**
+	 * Add a trade to the database trade book
+	 * 
+	 * @param tradeID
+	 * @param symbolIndex
+	 * @param time_ns
+	 * @param symbolSeqNumber
+	 * @param price
+	 * @param volume
+	 * @param packetTimestamp
+	 * @throws SQLException
+	 */
 	public void addTrade(long tradeID, long symbolIndex, long time_ns,
-			long symbolSeqNumber, long prize, long volume) throws SQLException;
+			long symbolSeqNumber, long price, long volume, long packetTimestamp)
+			throws SQLException;
 
+	/**
+	 * Add a stock summary to database stock summary table
+	 * 
+	 * @param symbolIndex
+	 * @param time_s
+	 * @param time_ns
+	 * @param highPrice
+	 * @param lowPrice
+	 * @param openPrice
+	 * @param closePrice
+	 * @param totalVolume
+	 * @param packetTimestamp
+	 * @throws SQLException
+	 */
 	public void addStockSummary(long symbolIndex, long time_s, long time_ns,
-			long lighPrice, long lowPrice, long openPrice, long closePrice,
-			long totalVolume) throws SQLException;
+			long highPrice, long lowPrice, long openPrice, long closePrice,
+			long totalVolume, long packetTimestamp) throws SQLException;
 
+	/**
+	 * Correct a trade entry in the database
+	 * 
+	 * This method will alter an existing trade entry specified by originalTradeID.
+	 * 
+	 * @param originalTradeID
+	 * @param tradeID
+	 * @param symbolIndex
+	 * @param time_s
+	 * @param time_ns
+	 * @param symbolSeqNumber
+	 * @param price
+	 * @param volume
+	 * @throws SQLException
+	 */
 	public void correctTrade(long originalTradeID, long tradeID,
 			long symbolIndex, long time_s, long time_ns, long symbolSeqNumber,
 			long price, long volume) throws SQLException;
 
 	/**
-	 * Adds a reference time to a stock specified by the symbol index, the
-	 * reference time maps to a symbol-sequence-number (other messages refer to
-	 * this sequence number to specify a time in seconds)
+	 * Add a reference time to a stock specified by the symbol index
+	 * 
+	 * The reference time maps to a symbol-sequence-number (other messages refer to this sequence
+	 * number to specify a time in seconds)
 	 * 
 	 * @param symbolIndex
 	 *            specifies the stock the time reference is connected to
@@ -100,19 +166,46 @@ public interface DatabaseConnection {
 	public void addSourceTimeReference(long symbolIndex, long symbolSeqNumber,
 			long referenceTime) throws SQLException;
 
+	/**
+	 * Add a symbol mapping entry to the database's symbol table
+	 * 
+	 * @param symbolIndex
+	 * @param symbol
+	 * @param priceScaleCode
+	 * @param prevClosingPrice
+	 * @param prevClosingVolume
+	 * @throws SQLException
+	 */
 	public void addSymbolMappingEntry(long symbolIndex, String symbol,
 			long priceScaleCode, long prevClosingPrice, long prevClosingVolume)
 			throws SQLException;
 
-	// TODO: This is a misleading name, it should be removeTrade or
-	// addTradeCancellation
-	// how exactly are we implementing this in the database? -Lucas
+	/**
+	 * Cancel a trade in the database
+	 * 
+	 * This method will delete a trade record from the database to reflect the cancellation of the
+	 * trade.
+	 * 
+	 * @param tradeID
+	 *            the trade ID of the trade to cancel
+	 * @param symbolIndex
+	 *            the stock to which the trade relates
+	 * @param time_s
+	 *            timestamp from the sender in seconds
+	 * @param time_ns
+	 *            timestamp from the sender in nanoseconds
+	 * @param symbolSeqNumber
+	 *            symbol-sequence-number of the stock - refers to an epoch timestamp in seconds for
+	 *            this stock
+	 * @throws SQLException
+	 */
 	public void cancelTrade(long tradeID, long symbolIndex, long time_s,
 			long time_ns, long symbolSeqNumber) throws SQLException;
 
 	/**
-	 * Change the current trade session for the symbol specified all open orders
-	 * that are not valid for the new trading session have have to be deleted
+	 * Change the current trade session for the symbol specified
+	 * 
+	 * All open orders that are not valid for the new trading session have to be deleted.
 	 * 
 	 * @param symbolIndex
 	 * @param time_s
@@ -125,14 +218,14 @@ public interface DatabaseConnection {
 			long symbolSeqNumber, int tradingSession) throws SQLException;
 
 	/**
-	 * Commits the database changes that have been accumulated
+	 * Commit the database changes that have been accumulated
 	 * 
 	 * @throws SQLException
 	 */
 	public void commit() throws SQLException;
 
 	/**
-	 * Sets the connection to the database
+	 * Set the connection to the database
 	 * 
 	 * @param connection
 	 *            The new connection to use.
