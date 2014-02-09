@@ -267,7 +267,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long symbolIndex = m.readLong(4);
 		long symbolSequenceNumber = m.readLong(4);
 		int tradingSession = m.readUnsignedByte();
-		// TODO update database
+		
 		try {
 			mDB.changeTradeSession(symbolIndex, sourceTime_s, sourceTime_ns,
 					symbolSequenceNumber, tradingSession);
