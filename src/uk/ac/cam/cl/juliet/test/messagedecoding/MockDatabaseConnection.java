@@ -180,7 +180,7 @@ public class MockDatabaseConnection implements DatabaseConnection{
 
 	@Override
 	public void addTrade(long tradeID, long symbolIndex, long time_ns,
-			long symbolSeqNumber, long price, long volume)
+			long symbolSeqNumber, long price, long volume, long packetTimestamp)
 			throws SQLException {
 		//part of the orderExecution message
 		if(!sMessageStatistics.containsKey(symbolIndex)) {
@@ -199,7 +199,7 @@ public class MockDatabaseConnection implements DatabaseConnection{
 	@Override
 	public void addStockSummary(long symbolIndex, long time_s,
 			long time_ns, long highPrice, long lowPrice,
-			long openPrice, long closePrice, long totalVolume)
+			long openPrice, long closePrice, long totalVolume, long packetTimestamp)
 			throws SQLException {
 		if(!sMessageStatistics.containsKey(symbolIndex)) {
 			MessageStatisticsDatum newDatum = new MessageStatisticsDatum();
@@ -243,8 +243,8 @@ public class MockDatabaseConnection implements DatabaseConnection{
 			sMessageStatistics.get(symbolIndex).noMsgsTimeReference++;
 		}
 		if(symbolIndex == singleStockSymbolIndex)
-			singleStockMessageLog.add("AddSourceTimeReference,"+"-"+","+"-"+","+referenceTime+","+"-"+","+
-					symbolSeqNumber);
+			singleStockMessageLog.add("AddSourceTimeReference,"+"-"+","+"-"+","+referenceTime+","
+					+"-"+","+symbolSeqNumber);
 	}
 
 	@Override
