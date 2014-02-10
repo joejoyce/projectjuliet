@@ -3,14 +3,15 @@ package uk.ac.cam.cl.juliet.slave.distribution;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.sql.Statement;
 
 public class DatabaseConnectionUnit implements DatabaseConnection {
 	private Connection connection;
-	private ConcurrentLinkedQueue<PreparedStatement> batchQuery = new ConcurrentLinkedQueue<PreparedStatement>();
+	private Statement batchQuery;
 	
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
+		this.batchQuery = connection.createStatement();
 	}
 	
 	@Override
@@ -31,7 +32,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(7, symbolSeqNumber);
 		statement.setLong(8, packetTimestamp);
 		statement.setLong(9, symbolSeqNumber);
-		batchQuery.add(statement);
+		batchQuery.addBatch(statement.toString().split(":")[1]);
 	}
 	
 	@Override
@@ -49,7 +50,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(4, symbolSeqNumber);
 		statement.setLong(5, orderID);
 		statement.setLong(6, symbolIndex);
-		batchQuery.add(statement);
+		batchQuery.addBatch(statement.toString().split(":")[1]);
+		
 	}
 	
 	@Override
@@ -62,7 +64,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(1, volumeReduction);
 		statement.setLong(2, orderID);
 		statement.setLong(3, symbolIndex);
-		batchQuery.add(statement);
+		batchQuery.addBatch(statement.toString().split(":")[1]);		
 	}
 	
 	@Override
@@ -74,7 +76,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		);
 		statement.setLong(1, orderID);
 		statement.setLong(2, symbolIndex);
-		batchQuery.add(statement);
+		batchQuery.addBatch(statement.toString().split(":")[1]);		
 	}
 	
 	@Override
@@ -92,7 +94,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(4, volume);
 		statement.setLong(5, packetTimestamp);
 		statement.setLong(6, symbolSeqNumber);
-		batchQuery.add(statement);
+		batchQuery.addBatch(statement.toString().split(":")[1]);
+		System.out.println("Added trade------------========");
 	}
 
 	@Override
@@ -110,7 +113,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(4, totalVolume);
 		statement.setLong(5, time_s);
 		statement.setLong(6, time_ns);
-		batchQuery.add(statement);
+		batchQuery.addBatch(statement.toString().split(":")[1]);
 	}
 
 	@Override
@@ -126,7 +129,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(3, price);
 		statement.setLong(4, volume);
 		statement.setLong(5, originalTradeID);
-		batchQuery.add(statement);
+		batchQuery.addBatch(statement.toString().split(":")[1]);
 	}
 
 	@Override
@@ -143,7 +146,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 				"DELETE FROM trade WHERE (trade_id = ?)"
 		);
 		statement.setLong(1, tradeID);
-		batchQuery.add(statement);
+		batchQuery.addBatch(statement.toString().split(":")[1]);
 	}
 
 	@Override
@@ -151,14 +154,14 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			long priceScaleCode, long prevClosingPrice, long prevClosingVolume)
 			throws SQLException {
 		PreparedStatement statement = this.connection.prepareStatement(
-				"INSERT INTO symbol (symbol_id, symbol, company_name, price_scale, open_price)"
+				"INSERT INTO symbol (symbol_id, symbol, company_name, price_scale, open_price) VALUES (?,?,?,?,?)"
 		);
 		statement.setLong(1, symbolIndex);
 		statement.setString(2, symbol);
 		statement.setString(3, "");
 		statement.setLong(4, priceScaleCode);
 		statement.setLong(5, prevClosingPrice);
-		batchQuery.add(statement);
+		//batchQuery.addBatch(statement.toString().split(":")[1]);
 	}
 
 	@Override
@@ -168,13 +171,13 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		// It will probably involve deleting all orders from that expire within the current trade
 		// session.
 	}
+	
 	@Override
 	public void commit() throws SQLException{
-		PreparedStatement ps;
-		while( (ps = batchQuery.poll()) != null) {
-			System.out.println("Commiting to Database");
-			ps.execute();
-		}
+		batchQuery.executeBatch();
+		batchQuery.close();
+		System.out.println("Executed batch");
+		batchQuery = connection.createStatement();
 	}
 	
 	public void setConnection(Connection connection) {
