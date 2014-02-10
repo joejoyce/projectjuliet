@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -31,11 +33,13 @@ public class Listener {
 	private static final int numProcessingThreads = 4;
 
 	private Socket socket;
+	private String ip;
+	private int port;
 	private Thread receiveThread;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
-	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(20);
-private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Container>(20);
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(200);
+	private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Container>(200);
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
 	private QueryProcessor query;
@@ -50,8 +54,9 @@ private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Cont
 	 *            The port which packets are being sent from.
 	 * @throws IOException
 	 */
-	public void listen(String server, int port) throws IOException,
-			SQLException {
+	public void listen(String server, int port) throws IOException, SQLException {
+		this.ip = server;
+		this.port = port;
 		this.socket = new Socket(server, port);
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());
@@ -86,8 +91,19 @@ private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Cont
 				output.writeObject(response);
 				output.flush();
 				System.out.println("sent: size: " + responseQueue.size());
-			} catch (InterruptedException e) {
+			} catch (IOException e) {
 				e.printStackTrace();
+				// Just attempt to reconnect
+				try {
+					this.socket = new Socket(ip,port);
+					this.input = new ObjectInputStream(this.socket.getInputStream());
+					this.output = new ObjectOutputStream(this.socket.getOutputStream());
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			} catch(InterruptedException e) {
+				e.printStackTrace();
+				System.exit(0);
 			}
 		}
 	}
@@ -111,18 +127,25 @@ private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Cont
 		} catch (ClassNotFoundException | ClassCastException e) {
 			System.err.println("An unexpected object was recieved from the server.");
 			e.printStackTrace();
-			System.exit(1);
+			System.exit(0);
 		} catch (IOException e) {
 			System.err.println("An error occurred communicating with the server.");
 			e.printStackTrace();
-			System.exit(1);
-		}
+			// Just attempt to reconnect
+			try {
+				this.socket = new Socket(ip,port);
+				this.input = new ObjectInputStream(this.socket.getInputStream());
+				this.output = new ObjectOutputStream(this.socket.getOutputStream());
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		} 
 	}
 
 	private void processPacket() {
 		try {
 			Container container = this.requestQueue.take();
-			System.out.println("Adde new packet to requestQueure");
+			System.out.println("Removed packet from requestQueure");
 			if (container instanceof XDPRequest) {
 				processXDPRequest((XDPRequest) container);
 			} else if (container instanceof QueryPacket) {

@@ -75,7 +75,8 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 * @param pw PrintWriter to the webserver socket
 	 */
 	public void runBasicQuery(String query, PrintWriter pw) {
-		try {			
+		try {		
+			System.out.println("Got query: " + query);
 			Statement s = con.createStatement();
 			ResultSet res = s.executeQuery(query);
 			String jsonResults = toJSON(res);

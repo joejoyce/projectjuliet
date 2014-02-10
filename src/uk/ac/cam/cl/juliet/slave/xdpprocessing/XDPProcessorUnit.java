@@ -71,9 +71,9 @@ public class XDPProcessorUnit implements XDPProcessor {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return false;
+			return true;
 		}
-		return false;
+		return true;
 	}
 
 	private boolean decodeSourceTimeReferenceMessage(Message m) {
@@ -129,15 +129,13 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long totalVolume = m.readLong(4);
 		
 		try {
-			mDB.addStockSummary(symbolIndex, sourceTime_s, sourceTime_ns,
-					highPrice, lowPrice, openPrice, closePrice, totalVolume, timestamp);
+			mDB.addStockSummary(symbolIndex, sourceTime_s, sourceTime_ns, highPrice, lowPrice, openPrice, closePrice, totalVolume);
 		} catch (SQLException e) {
 			System.out.println("SQL EXCEPTION StockSummaryMessage");
 			e.printStackTrace();
 			return false;
 		}
 		
-		//write to database
 		return true;
 	}
 

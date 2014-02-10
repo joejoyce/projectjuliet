@@ -12,7 +12,7 @@ import java.util.Map.Entry;
 
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
 
-public class MockDatabaseConnection implements DatabaseConnection{
+public class MockDatabaseConnection implements DatabaseConnection {
 	private HashMap<Long, MessageStatisticsDatum> sMessageStatistics; 
 	private PrintWriter symbolMappingOut;
 	private long singleStockSymbolIndex;
@@ -199,7 +199,7 @@ public class MockDatabaseConnection implements DatabaseConnection{
 	@Override
 	public void addStockSummary(long symbolIndex, long time_s,
 			long time_ns, long highPrice, long lowPrice,
-			long openPrice, long closePrice, long totalVolume, long packetTimestamp)
+			long openPrice, long closePrice, long totalVolume)
 			throws SQLException {
 		if(!sMessageStatistics.containsKey(symbolIndex)) {
 			MessageStatisticsDatum newDatum = new MessageStatisticsDatum();
