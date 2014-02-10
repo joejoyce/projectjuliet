@@ -1,7 +1,31 @@
 extends layout
 
+block jsStuff
+  script(src='/js/main.js')
+
 block content
   .page-header
-    h3 Stock
-    p Company: #{companyId}
- 
+    h3 Stock Price - #{companyName} (#{companySymbol})
+    
+    #chartcontainer Test 
+
+    table.table.table-hover.table-striped
+      tr
+        th trade_id
+        th symbol_id
+        th price
+        th volume
+        th offered_s
+        th offered_seq_num
+        th completed_s
+        th completed_seq_num
+      each row in data
+        tr
+          th=row.trade_id
+          th=row.symbol_id
+          th=(row.price*priceScale).toFixed(2)
+          th=row.volume
+          th=row.offered_s
+          th=row.offered_seq_num
+          th=row.completed_s
+          th=row.completed_seq_num
