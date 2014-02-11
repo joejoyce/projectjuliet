@@ -99,7 +99,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 		
 		long elapsedTimeNS = Math.abs(System.nanoTime() - initialCallTimeNS);
 		long packetTimeDifference = nextPacketData.sendTime - firstPacketTime.sendTime;
-		long packetTimeDifferenceNS = (long)(Math.pow(packetTimeDifference, 6)) + (nextPacketData.sendTimeNS - firstPacketTime.sendTimeNS);
+		long packetTimeDifferenceNS = packetTimeDifference*1000000L + (nextPacketData.sendTimeNS - firstPacketTime.sendTimeNS);
 		long systemDifferenceNS = packetTimeDifferenceNS - elapsedTimeNS;
 		long systemDifferenceMS = TimeUnit.NANOSECONDS.toMillis(systemDifferenceNS);
 		
