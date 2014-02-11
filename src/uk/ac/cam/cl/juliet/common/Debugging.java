@@ -1,7 +1,13 @@
 package uk.ac.cam.cl.juliet.common;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.PrintStream;
+import java.net.InetAddress;
+import java.util.LinkedList;
 
-private class outputWrap {
+
+class OutputWrap {
 	PrintStream printout = null;
 	ObjectOutputStream ojout = null;
 	public OutputWrap(PrintStream ps) {
@@ -11,20 +17,25 @@ private class outputWrap {
 		ojout = oj;
 	}
 	public void send ( String str) {
-		if(printout)
+		if(printout != null)
 			printout.print(str);
-		else
-			ojout.write( new DebugMsg(str)); //Send message over the network to the ClusterMaster.
+		else {
+			try {
+				ojout.writeObject( new DebugMsg(str));
+			} catch (IOException e) {
+				System.err.println("Error sending error to host!");
+			}
+		}
 	}
 }
 
-public class Deubugging {
+public class Debugging {
 	private static String myAddr = null;
 	private static boolean debug = false;
 	
-	private static LinkedList<outputWrap> out = new LinkedList<outputWrap>();
+	private static LinkedList<OutputWrap> out = new LinkedList<OutputWrap>();
 	
-	public static void setAddr( InetAddr addr ) {
+	public static void setAddr( InetAddress addr ) {
 		myAddr = addr.toString();
 	}
 	public static void setAddr( String addr ) {
@@ -40,19 +51,11 @@ public class Deubugging {
 	}
 
 	public static void registerOutputLocation( PrintStream ps ) {
-		out.add(ps);
+		out.add(new OutputWrap(ps));
 	}
 	
-	public static boolean removeOutputLocation( PrintStream ps) {
-		return out.remove(ps);
-	}
-	
-	public static void registerOutputLocation( ObjectOutputStream out ) {
-		out.add(out);
-	}
-	
-	public static boolean removeOutputLocation( ObjectOutputStream out ) {
-		return out.remove(out);
+	public static void registerOutputLocation( ObjectOutputStream oj ) {
+		out.add(new OutputWrap(oj));
 	}
 	
 	private static void send(String str) {
@@ -72,6 +75,6 @@ public class Deubugging {
 	}
 	
 	public static void recieveDebug( DebugMsg msg ) {
-		send(msg); //TODO also add information about location? 
+		send(msg.toString()); //TODO also add information about location? 
 	}
 }
