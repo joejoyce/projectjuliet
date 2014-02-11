@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -131,7 +132,8 @@ public class Client {
 		
 		address = s.getInetAddress();
 		try {
-			out = new ObjectOutputStream(s.getOutputStream());
+			BufferedOutputStream bos = new BufferedOutputStream(s.getOutputStream());
+			out = new ObjectOutputStream(bos);
 			in = new ObjectInputStream(s.getInputStream());
 			out.writeObject(parent.getConfiguration());
 		} catch (IOException e) {
