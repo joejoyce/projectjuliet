@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -17,10 +14,8 @@ import uk.ac.cam.cl.juliet.common.StringTestPacket;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.common.XDPResponse;
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
-import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnectionUnit;
 import uk.ac.cam.cl.juliet.slave.queryprocessing.QueryProcessor;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessor;
-import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 
 /**
  * The listener reads packets send from the master PC and passes them on to
@@ -38,8 +33,10 @@ public class Listener {
 	private Thread receiveThread;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
-	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(200);
-	private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Container>(200);
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(
+			200);
+	private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Container>(
+			200);
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
 	private QueryProcessor query;
@@ -54,16 +51,18 @@ public class Listener {
 	 *            The port which packets are being sent from.
 	 * @throws IOException
 	 */
-	public void listen(String server, int port) throws IOException, SQLException {
+	public void listen(String server, int port, DatabaseConnection db,
+			XDPProcessor xdpProcessor, QueryProcessor queryProcessor)
+			throws IOException, SQLException {
 		this.ip = server;
 		this.port = port;
 		this.socket = new Socket(server, port);
 		this.input = new ObjectInputStream(this.socket.getInputStream());
 		this.output = new ObjectOutputStream(this.socket.getOutputStream());
 
-		this.databaseConnection = new DatabaseConnectionUnit(DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword"));
-		this.xdp = new XDPProcessorUnit(this.databaseConnection);
-		// TODO Create query processor
+		this.databaseConnection = db;
+		this.xdp = xdpProcessor;
+		this.query = queryProcessor;
 
 		for (int i = 0; i < numProcessingThreads; i++) {
 			this.processingThreads[i] = new Thread() {
@@ -95,13 +94,15 @@ public class Listener {
 				e.printStackTrace();
 				// Just attempt to reconnect
 				try {
-					this.socket = new Socket(ip,port);
-					this.input = new ObjectInputStream(this.socket.getInputStream());
-					this.output = new ObjectOutputStream(this.socket.getOutputStream());
+					this.socket = new Socket(ip, port);
+					this.input = new ObjectInputStream(
+							this.socket.getInputStream());
+					this.output = new ObjectOutputStream(
+							this.socket.getOutputStream());
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
-			} catch(InterruptedException e) {
+			} catch (InterruptedException e) {
 				e.printStackTrace();
 				System.exit(0);
 			}
@@ -125,21 +126,24 @@ public class Listener {
 				}
 			}
 		} catch (ClassNotFoundException | ClassCastException e) {
-			System.err.println("An unexpected object was recieved from the server.");
+			System.err
+					.println("An unexpected object was recieved from the server.");
 			e.printStackTrace();
 			System.exit(0);
 		} catch (IOException e) {
-			System.err.println("An error occurred communicating with the server.");
+			System.err
+					.println("An error occurred communicating with the server.");
 			e.printStackTrace();
 			// Just attempt to reconnect
 			try {
-				this.socket = new Socket(ip,port);
+				this.socket = new Socket(ip, port);
 				this.input = new ObjectInputStream(this.socket.getInputStream());
-				this.output = new ObjectOutputStream(this.socket.getOutputStream());
+				this.output = new ObjectOutputStream(
+						this.socket.getOutputStream());
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
-		} 
+		}
 	}
 
 	private void processPacket() {
@@ -187,14 +191,15 @@ public class Listener {
 	private void handleConfigurationPacket(ConfigurationPacket packet) {
 		String ip = packet.getSetting("db.addr");
 		if (ip != null) {
-			/*try {
-				this.databaseConnection.setConnection(DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/juliet", "root", "rootword"));
-
-			} catch (SQLException e) {
-				System.err.println("An error occurred connecting to the database");
-				e.printStackTrace();
-				System.exit(1);
-			}*/
+			/*
+			 * try {
+			 * this.databaseConnection.setConnection(DriverManager.getConnection
+			 * ("jdbc:mysql://" + ip + ":3306/juliet", "root", "rootword"));
+			 * 
+			 * } catch (SQLException e) {
+			 * System.err.println("An error occurred connecting to the database"
+			 * ); e.printStackTrace(); System.exit(1); }
+			 */
 		}
 
 		if (!this.processingThreads[0].isAlive()) {
