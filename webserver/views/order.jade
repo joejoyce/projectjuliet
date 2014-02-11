@@ -1,27 +1,43 @@
 extends layout
 
 block content
-  .page-header
-    h3 Order Book - #{companyName} (#{companySymbol})
-    table.table.table-hover.table-striped
-      tr
-        th order_id
-        th symbol_id
-        th price
-        th volume
-        th is_ask
-        th placed_s
-        th placed_seq_num
-        th updated_s
-        th updated_seq_num
-      each row in data
+  #stat-container
+    h4 Current order book for #{companyName} (#{companySymbol})
+    #stats
+      #stat-first Last: 
+      #stat Volume:
+      #stat Spread: 
+      #stat High: 
+      #stat Low: 
+      #stat Change:
+  #tables
+    #offer-table
+      h4 Offers:
+      table.table.table-hover.table-striped
         tr
-          th=row.order_id
-          th=row.symbol_id
-          th=(row.price*priceScale).toFixed(2)
-          th=row.volume
-          th=row.is_ask
-          th=row.placed_s
-          th=row.placed_seq_num
-          th=row.updated_s
-          th=row.updated_seq_num
+          th Price
+          th Volume
+          th Total
+          th Time        
+        each row in offers
+          tr
+            th=(row.price*priceScale).toFixed(2)
+            th=row.volume
+            th=(row.price*priceScale*row.volume).toFixed(2)
+            th=moment(row.placed_s * Math.pow(10, 3)).format('DD/MM/YYYY - HH:MM:SS')
+    #bid-table
+      h4 Bids:
+      table.table.table-hover.table-striped
+        tr
+          th Price
+          th Volume
+          th Total
+          th Time        
+        each row in bids
+          tr
+            th=(row.price*priceScale).toFixed(2)
+            th=row.volume
+            th=(row.price*priceScale*row.volume).toFixed(2)
+            th=moment(row.placed_s * Math.pow(10, 3)).format('DD/MM/YYYY - HH:MM:SS')
+    .clear
+  

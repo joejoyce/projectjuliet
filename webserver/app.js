@@ -7,6 +7,7 @@ var path = require('path');
 var less = require('less-middleware');
 
 var app = express();
+app.locals.moment = require('moment');
 
 /**
  * Load controllers.
