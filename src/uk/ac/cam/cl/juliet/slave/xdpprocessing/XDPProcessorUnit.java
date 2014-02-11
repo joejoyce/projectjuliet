@@ -198,7 +198,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long symbolIndex = m.readLong(4);
 		long symbolSequenceNumber = m.readLong(4);
 		long orderID = m.readLong(4);
-		boolean isSell = m.readChar()== 'B';
+		boolean isSell = m.readChar()== 'S';
 		// there are two more bytes containing OrderIDGTCIndicator and a ReasonCode
 		// but we don't need them now
 
@@ -220,7 +220,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long orderID = m.readLong(4);
 		long price = m.readLong(4);
 		long volume = m.readLong(4);
-		boolean isSell = m.readChar()== 'B';
+		boolean isSell = m.readChar()== 'S';
 		// there are two more bytes containing OrderIDGTCIndicator and a ReasonCode
 		
 		try {
