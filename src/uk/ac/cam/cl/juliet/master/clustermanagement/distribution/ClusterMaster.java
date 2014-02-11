@@ -104,8 +104,9 @@ public class ClusterMaster  {
 				while(true) {
 					try {
 						Socket connection = socket.accept();
+						System.out.println("About to add a new client!");						
 						addClient(connection);
-						System.out.println("Added a new client!");
+						System.out.println("Added a new client!");					
 					} catch (IOException e) {
 						System.out.println("There was an error establishing a connection and spawning a client");
 						e.printStackTrace();
@@ -155,10 +156,8 @@ public class ClusterMaster  {
 	 * @throws NoClusterException In the case where the server is stopped or there are no Clients
 	 */	
 	public long sendPacket(Container msg, Callback cb) throws NoClusterException {
-		Client c = clientQueue.poll();
-		if(null == c) {
-			throw new NoClusterException("The Pis have all gone :'(");
-		}
+		Client c;
+		while((c = clientQueue.poll()) == null) {/*System.out.println("Was null: " + clientQueue.size());*/}
 		long l = c.send(msg,cb);
 		clientQueue.put(c);
 		return l;

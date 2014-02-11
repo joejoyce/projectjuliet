@@ -122,12 +122,11 @@ public interface DatabaseConnection {
 	 * @param openPrice
 	 * @param closePrice
 	 * @param totalVolume
-	 * @param packetTimestamp
 	 * @throws SQLException
 	 */
 	public void addStockSummary(long symbolIndex, long time_s, long time_ns,
 			long highPrice, long lowPrice, long openPrice, long closePrice,
-			long totalVolume, long packetTimestamp) throws SQLException;
+			long totalVolume) throws SQLException;
 
 	/**
 	 * Correct a trade entry in the database

@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS stock_summary (
   low_price int(10) unsigned NOT NULL,
   total_volume int(10) unsigned NOT NULL,
   updated_s int(10) unsigned NOT NULL,
+  updated_ns int(10) unsigned NOT NULL,
   PRIMARY KEY(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 

@@ -37,6 +37,7 @@ class ClientCleanup implements Runnable {
 public class Client {
 	private ObjectOutputStream out = null;
 	private ObjectInputStream in = null;
+	private Socket s;
 	private InetAddress address = null;
 	private ClusterMaster parent = null;
 	
@@ -45,7 +46,7 @@ public class Client {
 	private static ScheduledExecutorService workers = null;
 	
 	private ScheduledFuture<?> cleaner = null;
-	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(40);
+	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(200);
 	
 	private static AtomicInteger numberClients = new AtomicInteger(0);
 	
@@ -102,27 +103,31 @@ public class Client {
 	public void closeClient() {
 		parent.removeClient(this);
 		//Close the streams
-		if(0 == numberClients.decrementAndGet()) {
+		/*if(0 == numberClients.decrementAndGet()) {
 			workers.shutdownNow();
-			workers = null;
-		}
+		//	workers = null;
+		}*/
+				
 		cleaner.cancel(false); //Try to stop the regular operation flushing my queue, waiting until finished
 		try {
+			System.out.println("about to close stuff--------==========================");
 			out.close();
 			in.close(); //Should also have the effect of closing the threads that read and write on them
+			s.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public Client(Socket s,ClusterMaster parent) {
+	public Client(Socket s, ClusterMaster parent) {
 		this.parent = parent;
-		if( 0 == numberClients.getAndIncrement() ) {
+		this.s = s;
+		if(0 == numberClients.getAndIncrement() ) {
 			workers = Executors.newScheduledThreadPool(numberPooledThreads);
 		}
 		//Schedule queueflush for me
-		cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0, queueFlushTime, TimeUnit.MILLISECONDS);
+		//cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0, queueFlushTime, TimeUnit.MILLISECONDS);
 		
 		address = s.getInetAddress();
 		try {
@@ -150,6 +155,8 @@ public class Client {
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
+						closeClient();
+						return;
 					}
 					if(null == recieve) continue;
 					if(recieve instanceof Container) {
@@ -180,10 +187,10 @@ public class Client {
 						out.writeObject(container.getContainer());
 						totalPackets++; //TODO this means it won't count objects in the queue
 						System.out.println("Written obj to client");
-					} catch ( InterruptedException e){
+					} catch (InterruptedException e){
 						e.printStackTrace();
 						return;
-					} catch ( IOException e) {
+					} catch (IOException e) {
 						e.printStackTrace();
 						closeClient();
 						return;
@@ -219,9 +226,11 @@ public class Client {
 		InFlightContainer ifc = new InFlightContainer(c,cb);
 		ifc.setBroadcast(bcast);
 		try {
+			System.out.println("Abnout to add to send q: " + sendQueue.size());
 			sendQueue.put(ifc);
 			System.out.println("Added to send queue: " + sendQueue.size());
 		} catch (InterruptedException e) {
+			e.printStackTrace();
 			return -1;
 		}
 		return uid;
@@ -231,7 +240,7 @@ public class Client {
 	 * @param c The container to send
 	 * @return The unique id of the packet being sent
 	 */
-	public long send (Container c) {
+	public long send(Container c) {
 		long uid = parent.getNextId();
 		return send(c,null,uid,false);
 	}
@@ -241,7 +250,7 @@ public class Client {
 	 * @param cb The callback to be run
 	 * @return The unique id of the packet being sent
 	 */	
-	public long send (Container c,Callback cb) {
+	public long send(Container c,Callback cb) {
 		long uid = parent.getNextId();
 		return send(c,cb,uid,false);
 	}
@@ -252,7 +261,7 @@ public class Client {
 	 * @return The id of the broadcast packet
 	 */
 	public long broadcast(Container c) {
-		return send(c,null,c.getPacketId(),true);
+		return send(c, null, c.getPacketId(), true);
 	}
 	//TODO mark a broadcast one as a message that it doesn't cascade on failure
 	

@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  .page-header
+    h3 Stock Price
+    center
+      h4 Please enter company symbol:
+      form(role='form', name="input", action="/stockPrice/", method="get")
+        #row
+          .input-group        
+            input.form-control(type="text", title="Company Symbol", name="companySymbol")
+            span.input-group-btn
+              button.btn.btn-primary Go!

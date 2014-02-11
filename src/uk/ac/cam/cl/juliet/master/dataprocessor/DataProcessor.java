@@ -24,10 +24,12 @@ public class DataProcessor {
 
 	public void start() {
 		XDPRequest packet = null;
+		Scanner scan = new Scanner(System.in);
 		do {
 			try {
 				packet = dataStream.getPacket();
 				if(packet.getDeliveryFlag() == 11) {
+					//scan.nextLine();
 					clusterMaster.sendPacket(packet);
 				}
 			} catch (IOException e) {

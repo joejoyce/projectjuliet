@@ -29,7 +29,7 @@ exports.getOrder = function(req, res) {
 		companyName = parsedCompanyData[0].company_name;
 		priceScale = 1/Math.pow(10, parsedCompanyData[0].price_scale);
 		symbolIndex = parsedCompanyData[0].symbol_id;
-		client2.write('basic|select * from order_book where symbol_id = "' + symbolIndex + '" LIMIT 100\n');
+		client2.write('basic|select * from order_book where symbol_id = "' + symbolIndex + '"ORDER BY order_id DESC LIMIT 100\n');
 	});
 
 
