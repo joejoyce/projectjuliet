@@ -71,7 +71,7 @@ public class Client {
 	 */
 	private void checkoutContainer(InFlightContainer container) {
 		workCount++;
-		jobqueue.add(container);
+		//jobqueue.add(container);
 		System.out.println("Added to job queue: " + jobqueue.size());		
 		hash.put(container.getPacketId(), container);
 	}
@@ -87,7 +87,7 @@ public class Client {
 		InFlightContainer cont = hash.get(l);
 		System.out.println("About to get backing: " + l);
 		if(null != cont) {
-			jobqueue.remove(cont);
+			//jobqueue.remove(cont);
 			hash.remove(l);
 			System.out.println("Removed from job queue: " + l);
 			workCount--;
@@ -132,8 +132,8 @@ public class Client {
 		
 		address = s.getInetAddress();
 		try {
-			BufferedOutputStream bos = new BufferedOutputStream(s.getOutputStream());
-			out = new ObjectOutputStream(bos);
+			//BufferedOutputStream bos = new BufferedOutputStream(s.getOutputStream());
+			out = new ObjectOutputStream(s.getOutputStream());
 			in = new ObjectInputStream(s.getInputStream());
 			out.writeObject(parent.getConfiguration());
 		} catch (IOException e) {

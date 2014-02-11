@@ -5,6 +5,8 @@ var net = require('net');
  * Gets an order book for a specific company.
  */
 
+//is ask => im selling this i.e. offers
+
 exports.getOrder = function(req, res) {
 	var companySymbol = req.param("companySymbol");
 
@@ -14,8 +16,13 @@ exports.getOrder = function(req, res) {
 	var client2 = net.connect(1337, 'localhost');
 	client2.setEncoding('utf8');
 
+	var client3 = net.connect(1337, 'localhost');
+	client3.setEncoding('utf8');
 
-	var totalOrderBookData = "";
+
+	var offerOrderBookData = "";
+	var bidOrderBookData = "";
+	
 	var companyName = "";
 	var priceScale = 0;
 	var symbolIndex = "";
@@ -29,24 +36,37 @@ exports.getOrder = function(req, res) {
 		companyName = parsedCompanyData[0].company_name;
 		priceScale = 1/Math.pow(10, parsedCompanyData[0].price_scale);
 		symbolIndex = parsedCompanyData[0].symbol_id;
-		client2.write('basic|select * from order_book where symbol_id = "' + symbolIndex + '"ORDER BY order_id DESC LIMIT 100\n');
+		client2.write('basic|select * from order_book where symbol_id = "' + symbolIndex + '" AND is_ask=1 ORDER BY price LIMIT 25\n');
+		client.end();
 	});
 
-
 	client2.on('data', function(data) {
-		totalOrderBookData += data;
+		offerOrderBookData += data;
 	});
 
 	client2.on('end', function() {
-		var dataObj = JSON.parse(totalOrderBookData);		
+		client3.write('basic|select * from order_book where symbol_id = "' + symbolIndex + '" AND is_ask=0 ORDER BY price DESC LIMIT 25\n');
+		client2.end();
+	});
+
+	client3.on('data', function(data) {
+		bidOrderBookData += data;
+	});
+
+	client3.on('end', function() {
+		var offers = JSON.parse(offerOrderBookData);
+		var bids = JSON.parse(bidOrderBookData);
 		
 		res.render('order', {
     	title: 'Order',
-    	data: dataObj,
+    	offers: offers,
+    	bids: bids,
     	companyName: companyName,
     	priceScale: priceScale,
     	companySymbol: companySymbol
     });
+
+    client3.end();
 	});
 };
 
@@ -55,4 +75,3 @@ exports.orderBook = function(req, res) {
     	title: 'Order'    	
     });
 };
-
