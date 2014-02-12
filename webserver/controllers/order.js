@@ -33,6 +33,14 @@ exports.getOrder = function(req, res) {
 
 	client.on('data', function(data) {
 		var parsedCompanyData = JSON.parse(data);
+		if(parsedCompanyData.length == 0) {
+			res.render('orderBook', {
+    		title: 'Order',
+    		error: "Symbol not found"
+    	});
+    	client.end();
+    	return;
+		}
 		companyName = parsedCompanyData[0].company_name;
 		priceScale = 1/Math.pow(10, parsedCompanyData[0].price_scale);
 		symbolIndex = parsedCompanyData[0].symbol_id;

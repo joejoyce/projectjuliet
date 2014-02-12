@@ -37,7 +37,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
 			
 			String query = din.readLine();			
-			String[] splitQuery = query.split("\\|");			
+			String[] splitQuery = query.split("\\|");		
 			
 			switch(splitQuery[0]) {
 				case "basic": 	runBasicQuery(splitQuery[1], pw);
@@ -79,7 +79,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			System.out.println("Got query: " + query);
 			Statement s = con.createStatement();
 			ResultSet res = s.executeQuery(query);
-			if(!res.isBeforeFirst() ) {    
+			if(!res.isBeforeFirst()) {    
 				// Result set was empty, return an empty array
 				pw.print("[]");
 				return;
