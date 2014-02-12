@@ -1,6 +1,6 @@
 {
-  "name": "hackathon-starter",
-  "version": "0.0.0",
+  "name": "Team-Juliet",
+  "version": "3.1.4",
   "dependencies": {
     "async": "~0.2.10",
     "express": "~3.4.8",
