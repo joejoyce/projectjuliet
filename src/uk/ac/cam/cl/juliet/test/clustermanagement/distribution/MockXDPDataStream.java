@@ -6,7 +6,7 @@ import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
 
 public class MockXDPDataStream implements XDPDataStream {
-	private long timeDifference_ms;
+	private long timeDifference_ns;
 	private long timeOfNextPacket;
 	private int noOfPackets;
 	private int packetCounter;
@@ -32,7 +32,8 @@ public class MockXDPDataStream implements XDPDataStream {
 					+ "packets per second");
 		}
 		tracker = pTracker;
-		timeDifference_ms = Math.round((float) 1000 / (float) packetsPerSecond);
+		timeDifference_ns = 
+				Math.round((float) 1000000000 / (float) packetsPerSecond);
 		timeOfNextPacket = 0;
 		noOfPackets = pNoOfPackets;
 		packetCounter = 0;
@@ -60,8 +61,8 @@ public class MockXDPDataStream implements XDPDataStream {
 		
 		//System.out.println("packet no "+packetCounter+" generated.");
 		tracker.ackPacketGenerated(packetCounter);
-		
-		timeOfNextPacket = System.currentTimeMillis() + timeDifference_ms;
+	
+		timeOfNextPacket = System.currentTimeMillis() + timeDifference_ns / 1000000;
 		this.packetCounter++;
 		return packet;
 	}
