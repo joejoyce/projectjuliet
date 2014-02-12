@@ -1,10 +1,15 @@
 extends layout
 
+block jsStuff
+  script(src='/js/error.js')
+
 block content
   .page-header
     h3 Stock Price
     center
       h4 Please enter company symbol:
+      if locals.error
+        p.error.alert-danger #{error}
       form(role='form', name="input", action="/stockPrice/", method="get")
         #row
           .input-group        
