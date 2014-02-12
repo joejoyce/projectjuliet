@@ -1,4 +1,4 @@
-#!bin/sh
+#!/bin/sh
 
 leases=/var/lib/dhcp/dhclient.eth0.leases
 dhcpServer=`grep '^\s*option\s\s*dhcp-server-identifier\s\s*' $leases | sed 's/#.*//g' | tail -n 1 | awk '{print $3}' | sed 's/;.*//g'`
@@ -16,7 +16,7 @@ else
 fi
 
 if cp /juliet/cluster.jar /cluster.jar; then
-    java -jar cluster.jar $dhcpServer &
+    java -jar /cluster.jar $dhcpServer &
 else
     echo 'Failed to copy cluster.jar'
     exit 1
