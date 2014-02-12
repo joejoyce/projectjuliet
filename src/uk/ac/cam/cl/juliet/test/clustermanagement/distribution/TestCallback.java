@@ -27,7 +27,6 @@ public class TestCallback implements Callback {
 		MockXDPResponse response = (MockXDPResponse) data;
 		int seq = response.getSequenceNo();
 		tracker.ackPacketReturned(seq);
-		System.out.println(seq+" arrived back");
 	}
 
 }

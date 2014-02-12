@@ -8,7 +8,12 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
-
+/**
+ * A a class that runs a single load test on the ClusterMaster by creating
+ * a mock DataStream and Mock Pis around it.
+ * @author lucas
+ *
+ */
 public class ClusterMasterLoadTest {
 	static MockPi[] mockPis;
 	
@@ -40,9 +45,9 @@ public class ClusterMasterLoadTest {
 	 * @param pWaitingTimeOfPis_ms	estimate of the time a Pi will need to process
 	 * 								a single packet
 	 * @param pNumberOfPis			number of simulated pis in the test
-	 * @return						A string with a summary
+	 * @return						the execution time in milliseconds
 	 */
-	public static String runTest(int pNoOfPackets,int pPacketsPerSecond, 
+	public static long runTest(int pNoOfPackets,int pPacketsPerSecond, 
 			long pWaitingTimeOfPis_ms, int pNumberOfPis, int pPacketSize) {
 		Trackkeeper myTracker = new Trackkeeper(pNoOfPackets);
 		XDPDataStream ds = new MockXDPDataStream(pPacketsPerSecond, pNoOfPackets, 
@@ -55,9 +60,10 @@ public class ClusterMasterLoadTest {
 			addLocalMockPisToClusterMaster(pNumberOfPis, pWaitingTimeOfPis_ms, 
 					5001, myTracker);
 		} catch (IOException e) {
+			System.err.println("could not start cluster master or connect Pis"
+					+ "to the cluster master!");
 			e.printStackTrace();
-			return "could not start cluster master or connect Pis"
-					+ "to the cluster master!";
+			return -1;
 			
 		}
 		long startTime = System.currentTimeMillis();
@@ -68,14 +74,15 @@ public class ClusterMasterLoadTest {
 			}
 		} catch (IOException | NoClusterException e) {
 			e.printStackTrace();
-			return "Error while running! This means either an error"
-					+ "in getting the next packet or in sending a packet";
+			System.err.println("Error while running! This means either an error"
+					+ "in getting the next packet or in sending a packet");
+			return -1;
 		} catch (InterruptedException e) {
-			return "Error while waiting for Pis to finish.";
+			System.err.println("Error while waiting for Pis to finish.");
 		}
 		
 		long stopTime = System.currentTimeMillis();
-		long executionTime = (long) ((float)(stopTime-startTime) / 1000f);
+		long executionTime = stopTime-startTime;
 		
 		/* this throws a nice stack-trace because thats what the client does at the 
 		 * moment when it loses the connection to the pi
@@ -87,9 +94,7 @@ public class ClusterMasterLoadTest {
 		}
 		*/
 		
-		return "The system needed "+executionTime+"s to send "+
-				pNoOfPackets+" at a rate of "+pPacketsPerSecond+" packets per "
-						+ "second to "+pNumberOfPis+" pis!";
+		return executionTime;
 	}
 	/**
 	 * Starts a test with the provided arguments
@@ -104,9 +109,13 @@ public class ClusterMasterLoadTest {
 			long waitingTimeOfPi_ms = Long.parseLong(args[2]);
 			int numberOfPis = Integer.parseInt(args[3]);
 			
-			String output = runTest(noOfPackets, packetsPerSecond, 
+			long executionTime = runTest(noOfPackets, packetsPerSecond, 
 					waitingTimeOfPi_ms, numberOfPis, 500);
-			System.out.println(output);
+			System.out.println("The system needed "+executionTime+"ms to send "+
+					noOfPackets+" at a rate of "+packetsPerSecond+" packets per "
+					+ "second to "+numberOfPis+" pis!");
+			
+			
 		} catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
 			System.err.println("Usage: <No. of test packets to send> <Packets per second> "
 					+ "<processing time at pi> <number of Pis>");
