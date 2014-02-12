@@ -5,7 +5,7 @@ var net = require('net');
  * Gets an order book for a specific company.
  */
 
-//is ask => im selling this i.e. offers
+//is ask => im selling this i.e. offer
 
 exports.getOrder = function(req, res) {
 	var companySymbol = req.param("companySymbol");
@@ -57,13 +57,16 @@ exports.getOrder = function(req, res) {
 		var offers = JSON.parse(offerOrderBookData);
 		var bids = JSON.parse(bidOrderBookData);
 		
+		var spread = offers[0].price*priceScale - bids[0].price*priceScale;
+
 		res.render('order', {
     	title: 'Order',
     	offers: offers,
     	bids: bids,
     	companyName: companyName,
     	priceScale: priceScale,
-    	companySymbol: companySymbol
+    	companySymbol: companySymbol,
+    	spread: spread
     });
 
     client3.end();

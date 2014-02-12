@@ -1,7 +1,12 @@
 package uk.ac.cam.cl.juliet.slave.listening;
 
 import java.io.IOException;
+import java.sql.DriverManager;
 import java.sql.SQLException;
+
+import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
+import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnectionUnit;
+import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 
 /**
  * Has the main method for the slaves. Starts the listener.
@@ -13,9 +18,14 @@ public class Client {
 	public static void main(String[] args) {
 		Listener listener = new Listener();
 		try {
-			listener.listen(args[0], 5000);
+			DatabaseConnection db = new DatabaseConnectionUnit(
+					DriverManager.getConnection(
+							"jdbc:mysql://"+args[0]+":3306/juliet", "root",
+							"rootword"));
+			listener.listen(args[0], 5000, db, new XDPProcessorUnit(db), null);
 		} catch (IOException e) {
-			System.err.println("An error occurred communicating with the server.");
+			System.err
+					.println("An error occurred communicating with the server.");
 			e.printStackTrace();
 			System.exit(0);
 		} catch (SQLException e) {

@@ -79,6 +79,11 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			System.out.println("Got query: " + query);
 			Statement s = con.createStatement();
 			ResultSet res = s.executeQuery(query);
+			if(!res.isBeforeFirst() ) {    
+				// Result set was empty, return an empty array
+				pw.print("[]");
+				return;
+			}
 			String jsonResults = toJSON(res);
 			System.out.println("Writing: " + jsonResults);
 			pw.print(jsonResults);
@@ -91,7 +96,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	
 	/**
 	 * Converts a ResultSet object to a JSON string
-	 * Example: {results: [{name: "scott", age: 20},{name: "greg", age: 19}]}
+	 * Example: [{name: "scott", age: 20},{name: "greg", age: 19}]
 	 * @param r	The ResultSet to convert
 	 * @return The JSON String
 	 */
