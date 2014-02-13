@@ -11,3 +11,4 @@
 /bin
 /webserver/node_modules
 /scripts/node_modules
+/.settings
