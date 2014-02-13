@@ -103,7 +103,8 @@ public interface ClusterMaster {
 	public abstract void broadcast(Container c);
 	
 	/**
-	 * Sends the container c to all connected clients with a callback
+	 * Sends the container c to all connected clients with a callback.
+	 * Warning the callbacks will run from different threads so make sure it's thread safe
 	 * @param c
 	 * @param cb
 	 */
