@@ -109,7 +109,7 @@ class TestDatabase implements DatabaseConnection {
 	/* THIS IS A METHOD THAT I'VE ADDED */
 	public void executeOrder(long orderID, long symbolIndex, long time_ns,
 			long symbolSeqNumber, long price, long volume, long tradeId, int reason, long packetTimestamp) {
-		TSB s = new TSB();
+	/*	TSB s = new TSB();
 		s.add(orderID);
 		s.add(symbolIndex);
 		s.add(time_ns);
@@ -119,6 +119,7 @@ class TestDatabase implements DatabaseConnection {
 		s.add(isSell);
 		s.add(tradeSession);
 		s.add(packetTimestamp);
+		pushOrTest(s.getStr(),"EXEC ORDER");
 		if(!checking) {
 			//Build the data
 			pushShort(31);
@@ -132,8 +133,8 @@ class TestDatabase implements DatabaseConnection {
 			pushByte( isSell?'S':'B');
 			pushByte(0); //OrderIDGTCIndicator -> ?????
 			pushByte(tradeSession);
-		}
-		pushOrTest(s.getStr(),"ADD ORDER");
+		}*/ 
+		//TODO implement this 
 	}
 	
 	public void addOrder(long orderID, long symbolIndex, long time_ns,

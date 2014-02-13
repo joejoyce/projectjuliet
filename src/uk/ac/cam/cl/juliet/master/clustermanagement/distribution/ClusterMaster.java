@@ -101,5 +101,12 @@ public interface ClusterMaster {
 	 * @param c
 	 */
 	public abstract void broadcast(Container c);
+	
+	/**
+	 * Sends the container c to all connected clients with a callback
+	 * @param c
+	 * @param cb
+	 */
+	public abstract void broadcast(Container c, Callback cb);
 
 }
