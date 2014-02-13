@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import uk.ac.cam.cl.juliet.common.StringTestPacket;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 
 /**
@@ -14,7 +15,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterExcept
 public class ClusterServer {
 	
 	public static void main(String args[]) throws IOException {
-		ClusterMaster m = new ClusterMaster("");
+		ClusterMaster m = new ClusterMasterUnit("");
 		m.start(5000);
 		try {
 			m.sendPacket(new StringTestPacket("Is this working?"));
