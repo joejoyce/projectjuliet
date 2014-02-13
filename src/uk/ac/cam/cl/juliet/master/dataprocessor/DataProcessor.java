@@ -1,11 +1,12 @@
 package uk.ac.cam.cl.juliet.master.dataprocessor;
 
-import uk.ac.cam.cl.juliet.common.XDPRequest;
-import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
-import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
-
 import java.io.IOException;
 import java.util.Scanner;
+
+import uk.ac.cam.cl.juliet.common.XDPRequest;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 
 /**
  * @description This class attaches to a XDPDataStream and requests packets.
@@ -24,7 +25,7 @@ public class DataProcessor {
 
 	public void start() {
 		XDPRequest packet = null;
-		Scanner scan = new Scanner(System.in);
+		//Scanner scan = new Scanner(System.in);
 		do {
 			try {
 				packet = dataStream.getPacket();
@@ -59,7 +60,7 @@ public class DataProcessor {
 			return;
 		}
 		SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4, skipBoundary);
-		ClusterMaster m = new ClusterMaster("");
+		ClusterMaster m = new ClusterMasterUnit("");
 		m.start(5000);
 		DataProcessor dp = new DataProcessor(ds, m);
 		Scanner s = new Scanner(System.in);

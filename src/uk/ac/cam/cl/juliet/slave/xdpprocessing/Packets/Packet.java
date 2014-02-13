@@ -9,14 +9,15 @@ public class Packet extends DataWrapper {
 	protected long sendTimeNS;
 
 	/**
-	 * create a packet object that wraps the data of a packet. It will read the
-	 * header of the packet from the data, the datapointer will then be at
+	 * Create a packet object that wraps the data of a packet
+	 * 
+	 * It will read the header of the packet from the data, the data pointer will then be at
 	 * position 16 in the data array.
+	 * 
 	 * @param data
 	 */
 	public Packet(byte[] data) {
 		super(data);
-		
 		super.mSize = (int) readLong(2);
 
 		deliveryFlag = readUnsignedByte();
@@ -25,18 +26,48 @@ public class Packet extends DataWrapper {
 		sendTime = readLong(4);
 		sendTimeNS = readLong(4);
 	}
-	/**
-	 * returns the delivery flag of the packet
-	 * @return delivery flag as an int.
-	 */
-	public int getDeliveryFlag() {return this.deliveryFlag;}
 	
 	/**
-	 * read the next message within the data array, wrap the data
-	 * into a Message object and return this.
-	 * The datapointer advances by the size of the next message
-	 * @return the next message or null if you reached the end 
-	 * 	of the packet
+	 * Return the delivery flag of the packet
+	 * 
+	 * @return delivery flag as an int.
+	 */
+	public int getDeliveryFlag() { return this.deliveryFlag; }
+	
+	/**
+	 * Return the number of messages in this packet
+	 * 
+	 * @return number of messages (int)
+	 */
+	public int getNumberOfMsgs() { return this.numberMsgs; }
+	
+	/**
+	 * Return sequence number of this packet
+	 * 
+	 * @return sequence number (long)
+	 */
+	public long getSequenceNumber() { return this.seqNum; }
+	
+	/**
+	 * Return the send time (seconds since Unix Epoch) of this packet
+	 * 
+	 * @return send time of packet (long)
+	 */
+	public long getTimestamp() { return this.sendTime; }
+	/**
+	 * Return the send time in nanoseconds of this packet
+	 * 
+	 * @return nanosecond send time of packet (long)
+	 */
+	public long getTimestampNS() { return this.sendTimeNS; }
+	
+	/**
+	 * Read the next message within the data array
+	 * 
+	 * This wraps the data into a Message object and returns the message object.
+	 * The data pointer advances by the size of the next message
+	 * 
+	 * @return the next message or null if you reached the end of the packet
 	 */
 	public Message getNextMessage() {
 		if(super.datapointerAtEnd()) {
@@ -44,8 +75,5 @@ public class Packet extends DataWrapper {
 		} 
 		int msgSize = (int) readLong(2);
 		return new Message(msgSize, readBytes(msgSize-2));
-	}
-	public long getTimestamp() {
-		return this.sendTime;
 	}
 }

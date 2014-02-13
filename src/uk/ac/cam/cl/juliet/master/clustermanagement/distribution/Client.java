@@ -255,7 +255,11 @@ public class Client {
 	public long broadcast(Container c) {
 		return send(c, null, c.getPacketId(), true);
 	}
-	//TODO mark a broadcast one as a message that it doesn't cascade on failure
+	
+	public long broadcast(Container c, Callback cb) {
+		return send(c, cb, c.getPacketId(), true);
+	}
+	
 	
 	/**
 	 * This method checks the front of the priority queue ( the timeout that'll expire 

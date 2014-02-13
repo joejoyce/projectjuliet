@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
 /**
@@ -52,7 +53,7 @@ public class ClusterMasterLoadTest {
 		Trackkeeper myTracker = new Trackkeeper(pNoOfPackets);
 		XDPDataStream ds = new MockXDPDataStream(pPacketsPerSecond, pNoOfPackets, 
 				myTracker, pPacketSize);
-		ClusterMaster cm = new ClusterMaster(""); // pass in the path of the configuration file
+		ClusterMaster cm = new ClusterMasterUnit(""); // pass in the path of the configuration file
 									// for now let an error be thrown and continue 
 		//set up the clusterMaster to listen to new Pis
 		try {

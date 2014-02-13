@@ -10,7 +10,7 @@ import java.sql.DriverManager;
 
 import uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling.WebServerListener;
 
-public class QueryHandlerSpecifictaion {
+public class QueryHandlerSpecification {
 	public static void runTests() throws Exception {
 		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/juliettest", "root", "rootword");
 		con.createStatement().execute("DROP TABLE IF EXISTS symbol");
@@ -47,7 +47,7 @@ public class QueryHandlerSpecifictaion {
 	
 	public static void main(String[] args) {
 		try {
-			QueryHandlerSpecifictaion.runTests();
+			QueryHandlerSpecification.runTests();
 		} catch (Exception e) {
 			System.out.println("[QueryHandler] Tests failed");
 			e.printStackTrace();
