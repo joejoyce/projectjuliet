@@ -1,6 +1,5 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,7 +12,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import uk.ac.cam.cl.juliet.common.Container;
@@ -72,7 +70,6 @@ public class Client {
 	private void checkoutContainer(InFlightContainer container) {
 		workCount++;
 		//jobqueue.add(container);
-		System.out.println("Added to job queue: " + jobqueue.size());		
 		hash.put(container.getPacketId(), container);
 	}
 	
@@ -85,11 +82,10 @@ public class Client {
 	private InFlightContainer checkbackContainer(Container container) {
 		Long l = container.getPacketId();
 		InFlightContainer cont = hash.get(l);
-		System.out.println("About to get backing: " + l);
+		System.out.println("Received ack for packet ID: " + l);
 		if(null != cont) {
 			//jobqueue.remove(cont);
 			hash.remove(l);
-			System.out.println("Removed from job queue: " + l);
 			workCount--;
 		} else {
 			System.out.println("Null InFlightContainer recieved from hash");
@@ -111,7 +107,7 @@ public class Client {
 				
 		cleaner.cancel(false); //Try to stop the regular operation flushing my queue, waiting until finished
 		try {
-			System.out.println("about to close stuff--------==========================");
+			System.out.println("---------------Close Client has been called----------------");
 			out.close();
 			in.close(); //Should also have the effect of closing the threads that read and write on them
 			s.close();
@@ -150,12 +146,10 @@ public class Client {
 					Object recieve = null;
 					try {
 						recieve = in.readObject();
-						System.out.println("Boom");
+						System.out.println("Received an object from client...");
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 						closeClient();
 						return;
@@ -165,12 +159,9 @@ public class Client {
 						//fantastic!
 						//Count the packets back in
 						Container container = (Container)recieve;
-						System.out.println("recieved ack for: " + container.getPacketId());
-						
 						InFlightContainer record = checkbackContainer(container);
 						if(record != null)
 							record.executeCallback(container);
-						//Packet dealt with
 					}
 					//Otherwise ignore for the moment
 				}
@@ -188,7 +179,7 @@ public class Client {
 						checkoutContainer(container);
 						out.writeObject(container.getContainer());
 						totalPackets++; //TODO this means it won't count objects in the queue
-						System.out.println("Written obj to client");
+						System.out.println("Written packet ID: " + container.getPacketId());
 					} catch (InterruptedException e){
 						e.printStackTrace();
 						return;
@@ -198,7 +189,6 @@ public class Client {
 						return;
 					}
 					if(this.isInterrupted()) {
-						System.out.println("BAD");
 						return; //In case it's not thrown whilst waiting?
 					}
 				}
@@ -228,7 +218,7 @@ public class Client {
 		InFlightContainer ifc = new InFlightContainer(c,cb);
 		ifc.setBroadcast(bcast);
 		try {
-			System.out.println("Abnout to add to send q: " + sendQueue.size());
+			System.out.println("About to add to send queue: " + sendQueue.size());
 			sendQueue.put(ifc);
 			System.out.println("Added to send queue: " + sendQueue.size());
 		} catch (InterruptedException e) {
@@ -287,7 +277,7 @@ public class Client {
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.getBroadcast()) {
 						//Reply hasn't been received and not broadcast so resend
-						System.out.println("Resending packet");
+						System.out.println("Resending packet: " + ifc.getPacketId());
 						try {
 							parent.sendPacket(ifc.getContainer(),ifc.getCallback());
 						} catch (NoClusterException e) {
