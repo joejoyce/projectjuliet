@@ -64,8 +64,10 @@ exports.getOrder = function(req, res) {
 	client3.on('end', function() {
 		var offers = JSON.parse(offerOrderBookData);
 		var bids = JSON.parse(bidOrderBookData);
+		var spread = 0;
 		
-		var spread = offers[0].price*priceScale - bids[0].price*priceScale;
+		if(offers[0] && bids[0])
+			spread = offers[0].price*priceScale - bids[0].price*priceScale;
 
 		res.render('order', {
     	title: 'Order',
