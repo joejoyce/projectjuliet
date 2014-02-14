@@ -12,6 +12,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
 
@@ -73,7 +74,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			Debug.println(Debug.INFO,"Running a status query");
 			ClusterMaster cm = ClusterServer.cm;
 			Client carr[] = cm.listClients();
-			
+			Debug.println(Debug.INFO,"Connected clients" + Arrays.toString(carr));
 			StringBuilder res = new StringBuilder();
 			res.append("[");
 			for(int i = 0; i< carr.length; i++) {

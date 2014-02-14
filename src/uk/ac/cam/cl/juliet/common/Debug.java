@@ -39,8 +39,8 @@ class OutputWrap {
 public class Debug {
 	private static String myAddr = null;
 	
-	public static int SHOWSTOP = 30, ERROR = 20, WARN = 10;
-	public static int INFO = 0, DEBUG = -10, ALL = -20; 
+	public static int SHOWSTOP = 40, ERROR = 30, WARN = 20;
+	public static int INFO = 10, DEBUG = 0, ALL = -10; 
 	
 	
 	private static int default_priority = 0;
