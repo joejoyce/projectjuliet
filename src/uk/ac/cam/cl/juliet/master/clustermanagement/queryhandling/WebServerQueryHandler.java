@@ -53,7 +53,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 							   	break;
 				case "cluster": runClusterQuery(splitQuery[1], pw);
 								break;
-				default: Debug.println("Unsupported query type");
+				default: Debug.println(Debug.ERROR,"Unsupported query type");
 			}
 			
 			pw.flush();
