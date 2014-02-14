@@ -176,7 +176,8 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	@Override
 	public Client[] listClients() {
-		return (Client[]) clientQueue.toArray();
+		Client[] arr = clientQueue.toArray(new Client[0]);
+		return arr;
 	}
 	
 	@Override
