@@ -74,7 +74,6 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			Debug.println(Debug.INFO,"Running a status query");
 			ClusterMaster cm = ClusterServer.cm;
 			Client carr[] = cm.listClients();
-			Debug.println(Debug.INFO,"Connected clients" + Arrays.toString(carr));
 			StringBuilder res = new StringBuilder();
 			res.append("[");
 			for(int i = 0; i< carr.length; i++) {
@@ -90,7 +89,9 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				}
 			}
 			res.append("]");
-			pw.print(res.toString());
+			String rtn = res.toString();
+			Debug.println(Debug.INFO,"Status query result" + rtn);
+			pw.print(rtn);
 		}
 	}
 	public void runConfigQuery(String query, PrintWriter pw) {}
