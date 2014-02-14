@@ -78,7 +78,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			for(int i = 0; i< carr.length; i++) {
 				res.append(" { \"name\" : \"");
 				res.append(carr[i].getClientIP().toString());
-				res.append(", \"totalPackets\" : ");
+				res.append("\", \"totalPackets\" : ");
 				res.append(carr[i].getTotalWork());
 				res.append(", \"currentPackets\" : ");
 				res.append(carr[i].getCurrentWork());
