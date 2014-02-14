@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnectionUnit;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
@@ -16,6 +17,9 @@ import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
  */
 public class Client {
 	public static void main(String[] args) {
+		Debug.registerOutputLocation(System.out);
+		Debug.setPriority(10); //Default priority is 5
+		
 		Listener listener = new Listener();
 		try {
 			DatabaseConnection db = new DatabaseConnectionUnit(
@@ -24,8 +28,7 @@ public class Client {
 							"rootword"));
 			listener.listen(args[0], 5000, db, new XDPProcessorUnit(db), null);
 		} catch (IOException e) {
-			System.err
-					.println("An error occurred communicating with the server.");
+			System.err.println("An error occurred communicating with the server.");
 			e.printStackTrace();
 			System.exit(0);
 		} catch (SQLException e) {
