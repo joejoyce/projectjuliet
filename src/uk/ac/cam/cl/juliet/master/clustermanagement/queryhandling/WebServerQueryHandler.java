@@ -69,7 +69,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	
 	public void runStatusQuery(String query, PrintWriter pw) {
 		//Returns a json array of objects of name, totalPackets and currentPackets
-		if(query.trim().equals("listclients")) {
+		if(query.equals("listclients")) {
 			ClusterMaster cm = ClusterServer.cm;
 			Client carr[] = cm.listClients();
 			
