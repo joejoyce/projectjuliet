@@ -20,7 +20,7 @@ import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 public class Client {
 	public static void main(String[] args) {
 		Debug.registerOutputLocation(System.out);
-		Debug.setPriority(-50); // Default priority is 5
+		Debug.setPriority(Debug.WARN);
 
 		Listener listener = new Listener();
 		try {
@@ -32,13 +32,15 @@ public class Client {
 			
 			Scanner s = new Scanner(System.in);
 			String input = "";
-			while(true) {
+			//Although this won't close it!
+			while(input != "quit") {
 				input = s.nextLine();
 				System.out.println("input: " + input);
 				if(Debug.parseDebugArgs(input)) {
 					continue;
 				}
 			}
+			s.close();
 		} catch (IOException e) {
 			System.err
 					.println("An error occurred communicating with the server.");

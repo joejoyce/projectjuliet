@@ -151,6 +151,7 @@ public class Client {
 					} catch (ClassNotFoundException e) {
 						e.printStackTrace();
 					} catch (IOException e) {
+						Debug.println(Debug.SHOWSTOP,e.getMessage());
 						e.printStackTrace();
 						closeClient();
 						return;
@@ -185,6 +186,7 @@ public class Client {
 						e.printStackTrace();
 						return;
 					} catch (IOException e) {
+						Debug.println(Debug.SHOWSTOP,e.getMessage());
 						e.printStackTrace();
 						closeClient();
 						return;
