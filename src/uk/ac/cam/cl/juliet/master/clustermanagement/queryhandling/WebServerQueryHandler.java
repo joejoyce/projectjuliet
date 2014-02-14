@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 /**
  * @description WebServerQueryHandler
@@ -48,14 +49,14 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 							   	break;
 				case "cluster": runClusterQuery(splitQuery[1], pw);
 								break;
-				default: System.out.println("Unsupported query type");
+				default: Debug.println("Unsupported query type");
 			}
 			
 			pw.flush();
 			pw.close();
 			server.close();
 		} catch (IOException e) {
-			System.out.println("Error reading query from webserver");
+			Debug.println("Error reading query from webserver");
 			e.printStackTrace();
 		} 
     }

@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.master.dataprocessor;
 import java.io.IOException;
 import java.util.Scanner;
 
+import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
@@ -43,10 +44,13 @@ public class DataProcessor {
 				break;
 			}
 		} while (packet != null);
-		System.out.println("Finished entire stream");
+		Debug.println("Finished entire stream");
 	}
 
 	public static void main(String[] args) throws IOException {
+		Debug.registerOutputLocation(System.out);
+		Debug.setPriority(10); //Default is 5 so no msg show
+		
 		String file1, file2, file3, file4;
 		float skipBoundary;
 		try {
@@ -64,7 +68,7 @@ public class DataProcessor {
 		m.start(5000);
 		DataProcessor dp = new DataProcessor(ds, m);
 		Scanner s = new Scanner(System.in);
-		System.out.println("GO?");
+		Debug.println("GO?");
 		s.nextLine();
 		dp.start();
 		s.close();

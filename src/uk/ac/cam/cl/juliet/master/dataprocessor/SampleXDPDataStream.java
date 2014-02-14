@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.master.dataprocessor;
 
+import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 
 import java.io.RandomAccessFile;
@@ -73,7 +74,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 	public XDPRequest getPacket() throws IOException {
 		
 		if(currentPacketCount % 100 == 0)
-			System.out.println("packet num: " + currentPacketCount);
+			Debug.println("packet num: " + currentPacketCount);
 		
 		TimeStamp nextPacketData = getNextPacketDataStream();
 		
@@ -114,7 +115,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 		
 		if(systemDifferenceNS < 0) {
 			// System is falling behind realtime
-			System.out.println("System is " + (-systemDifferenceMS) + " milliseconds behind realtime stream");
+			Debug.println("System is " + (-systemDifferenceMS) + " milliseconds behind realtime stream");
 		}
 		else {
 			/*initialCallTimeNS -= systemDifferenceNS;
@@ -122,7 +123,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 			return new XDPRequest(fileData, toUnsignedInt(deliveryFlag));*/
 			
 			// System is ahead of realtime stream - wait for a bit
-			System.out.println("System is " + systemDifferenceMS + " milliseconds ahead of realtime stream");
+			Debug.println("System is " + systemDifferenceMS + " milliseconds ahead of realtime stream");
 			try {
 				long milliSeconds = 0L;
 				if(systemDifferenceNS > 999999) {
@@ -210,7 +211,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 		byte[] sendTimeBytes = new byte[4];
 		byte[] sendTimeNSBytes = new byte[4];		
 		if(dataChannel.read(sendTimeBytes) == -1) {
-			System.out.println("Datachanel: " + dataChannel.length() + ", reached end of file");
+			Debug.println("Datachanel: " + dataChannel.length() + ", reached end of file");
 			// End of stream reached, make this TimeStamp unfavourable
 			return new TimeStamp(Long.MAX_VALUE, Long.MAX_VALUE, dataChannel);
 		}

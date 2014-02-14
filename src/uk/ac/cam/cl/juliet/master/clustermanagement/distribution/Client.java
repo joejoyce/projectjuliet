@@ -15,6 +15,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import uk.ac.cam.cl.juliet.common.Container;
+import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 
 final class ContainerTimeComparator implements Comparator<InFlightContainer> {
@@ -82,13 +83,13 @@ public class Client {
 	private InFlightContainer checkbackContainer(Container container) {
 		Long l = container.getPacketId();
 		InFlightContainer cont = hash.get(l);
-		System.out.println("Received ack for packet ID: " + l);
+		Debug.println("Received ack for packet ID: " + l);
 		if(null != cont) {
 			//jobqueue.remove(cont);
 			hash.remove(l);
 			workCount--;
 		} else {
-			System.out.println("Null InFlightContainer recieved from hash");
+			Debug.println("Null InFlightContainer recieved from hash");
 		}
 		return cont;
 	}
@@ -107,7 +108,7 @@ public class Client {
 				
 		cleaner.cancel(false); //Try to stop the regular operation flushing my queue, waiting until finished
 		try {
-			System.out.println("---------------Close Client has been called----------------");
+			Debug.println("---------------Close Client has been called----------------");
 			out.close();
 			in.close(); //Should also have the effect of closing the threads that read and write on them
 			s.close();
@@ -146,7 +147,7 @@ public class Client {
 					Object recieve = null;
 					try {
 						recieve = in.readObject();
-						System.out.println("Received an object from client...");
+						Debug.println("Received an object from client...");
 					} catch (ClassNotFoundException e) {
 						e.printStackTrace();
 					} catch (IOException e) {
@@ -179,7 +180,7 @@ public class Client {
 						checkoutContainer(container);
 						out.writeObject(container.getContainer());
 						totalPackets++; //TODO this means it won't count objects in the queue
-						System.out.println("Written packet ID: " + container.getPacketId());
+						Debug.println("Written packet ID: " + container.getPacketId());
 					} catch (InterruptedException e){
 						e.printStackTrace();
 						return;
@@ -218,9 +219,9 @@ public class Client {
 		InFlightContainer ifc = new InFlightContainer(c,cb);
 		ifc.setBroadcast(bcast);
 		try {
-			System.out.println("About to add to send queue: " + sendQueue.size());
+			Debug.println("About to add to send queue: " + sendQueue.size());
 			sendQueue.put(ifc);
-			System.out.println("Added to send queue: " + sendQueue.size());
+			Debug.println("Added to send queue: " + sendQueue.size());
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			return -1;
@@ -281,7 +282,7 @@ public class Client {
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.getBroadcast()) {
 						//Reply hasn't been received and not broadcast so resend
-						System.out.println("Resending packet: " + ifc.getPacketId());
+						Debug.println("Resending packet: " + ifc.getPacketId());
 						try {
 							parent.sendPacket(ifc.getContainer(),ifc.getCallback());
 						} catch (NoClusterException e) {
