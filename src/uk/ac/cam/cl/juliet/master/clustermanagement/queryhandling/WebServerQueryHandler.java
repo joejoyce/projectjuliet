@@ -60,7 +60,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			pw.close();
 			server.close();
 		} catch (IOException e) {
-			Debug.println("Error reading query from webserver");
+			Debug.println(Debug.ERROR,"Error reading query from webserver");
 			e.printStackTrace();
 		} 
     }
@@ -70,6 +70,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	public void runStatusQuery(String query, PrintWriter pw) {
 		//Returns a json array of objects of name, totalPackets and currentPackets
 		if(query.equals("listclients")) {
+			Debug.println(Debug.INFO,"Running a status query");
 			ClusterMaster cm = ClusterServer.cm;
 			Client carr[] = cm.listClients();
 			
@@ -87,6 +88,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 					res.append(",");
 				}
 			}
+			res.append("]");
 			pw.print(res.toString());
 		}
 	}
@@ -103,7 +105,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 */
 	public void runBasicQuery(String query, PrintWriter pw) {
 		try {		
-			Debug.println("Got query: " + query);
+			Debug.println(Debug.INFO,"Got query: " + query);
 			Statement s = con.createStatement();
 			ResultSet res = s.executeQuery(query);
 			if(!res.isBeforeFirst()) {    
@@ -112,10 +114,10 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				return;
 			}
 			String jsonResults = toJSON(res);
-			Debug.println("Writing: " + jsonResults);
+			Debug.println(Debug.DEBUG,"Writing: " + jsonResults);
 			pw.print(jsonResults);
 		} catch(SQLException e) {
-			Debug.println("SQL query exception");
+			Debug.println(Debug.ERROR,"SQL query exception");
 			e.printStackTrace();
 			pw.print("SQL Query Exception");
 		}
