@@ -24,7 +24,7 @@ block content
             th=(row.price*priceScale).toFixed(2)
             th=row.volume
             th=(row.price*priceScale*row.volume).toFixed(2)
-            th=moment(row.placed_s * Math.pow(10, 3)).format('DD/MM/YYYY - HH:MM:SS')
+            th=moment(row.placed_s * 1000).format('DD/MM/YYYY - HH:MM:ss')
     #bid-table
       h4 Bids:
       table.table.table-hover.table-striped
@@ -38,6 +38,6 @@ block content
             th=(row.price*priceScale).toFixed(2)
             th=row.volume
             th=(row.price*priceScale*row.volume).toFixed(2)
-            th=moment(row.placed_s * Math.pow(10, 3)).format('DD/MM/YYYY - HH:MM:SS')
+            th=moment(row.placed_s * Math.pow(10, 3)).format('DD/MM/YYYY - HH:MM:ss')
     .clear
   
