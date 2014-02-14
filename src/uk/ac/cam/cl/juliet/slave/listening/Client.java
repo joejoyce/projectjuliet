@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnectionUnit;
+import uk.ac.cam.cl.juliet.slave.queryprocessing.QueryProcessorUnit;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 
 /**
@@ -18,17 +19,18 @@ import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 public class Client {
 	public static void main(String[] args) {
 		Debug.registerOutputLocation(System.out);
-		Debug.setPriority(-50); //Default priority is 5
-		
+		Debug.setPriority(-50); // Default priority is 5
+
 		Listener listener = new Listener();
 		try {
 			DatabaseConnection db = new DatabaseConnectionUnit(
-					DriverManager.getConnection(
-							"jdbc:mysql://"+args[0]+":3306/juliet", "root",
-							"rootword"));
-			listener.listen(args[0], 5000, db, new XDPProcessorUnit(db), null);
+					DriverManager.getConnection("jdbc:mysql://" + args[0]
+							+ ":3306/juliet", "root", "rootword"));
+			listener.listen(args[0], 5000, db, new XDPProcessorUnit(db),
+					new QueryProcessorUnit(db));
 		} catch (IOException e) {
-			System.err.println("An error occurred communicating with the server.");
+			System.err
+					.println("An error occurred communicating with the server.");
 			e.printStackTrace();
 			System.exit(0);
 		} catch (SQLException e) {
