@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.master.dataprocessor;
 import java.io.IOException;
 import java.util.Scanner;
 
+import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
@@ -17,6 +18,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterExcept
 public class DataProcessor {
 	private XDPDataStream dataStream;
 	private ClusterMaster clusterMaster;
+	public volatile boolean pause = false;
 	
 	public DataProcessor(XDPDataStream dataStream, ClusterMaster cm) {
 		this.dataStream = dataStream;
@@ -28,6 +30,7 @@ public class DataProcessor {
 		//Scanner scan = new Scanner(System.in);
 		do {
 			try {
+				while(pause){}
 				packet = dataStream.getPacket();
 				if(packet.getDeliveryFlag() == 11) {
 					//scan.nextLine();
@@ -43,10 +46,13 @@ public class DataProcessor {
 				break;
 			}
 		} while (packet != null);
-		System.out.println("Finished entire stream");
+		Debug.println("Finished entire stream");
 	}
 
 	public static void main(String[] args) throws IOException {
+		Debug.registerOutputLocation(System.out);
+		Debug.setPriority(10); //Default is 5 so no msg show
+		
 		String file1, file2, file3, file4;
 		float skipBoundary;
 		try {
@@ -64,7 +70,7 @@ public class DataProcessor {
 		m.start(5000);
 		DataProcessor dp = new DataProcessor(ds, m);
 		Scanner s = new Scanner(System.in);
-		System.out.println("GO?");
+		Debug.println("GO?");
 		s.nextLine();
 		dp.start();
 		s.close();

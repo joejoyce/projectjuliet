@@ -36,10 +36,15 @@ class OutputWrap {
 	}
 }
 
-public class Debugging {
+public class Debug {
 	private static String myAddr = null;
-	private static int priority = 0;
-	private static int default_priority = 5;
+	
+	public static int SHOWSTOP = 30, ERROR = 20, WARN = 10;
+	public static int INFO = 0, DEBUG = -10, ALL = -20; 
+	
+	
+	private static int default_priority = 0;
+	private static int priority = default_priority;
 	
 	private static LinkedList<OutputWrap> out = new LinkedList<OutputWrap>();
 	
@@ -81,21 +86,21 @@ public class Debugging {
 	}
 	
 	public static void println(String str) {
-		if(priority >= default_priority)
+		if(priority <= default_priority)
 			send(str + "\n",default_priority);
 	}
 	
 	public static void print(String str) {
-		if(priority >= default_priority)
+		if(priority <= default_priority)
 			send(str,default_priority);
 	}
 	public static void println(int pri, String str) {
-		if(priority >= pri)
+		if(priority <= pri)
 			send(str + "\n",pri);
 	}
 	
 	public static void print(int pri, String str) {
-		if(priority >= pri)
+		if(priority <= pri)
 			send(str,pri);
 	}
 	

@@ -2,6 +2,10 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+<<<<<<< HEAD
 	<classpathentry kind="lib" path="/media/ntfs/michael/workspace/git/projectjuliet/mysql-connector-java-5.1.29-bin.jar"/>
+=======
+	<classpathentry kind="lib" path="mysql-connector-java-5.1.29-bin.jar"/>
+>>>>>>> branch 'master' of https://github.com/joejoyce/projectjuliet
 	<classpathentry kind="output" path="bin"/>
 </classpath>

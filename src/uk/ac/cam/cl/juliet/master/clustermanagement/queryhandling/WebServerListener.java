@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import uk.ac.cam.cl.juliet.common.Debug;
+
 /**
  * @description WebServerListener
  * Waits for connections from the WebServer and passes
@@ -28,9 +30,9 @@ public class WebServerListener implements Runnable {
 	public void run() {		
 		while(true) {
 			try {
-				System.out.println("Waiting for connection");
+				Debug.println("Waiting for connection");
 				Socket webserver = querySocket.accept();
-				System.out.println("Accepted new connection");
+				Debug.println("Accepted new connection");
 				WebServerQueryHandler wqh = new WebServerQueryHandler(webserver, con);
 				Thread t = new Thread(wqh);
 				t.start();

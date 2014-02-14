@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
+import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
 
@@ -96,9 +97,9 @@ public class ClusterMasterUnit implements ClusterMaster  {
 				while(true) {
 					try {
 						Socket connection = socket.accept();
-						System.out.println("About to add a new client!");						
+						Debug.println("About to add a new client!");						
 						addClient(connection);
-						System.out.println("Added a new client!");					
+						Debug.println("Added a new client!");					
 					} catch (IOException e) {
 						System.out.println("There was an error establishing a connection and spawning a client");
 						e.printStackTrace();
@@ -184,5 +185,14 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		Iterator<Client> iter = clientQueue.iterator();
 		while(iter.hasNext())
 			iter.next().broadcast(c);
+	}
+	
+	
+	@Override
+	public void broadcast(Container c, Callback cb) {
+		c.setPacketId(getNextId());
+		Iterator<Client> iter = clientQueue.iterator();
+		while(iter.hasNext())
+			iter.next().broadcast(c,cb);	
 	}
 }
