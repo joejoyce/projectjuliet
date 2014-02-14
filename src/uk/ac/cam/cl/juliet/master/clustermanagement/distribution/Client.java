@@ -49,6 +49,7 @@ public class Client {
 	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(200);
 	
 	private static AtomicInteger numberClients = new AtomicInteger(0);
+	private AtomicInteger workCount = new AtomicInteger(0);
 	
 	private static ContainerTimeComparator comparator = new ContainerTimeComparator();
 	//Keep track of the objects in flight
@@ -56,7 +57,6 @@ public class Client {
 	private PriorityBlockingQueue<InFlightContainer> jobqueue = new PriorityBlockingQueue<InFlightContainer>(16,comparator);
 	
 	private long totalPackets = 0;
-	private int workCount = 0;
 	/**
 	 *  Get the IP address of the Client that this Client object is connected to.
 	 * @return The InetAAddress of the client
@@ -69,7 +69,7 @@ public class Client {
 	 * @param container
 	 */
 	private void checkoutContainer(InFlightContainer container) {
-		workCount++;
+		workCount.incrementAndGet();
 		//jobqueue.add(container);
 		hash.put(container.getPacketId(), container);
 	}
@@ -87,7 +87,7 @@ public class Client {
 		if(null != cont) {
 			//jobqueue.remove(cont);
 			hash.remove(l);
-			workCount--;
+			workCount.decrementAndGet();
 		} else {
 			Debug.println("Null InFlightContainer recieved from hash");
 		}
@@ -203,7 +203,7 @@ public class Client {
 	 */
 	public int getCurrentWork() {
 		//This is the amount of work which has not been accounted for
-		return workCount;
+		return workCount.get();
 	}
 	/**
 	 * @return The number of Containers that have been sent out to this Client,
