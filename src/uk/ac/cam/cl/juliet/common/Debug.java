@@ -39,7 +39,11 @@ class OutputWrap {
 public class Debug {
 	private static String myAddr = null;
 	
-	private static int default_priority = 5;
+	public static int SHOWSTOP = 30, ERROR = 20, WARN = 10;
+	public static int INFO = 0, DEBUG = -10, ALL = -20; 
+	
+	
+	private static int default_priority = 0;
 	private static int priority = default_priority;
 	
 	private static LinkedList<OutputWrap> out = new LinkedList<OutputWrap>();
