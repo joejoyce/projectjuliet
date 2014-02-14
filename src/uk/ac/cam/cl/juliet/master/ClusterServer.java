@@ -48,7 +48,7 @@ public class ClusterServer {
                 cm.start(5000);
                 final DataProcessor dp = new DataProcessor(ds, cm);
                 Scanner s = new Scanner(System.in);
-                Debug.println(11,"GO?");
+                System.out.println("GO?");
 		s.nextLine();
 		Thread t = new Thread(){
 			public void run() {
