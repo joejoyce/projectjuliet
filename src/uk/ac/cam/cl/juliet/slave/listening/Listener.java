@@ -9,6 +9,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
+import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.StringTestPacket;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
@@ -89,7 +90,7 @@ public class Listener {
 				Container response = responseQueue.take();
 				output.writeObject(response);
 				output.flush();
-				System.out.println("sent: size: " + responseQueue.size());
+				Debug.println("sent: size: " + responseQueue.size());
 			} catch (IOException e) {
 				e.printStackTrace();
 				// Just attempt to reconnect
@@ -112,7 +113,7 @@ public class Listener {
 	private void readPacket() {
 		try {
 			Container container = (Container) this.input.readObject();
-			System.out.println("Got new object");
+			Debug.println("Got new object");
 			if (container instanceof ConfigurationPacket)
 				handleConfigurationPacket((ConfigurationPacket) container);
 			else {
@@ -149,7 +150,7 @@ public class Listener {
 	private void processPacket() {
 		try {
 			Container container = this.requestQueue.take();
-			System.out.println("Removed packet from requestQueure");
+			Debug.println("Removed packet from requestQueure");
 			if (container instanceof XDPRequest) {
 				processXDPRequest((XDPRequest) container);
 			} else if (container instanceof QueryPacket) {
