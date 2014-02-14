@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import uk.ac.cam.cl.juliet.common.Debug;
+
 public class DatabaseConnectionUnit implements DatabaseConnection {
 	private Connection connection;
 	private Statement batchQuery;
@@ -95,7 +97,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(5, packetTimestamp);
 		statement.setLong(6, symbolSeqNumber);
 		batchQuery.addBatch(statement.toString().split(":")[1]);
-		System.out.println("Added trade------------========");
+		Debug.println("Added trade------------========");
 	}
 
 	@Override
@@ -176,7 +178,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	public void commit() throws SQLException{
 		batchQuery.executeBatch();
 		batchQuery.close();
-		System.out.println("Executed batch");
+		Debug.println("Executed batch");
 		batchQuery = connection.createStatement();
 	}
 	
