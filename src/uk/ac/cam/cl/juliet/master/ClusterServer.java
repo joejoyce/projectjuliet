@@ -63,33 +63,8 @@ public class ClusterServer {
 			System.out.println("input: " + input);
 			if(input.equals("pause")) {
 				dp.pause = !dp.pause;
-			} else if(input.matches("debug:\\s*\\w*")) {
-				String dargs[] = input.split(":");
-				if(dargs.length > 1) {
-					switch(dargs[1].trim()) {
-						case "ALL":
-							Debug.setPriority(Debug.ALL);
-							break;
-						case "DEBUG":
-							Debug.setPriority(Debug.DEBUG);
-							break;
-						case "INFO":
-							Debug.setPriority(Debug.INFO);
-							break;
-						case "WARN":
-							Debug.setPriority(Debug.WARN);
-							break;
-						case "ERROR":
-							Debug.setPriority(Debug.ERROR);
-							break;
-						case "SHOWSTOP":
-							Debug.setPriority(Debug.SHOWSTOP);
-							break;
-						default :
-							System.err.println(dargs[1] + " is not a valid debug level");
-					}
-				} else
-					System.err.println("Malformed debug level expression");
+			} else if (Debug.parseDebugArgs(input)) {
+				continue;
 			}
 			
 		}

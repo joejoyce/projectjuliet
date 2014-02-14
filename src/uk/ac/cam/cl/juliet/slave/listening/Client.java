@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.slave.listening;
 import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Scanner;
 
 import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
@@ -28,6 +29,16 @@ public class Client {
 							+ ":3306/juliet", "root", "rootword"));
 			listener.listen(args[0], 5000, db, new XDPProcessorUnit(db),
 					new QueryProcessorUnit(db));
+			
+			Scanner s = new Scanner(System.in);
+			String input = "";
+			while(true) {
+				input = s.nextLine();
+				System.out.println("input: " + input);
+				if(Debug.parseDebugArgs(input)) {
+					continue;
+				}
+			}
 		} catch (IOException e) {
 			System.err
 					.println("An error occurred communicating with the server.");
