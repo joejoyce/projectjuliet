@@ -18,6 +18,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterExcept
 public class DataProcessor {
 	private XDPDataStream dataStream;
 	private ClusterMaster clusterMaster;
+	public volatile boolean pause = false;
 	
 	public DataProcessor(XDPDataStream dataStream, ClusterMaster cm) {
 		this.dataStream = dataStream;
@@ -29,6 +30,7 @@ public class DataProcessor {
 		//Scanner scan = new Scanner(System.in);
 		do {
 			try {
+				while(pause){}
 				packet = dataStream.getPacket();
 				if(packet.getDeliveryFlag() == 11) {
 					//scan.nextLine();

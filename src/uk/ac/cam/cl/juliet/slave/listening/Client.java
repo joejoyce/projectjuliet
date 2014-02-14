@@ -18,7 +18,7 @@ import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 public class Client {
 	public static void main(String[] args) {
 		Debug.registerOutputLocation(System.out);
-		Debug.setPriority(10); //Default priority is 5
+		Debug.setPriority(-50); //Default priority is 5
 		
 		Listener listener = new Listener();
 		try {
