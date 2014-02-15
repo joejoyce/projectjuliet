@@ -90,7 +90,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			}
 			res.append("]");
 			String rtn = res.toString();
-			Debug.println(Debug.INFO,"Status query result" + rtn);
+			Debug.println(Debug.DEBUG,"Status query result" + rtn);
 			pw.print(rtn);
 		}
 	}

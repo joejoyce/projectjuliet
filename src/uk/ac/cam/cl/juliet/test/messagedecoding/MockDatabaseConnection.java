@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -310,5 +311,12 @@ public class MockDatabaseConnection implements DatabaseConnection {
 	
 	public void setConnection(Connection connection) {
 		// not needed
+	}
+
+	@Override
+	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start,
+			int end) throws SQLException {
+		// not needed
+		return null;
 	}
 }

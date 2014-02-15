@@ -156,6 +156,7 @@ public class Client {
 					} catch (ClassNotFoundException e) {
 						e.printStackTrace();
 					} catch (IOException e) {
+						Debug.println(Debug.SHOWSTOP,e.getMessage());
 						e.printStackTrace();
 						closeClient();
 						return;
@@ -198,6 +199,7 @@ public class Client {
 						}
 						Debug.println("Written packet ID: " + container.getPacketId());
 					} catch (IOException e) {
+						Debug.println(Debug.SHOWSTOP,e.getMessage());
 						e.printStackTrace();
 						closeClient();
 						return;
