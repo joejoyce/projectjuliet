@@ -295,6 +295,7 @@ public class Client {
 		if( null != (ifc = jobqueue.peek())) {
 			if( ifc.getDueTime() <= time ) {
 				//Remove and flush the rest of the queue
+				Debug.println(Debug.ERROR,"Timeout waiting for response from client " + address);
 				closeClient();
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.getBroadcast()) {
