@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.slave.distribution;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.sql.Connection;
@@ -215,6 +216,15 @@ public interface DatabaseConnection {
 	 */
 	public void changeTradeSession(long symbolIndex, long time_s, long time_ns,
 			long symbolSeqNumber, int tradingSession) throws SQLException;
+	
+	/**
+	 * Queries the database and returns the trades for a specific symbol in a specific time range.
+	 * @param symbolID
+	 * @param start
+	 * @param end
+	 * @return The trades for the specified symbol in the specified time range.
+	 */
+	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start, int end) throws SQLException;
 
 	/**
 	 * Commit the database changes that have been accumulated
@@ -230,5 +240,4 @@ public interface DatabaseConnection {
 	 *            The new connection to use.
 	 */
 	public void setConnection(Connection connection);
-
 }
