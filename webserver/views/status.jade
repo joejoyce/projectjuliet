@@ -3,6 +3,14 @@ extends layout
 block content
   .page-header
     h3 Status
-    p=dataObj
-
+    table.table.table-hover.table-striped
+      tr
+        th IP
+        th Total Packets
+        th Current Packets
+      each row in data
+        tr
+          th=row.name
+          th=row.totalPackets
+          th=row.currentPackets
  
