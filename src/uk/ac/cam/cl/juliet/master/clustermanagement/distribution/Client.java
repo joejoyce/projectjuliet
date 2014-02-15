@@ -7,9 +7,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -183,7 +181,6 @@ public class Client {
 				long then = System.nanoTime();
 				int packetsSentThisSecond = 0;
 				//ArrayList<InFlightContainer> containers = new ArrayList<InFlightContainer>();
-				boolean print = false;
 				while(true) {
 					try {
 						InFlightContainer container = sendQueue.take();
@@ -193,18 +190,17 @@ public class Client {
 						totalPackets++; //TODO this means it won't count objects in the queue
 						packetsSentThisSecond ++;
 						if(Math.abs(System.nanoTime() - then) > 1000000000) {
-							System.out.println("Packets sent this second: " + packetsSentThisSecond);
+							Debug.println(100, "Packets sent this second: " + packetsSentThisSecond);
 							then = System.nanoTime();
 							packetsSentThisSecond = 0;
 						}
 						Debug.println("Written packet ID: " + container.getPacketId());
 					} catch (IOException e) {
-						Debug.println(Debug.SHOWSTOP,e.getMessage());
+						Debug.println(Debug.SHOWSTOP, e.getMessage());
 						e.printStackTrace();
 						closeClient();
 						return;
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					

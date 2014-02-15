@@ -5,11 +5,9 @@ import uk.ac.cam.cl.juliet.common.XDPRequest;
 
 import java.io.RandomAccessFile;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -46,9 +44,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 	 * 			skip large periods of inactivity
 	 * @throws IOException
 	 */
-	public SampleXDPDataStream(String summaryFile, String channelOne, 
-			String channelTwo, String channelThree, float pSkipBoundary) 
-					throws IOException {
+	public SampleXDPDataStream(String summaryFile, String channelOne, String channelTwo, String channelThree, float pSkipBoundary) throws IOException {
 		this.skipBoundary = (long) (1000000000*pSkipBoundary); //convert to nanoseconds
 		this.summaryFileHandle = new RandomAccessFile(summaryFile, "r");
 		this.channelOneFileHandle = new RandomAccessFile(channelOne, "r");
@@ -75,8 +71,8 @@ public class SampleXDPDataStream implements XDPDataStream {
 	@SuppressWarnings("static-access")
 	public XDPRequest getPacket() throws IOException {
 		
-		if(currentPacketCount % 100 == 0)
-			Debug.println("packet num: " + currentPacketCount);
+		if(currentPacketCount % 10000 == 0)
+			Debug.println(1000,"packet num: " + currentPacketCount);
 		
 		TimeStamp nextPacketData = getNextPacketDataStream();
 		

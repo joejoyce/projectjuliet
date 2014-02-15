@@ -4,45 +4,68 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import uk.ac.cam.cl.juliet.common.Debug;
 
 public class DatabaseConnectionUnit implements DatabaseConnection {
 	private Connection connection;
-	private PreparedStatement addOrderBatch = null;
+	private PreparedStatement addOrderBatch;
+	private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 	private int batchSize = 0;
+	
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
+		this.addOrderBatch = connection.prepareStatement(
+				"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s, "
+						  + "placed_seq_num, updated_s, updated_seq_num) "
+						  + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+					);	
 		
+		final Runnable executeBatch = new Runnable() {
+			public void run() {
+				try {
+					System.out.println("About to execute batch size: " + batchSize);
+					long then = System.nanoTime();
+					addOrderBatch.executeBatch();
+					
+					synchronized(addOrderBatch) {
+						addOrderBatch.close();
+						addOrderBatch = connection.prepareStatement(
+								"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s, "
+										  + "placed_seq_num, updated_s, updated_seq_num) "
+										  + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+									);	
+					}
+					
+					double diff = Math.abs(System.nanoTime() - then);
+					diff /= 1000000;
+					System.out.println("Taken: " + diff);
+					batchSize = 0;
+				} catch (SQLException e) {					
+					e.printStackTrace();
+				}
+			}
+		};
+		scheduler.scheduleAtFixedRate(executeBatch, 5, 5, TimeUnit.SECONDS);
 	}
 
 	@Override
 	public void addOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, boolean isSell, int tradeSession, long packetTimestamp) throws SQLException {
-		if(addOrderBatch == null) {
-			addOrderBatch = connection.prepareStatement(
-					"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s, "
-							  + "placed_seq_num, updated_s, updated_seq_num) "
-							  + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-						);
+		synchronized(addOrderBatch) {			
+			addOrderBatch.setLong(1, orderID);
+			addOrderBatch.setLong(2, symbolIndex);
+			addOrderBatch.setLong(3, price);
+			addOrderBatch.setLong(4, volume);
+			addOrderBatch.setBoolean(5, isSell);
+			addOrderBatch.setLong(6, packetTimestamp);
+			addOrderBatch.setLong(7, symbolSeqNumber);
+			addOrderBatch.setLong(8, packetTimestamp);
+			addOrderBatch.setLong(9, symbolSeqNumber);
+			addOrderBatch.addBatch();
 		}
-		
-		
-		/*PreparedStatement statement = this.connection.prepareStatement(
-				"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s, "
-			  + "placed_seq_num, updated_s, updated_seq_num) "
-			  + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-		);*/		
-		addOrderBatch.setLong(1, orderID);
-		addOrderBatch.setLong(2, symbolIndex);
-		addOrderBatch.setLong(3, price);
-		addOrderBatch.setLong(4, volume);
-		addOrderBatch.setBoolean(5, isSell);
-		addOrderBatch.setLong(6, packetTimestamp);
-		addOrderBatch.setLong(7, symbolSeqNumber);
-		addOrderBatch.setLong(8, packetTimestamp);
-		addOrderBatch.setLong(9, symbolSeqNumber);
-		addOrderBatch.addBatch();
 		batchSize ++;
 	}
 
@@ -103,7 +126,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(6, symbolSeqNumber);
 		//batchQuery.addBatch(statement.toString().split(":")[1]);
 		//batchSize ++;
-		Debug.println("Added trade------------========");
+		Debug.println("Added trade");
 	}
 
 	@Override
@@ -143,9 +166,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	@Override
 	public void addSourceTimeReference(long symbolIndex, long symbolSeqNumber,
 			long referenceTime) throws SQLException {
-		// TODO implement method. Not sure how to add a source time reference to
-		// the database
-
+		// TODO implement method. Not sure how to add a source time reference to the database
 	}
 
 	@Override
@@ -181,35 +202,18 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		// session.
 	}
 
-	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start, int end)
-			throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("SELECT * FROM trades WHERE symbol_id=? and offered_s>=? and offered_s<?");
+	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start, int end) throws SQLException {
+		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trades WHERE symbol_id=? and offered_s>=? and offered_s<?");
 		ResultSet result;
-		try{
-		statement.setLong(1, symbolID);
-		statement.setInt(2, start);
-		statement.setInt(3, end);
-		result =  statement.executeQuery();
-	}finally{
-		statement.close();
-	}
+		try {
+			statement.setLong(1, symbolID);
+			statement.setInt(2, start);
+			statement.setInt(3, end);
+			result =  statement.executeQuery();
+		} finally {
+			statement.close();
+		}
 		return result;
-	}
-
-	@Override
-	public void commit() throws SQLException {
-		//System.out.println("Exectuing batch size: " + batchSize);
-		long then = System.nanoTime();
-		if(addOrderBatch == null) return;
-		addOrderBatch.executeBatch();
-		addOrderBatch.close();
-		addOrderBatch = null;
-		double diff = Math.abs(System.nanoTime() - then);
-		diff /= 1000000;
-		//System.out.println("Took: " + diff + "ms");
-		Debug.println("Executed batch");
-		batchSize = 0;
 	}
 
 	public void setConnection(Connection connection) {
