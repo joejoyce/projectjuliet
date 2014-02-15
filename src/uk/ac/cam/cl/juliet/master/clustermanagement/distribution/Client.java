@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import uk.ac.cam.cl.juliet.common.Container;
@@ -72,7 +73,7 @@ public class Client {
 	 */
 	private void checkoutContainer(InFlightContainer container) {
 		workCount.incrementAndGet();
-		//jobqueue.add(container);
+		jobqueue.add(container);
 		hash.put(container.getPacketId(), container);
 	}
 	
@@ -87,7 +88,7 @@ public class Client {
 		InFlightContainer cont = hash.get(l);
 		Debug.println("Received ack for packet ID: " + l);
 		if(null != cont) {
-			//jobqueue.remove(cont);
+			jobqueue.remove(cont);
 			hash.remove(l);
 			workCount.decrementAndGet();
 		} else {
@@ -127,7 +128,7 @@ public class Client {
 			workers = Executors.newScheduledThreadPool(numberPooledThreads);
 		}
 		//Schedule queueflush for me
-		//cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0, queueFlushTime, TimeUnit.MILLISECONDS);
+		cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0, queueFlushTime, TimeUnit.MILLISECONDS);
 		
 		address = s.getInetAddress();
 		try {
@@ -290,6 +291,7 @@ public class Client {
 		if( null != (ifc = jobqueue.peek())) {
 			if( ifc.getDueTime() <= time ) {
 				//Remove and flush the rest of the queue
+				Debug.println(Debug.ERROR,"Timeout waiting for response from client " + address);
 				closeClient();
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.getBroadcast()) {
