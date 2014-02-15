@@ -13,7 +13,11 @@ exports.getStatus = function(req, res) {
 
   client.on('data', function(data) {
     var dataObj = JSON.parse(data);
+<<<<<<< HEAD
     console.dir(dataObj);
+=======
+console.dir(dataObj);
+>>>>>>> ae88efc677d6bfaf79fd3530a45661282cb7db57
     res.render('status', {
       title: 'Status',
       data: dataObj

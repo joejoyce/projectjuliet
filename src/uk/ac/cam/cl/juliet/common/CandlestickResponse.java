@@ -9,7 +9,7 @@ package uk.ac.cam.cl.juliet.common;
  */
 public class CandlestickResponse extends QueryResponse {
 	private static final long serialVersionUID = 1L;
-	private int start;
+	private long start;
 	private long open;
 	private long close;
 	private long high;
@@ -26,7 +26,7 @@ public class CandlestickResponse extends QueryResponse {
 	 * @param low The low value of the candlestick.
 	 * @param volume The volume of trades in the candlestick.
 	 */
-	public CandlestickResponse(long id, int start, long open, long close, long high, long low, long volume){
+	public CandlestickResponse(long id, long start, long open, long close, long high, long low, long volume){
 		super(id, true);
 		this.start = start;
 		this.open = open;
@@ -36,7 +36,7 @@ public class CandlestickResponse extends QueryResponse {
 		this.volume = volume;
 	}
 	
-	public int getStart() {
+	public long getStart() {
 		return start;
 	}
 	
