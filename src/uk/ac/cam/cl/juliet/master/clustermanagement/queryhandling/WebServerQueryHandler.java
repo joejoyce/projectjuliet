@@ -95,8 +95,21 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 	}
 	public void runConfigQuery(String query, PrintWriter pw) {}
-	public void runClusterQuery(String query, PrintWriter pw) {}	
+	public void runClusterQuery(String query, PrintWriter pw) {
+		String type = query.indexOf(' ') == -1 ? query : query.substring(0, query.indexOf(' '));
+		String options = query.indexOf(' ') == -1? "" : query.substring(query.indexOf(' ') + 1);
+		Debug.println(Debug.INFO,"Running a cluster query. type=" + type);
+		
+		switch(type) {
+		case "candlestick":
+			getCandlestickChartData(options, pw);
+		}
+	}
 	
+	private void getCandlestickChartData(String options, PrintWriter pw) {
+		
+	}
+
 	/**
 	 * Runs a basic query.
 	 * Executes the SQL query string received from the webserver
