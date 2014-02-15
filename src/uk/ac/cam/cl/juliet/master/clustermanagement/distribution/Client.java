@@ -60,6 +60,8 @@ public class Client {
 	private PriorityBlockingQueue<InFlightContainer> jobqueue = new PriorityBlockingQueue<InFlightContainer>(16,comparator);
 	
 	private long totalPackets = 0;
+	public int packetsSentThisSecond = 0;
+	
 	/**
 	 *  Get the IP address of the Client that this Client object is connected to.
 	 * @return The InetAAddress of the client
@@ -180,8 +182,6 @@ public class Client {
 			public void run() {
 				//This method sends the packets to the client
 				long then = System.nanoTime();
-				int packetsSentThisSecond = 0;
-				//ArrayList<InFlightContainer> containers = new ArrayList<InFlightContainer>();
 				while(true) {
 					try {
 						InFlightContainer container = sendQueue.take();

@@ -145,4 +145,16 @@ public class MockClusterMaster implements ClusterMaster {
 		
 	}
 
+	@Override
+	public long getTime() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getPacketThroughput() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

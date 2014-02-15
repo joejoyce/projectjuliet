@@ -9,6 +9,7 @@ import uk.ac.cam.cl.juliet.common.XDPResponse;
  *
  */
 public class MockXDPResponse extends XDPResponse {
+	private static final long serialVersionUID = 1L;
 	private int sequenceNo;
 	
 	public MockXDPResponse(long id, boolean result) {

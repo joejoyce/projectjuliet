@@ -7,15 +7,14 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
-
 import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.master.ClusterServer;
@@ -93,10 +92,58 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			Debug.println(Debug.DEBUG,"Status query result" + rtn);
 			pw.print(rtn);
 		}
+		
+		if(query.equals("time")) {			
+			ClusterMaster cm = ClusterServer.cm;
+			long t = cm.getTime();
+			System.out.println("GOt tome: " + t);
+			pw.write(t + "");
+		}
+		
+		if(query.equals("throughput")) {
+			ClusterMaster cm = ClusterServer.cm;
+			int total = cm.getPacketThroughput();
+			pw.write(total + "");
+		}
 	}
 	public void runConfigQuery(String query, PrintWriter pw) {}
-	public void runClusterQuery(String query, PrintWriter pw) {}	
+	public void runClusterQuery(String query, PrintWriter pw) {
+		String type = query.indexOf(' ') == -1 ? query : query.substring(0, query.indexOf(' '));
+		String options = query.indexOf(' ') == -1? "" : query.substring(query.indexOf(' ') + 1);
+		Debug.println(Debug.INFO,"Running a cluster query. type=" + type);
+		
+		switch(type) {
+		case "candlestick":
+			try {
+				getCandlestickChartData(options, pw);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
 	
+	private void getCandlestickChartData(String options, PrintWriter pw) throws SQLException {
+		String[] split = options.split(" ");
+		long symbolID = Long.parseLong(split[0]);
+		int secondsPerCandlestick = Integer.parseInt(split[1]);
+		
+	    PreparedStatement rangeStatement = con.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
+	    ResultSet rs;
+	    try {
+	    	rangeStatement.setLong(1, symbolID);
+	    	rs = rangeStatement.executeQuery();
+	    }finally{
+	    	rangeStatement.close();
+	    }
+	    rs.next();
+	    long minTime = rs.getLong("min");
+	    long maxTime = rs.getLong("max");
+	    
+	    long numberOfCandlesticks = (maxTime - minTime) / secondsPerCandlestick;
+	    
+	}
+
 	/**
 	 * Runs a basic query.
 	 * Executes the SQL query string received from the webserver

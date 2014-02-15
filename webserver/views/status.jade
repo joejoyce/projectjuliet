@@ -1,8 +1,23 @@
 extends layout
 
+block jsStuff
+  script(src='/js/lib/segment-display.js')
+  script(src='/js/time.js')
+
 block content
   .page-header
     h3 Status
-    p=dataObj
-
+  
+  canvas#display(width='200', height='60')
+  
+  table.table.table-hover.table-striped
+    tr
+      th IP
+      th Total Packets
+      th Current Packets
+    each row in data
+      tr
+        th=row.name
+        th=row.totalPackets
+        th=row.currentPackets
  

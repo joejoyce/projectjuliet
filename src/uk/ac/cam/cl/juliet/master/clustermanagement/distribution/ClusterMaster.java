@@ -95,6 +95,14 @@ public interface ClusterMaster {
 	 * @return An array of currently connected Clients
 	 */
 	public abstract Client[] listClients();
+	
+	/**
+	 * @return Current system time
+	 */
+	public abstract long getTime();
+	
+	public abstract int getPacketThroughput();
+	
 
 	/**
 	 * Sends the Container c out to all currently connected clients

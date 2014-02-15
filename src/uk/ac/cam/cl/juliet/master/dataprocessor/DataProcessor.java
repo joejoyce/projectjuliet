@@ -27,13 +27,11 @@ public class DataProcessor {
 
 	public void start() {
 		XDPRequest packet = null;
-		//Scanner scan = new Scanner(System.in);
 		do {
 			try {
 				while(pause){}
 				packet = dataStream.getPacket();
 				if(packet.getDeliveryFlag() == 11) {
-					//scan.nextLine();
 					clusterMaster.sendPacket(packet);
 				}
 			} catch (IOException e) {
@@ -46,12 +44,12 @@ public class DataProcessor {
 				break;
 			}
 		} while (packet != null);
-		Debug.println("Finished entire stream");
+		Debug.println(100, "Finished entire stream");
 	}
 
 	public static void main(String[] args) throws IOException {
 		Debug.registerOutputLocation(System.out);
-		Debug.setPriority(10); //Default is 5 so no msg show
+		Debug.setPriority(10);
 		
 		String file1, file2, file3, file4;
 		float skipBoundary;
@@ -70,7 +68,7 @@ public class DataProcessor {
 		m.start(5000);
 		DataProcessor dp = new DataProcessor(ds, m);
 		Scanner s = new Scanner(System.in);
-		Debug.println("GO?");
+		Debug.println(100, "GO?");
 		s.nextLine();
 		dp.start();
 		s.close();

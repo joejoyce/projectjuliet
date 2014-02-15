@@ -108,7 +108,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 			// Need to update internal timings to keep everything in sync
 			initialCallTimeNS -= systemDifferenceNS;
 			currentPacketCount ++;
-			return new XDPRequest(fileData, toUnsignedInt(deliveryFlag));
+			return new XDPRequest(fileData, toUnsignedInt(deliveryFlag), nextPacketData.sendTime);
 		}
 		
 		if(systemDifferenceNS < 0) {
@@ -121,7 +121,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 			return new XDPRequest(fileData, toUnsignedInt(deliveryFlag));*/
 			
 			// System is ahead of realtime stream - wait for a bit
-			Debug.println("System is " + systemDifferenceMS + " milliseconds ahead of realtime stream");
+			Debug.println(100,"System is " + systemDifferenceMS + " milliseconds ahead of realtime stream");
 			try {
 				long milliSeconds = 0L;
 				if(systemDifferenceNS > 999999) {
@@ -134,7 +134,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 			}		
 		}
 		currentPacketCount ++;
-		return new XDPRequest(fileData, toUnsignedInt(deliveryFlag));
+		return new XDPRequest(fileData, toUnsignedInt(deliveryFlag), nextPacketData.sendTime);
 	}
 	
 	/**

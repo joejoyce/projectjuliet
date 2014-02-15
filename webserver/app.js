@@ -49,6 +49,7 @@ app.get('/order', orderController.orderBook);
 app.get('/stockPrice', stockController.getStockPrice);
 app.get('/stock', stockController.stock);
 app.get('/status', statusController.getStatus);
+app.get('/getTime', statusController.getTime);
 app.get('/settings', settingsController.getSettings);
 
 

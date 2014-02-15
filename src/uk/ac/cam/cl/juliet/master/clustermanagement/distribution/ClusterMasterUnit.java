@@ -7,7 +7,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
@@ -15,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 //import org.dhcp4java.DHCPCoreServer;
 //import org.dhcp4java.DHCPServerInitException;
 //import org.dhcp4java.DHCPServlet;
+
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
@@ -46,12 +46,11 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	private ServerSocket socket = null;
 	private AtomicLong nextId = new AtomicLong(0);
+	public long currentSystemTime;
 	
 	private static ClientLoadComparator clc = new ClientLoadComparator();
 	private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
 	private CopyOnWriteArrayList<Client> allClients = new CopyOnWriteArrayList<Client>();
-	//TODO need to sort out the priorityblocking queue so that it can be efficiently reordered on one update
-	//Make my own queue that also has fast random access so can be used for both ?
 	
 	public ClusterMasterUnit(String filename) {
 		StringReader r = new StringReader(filename);
@@ -65,7 +64,6 @@ public class ClusterMasterUnit implements ClusterMaster  {
 					cp.setSetting(arr[0],arr[1]);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -75,22 +73,10 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		Client c = new Client(skt,this);
 		clientQueue.add(c);
 		allClients.add(c);
-		//TODO sort this out
 	}
 	
 	@Override
 	public void start(int port) throws IOException {
-		/*if(null == dhcpServer) {
-		    try {
-		    	dhcpServer = DHCPCoreServer.initServer(new DHCPServlet(), null); //Why not DHCPStaticServlet?
-		        new Thread(dhcpServer).start();
-		    } catch (DHCPServerInitException e) {
-		        // die gracefully
-		    	System.out.println("Error starting DHCP server");
-		    	e.printStackTrace();
-		    }
-		}*/
-			
 		if(null != socket)
 			socket.close();
 		socket = new ServerSocket(port);
@@ -116,10 +102,6 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	@Override
 	public void stop() {
-		/*if(null != dhcpServer) {
-			dhcpServer.stopServer();
-			dhcpServer = null;
-		}*/
 		if(null != socket) {
 			try {
 				socket.close();
@@ -142,17 +124,18 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		while((c = clientQueue.poll()) == null) {/*System.out.println("Was null: " + clientQueue.size());*/}
 		long l = c.send(msg,cb);
 		clientQueue.put(c);
+		currentSystemTime = msg.getTimeStampS();
 		return l;
 	}
 	
 	@Override
-	public void removeClient( Client ob) {
+	public void removeClient(Client ob) {
 		clientQueue.remove(ob);
 		allClients.remove(ob);
 	}
 	
 	@Override
-	public void closeAndRemove( Client ob) {
+	public void closeAndRemove(Client ob) {
 		ob.closeClient();
 		removeClient(ob);
 	}
@@ -183,6 +166,18 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public Client[] listClients() {
 		Client[] arr = allClients.toArray(new Client[0]);
 		return arr;
+	}
+	
+	public long getTime() {
+		return currentSystemTime;
+	}
+	
+	public int getPacketThroughput() {
+		int total = 0;
+		for(Client c : allClients) {
+			total += c.packetsSentThisSecond;
+		}		
+		return total;
 	}
 	
 	@Override

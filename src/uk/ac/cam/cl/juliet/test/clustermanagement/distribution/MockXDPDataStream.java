@@ -49,7 +49,7 @@ public class MockXDPDataStream implements XDPDataStream {
 		}
 		byte[] emptyPacketData = new byte[packetSize];
 		enterSequenceNumber(emptyPacketData,packetCounter);
-		XDPRequest packet = new XDPRequest(emptyPacketData, 11);
+		XDPRequest packet = new XDPRequest(emptyPacketData, 11, 0);
 		long currentTime = System.currentTimeMillis();
 		try {
 			if(currentTime <= timeOfNextPacket)

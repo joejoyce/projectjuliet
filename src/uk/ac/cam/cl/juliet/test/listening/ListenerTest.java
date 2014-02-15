@@ -36,7 +36,7 @@ public class ListenerTest {
 						System.out.println("Distributing " + num + " requests");
 						long time = System.currentTimeMillis();
 						for (int i = 0; i < num; i++) {
-							XDPRequest r = new XDPRequest(null, 11);
+							XDPRequest r = new XDPRequest(null, 11, 0);
 							r.setPacketId(i);
 							distributor.write(r);
 							if (delay > 0) {

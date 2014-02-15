@@ -309,9 +309,7 @@ public class MockDatabaseConnection implements DatabaseConnection {
 	}
 
 	@Override
-	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start,
-			int end) throws SQLException {
-		// not needed
+	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start, int end) throws SQLException {
 		return null;
 	}
 }

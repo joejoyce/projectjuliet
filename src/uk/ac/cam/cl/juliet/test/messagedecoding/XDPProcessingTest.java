@@ -3,8 +3,6 @@ package uk.ac.cam.cl.juliet.test.messagedecoding;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 
 import uk.ac.cam.cl.juliet.common.XDPRequest;
@@ -103,7 +101,7 @@ class TestDatabase implements DatabaseConnection {
 		byte narr[] = new byte[bdex];
 		for(int i = 0; i < bdex;i++)
 			narr[i] = bytes[i];
-		XDPRequest rq = new XDPRequest(narr,0);
+		XDPRequest rq = new XDPRequest(narr,0,0);
 		return rq;
 	}
 	
