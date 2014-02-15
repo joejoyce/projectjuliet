@@ -10,7 +10,7 @@ package uk.ac.cam.cl.juliet.common;
 public class CandlestickRequest extends QueryPacket {
 	private static final long serialVersionUID = 1L;
 	private long symbolID;
-	private int start;
+	private long start;
 	private int resolution;
 
 	/**
@@ -24,7 +24,7 @@ public class CandlestickRequest extends QueryPacket {
 	 * @param resolution
 	 *            The number of seconds which the candlestick covers
 	 */
-	public CandlestickRequest(long symbolID, int start, int resolution) {
+	public CandlestickRequest(long symbolID, long start, int resolution) {
 		this.symbolID = symbolID;
 		this.start = start;
 		this.resolution = resolution;
@@ -34,7 +34,7 @@ public class CandlestickRequest extends QueryPacket {
 		return symbolID;
 	}
 
-	public int getStart() {
+	public long getStart() {
 		return start;
 	}
 

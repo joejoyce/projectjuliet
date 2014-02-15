@@ -202,13 +202,13 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		// session.
 	}
 
-	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start, int end) throws SQLException {
+	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start, long end) throws SQLException {
 		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE symbol_id=? and offered_s>=? and offered_s<?");
 		ResultSet result;
 		try {
 			statement.setLong(1, symbolID);
-			statement.setInt(2, start);
-			statement.setInt(3, end);
+			statement.setLong(2, start);
+			statement.setLong(3, end);
 			result =  statement.executeQuery();
 		} finally {
 			statement.close();

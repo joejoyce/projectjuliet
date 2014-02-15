@@ -224,7 +224,7 @@ public interface DatabaseConnection {
 	 * @param end
 	 * @return The trades for the specified symbol in the specified time range.
 	 */
-	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start, int end) throws SQLException;
+	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start, long end) throws SQLException;
 
 	/**
 	 * Set the connection to the database
