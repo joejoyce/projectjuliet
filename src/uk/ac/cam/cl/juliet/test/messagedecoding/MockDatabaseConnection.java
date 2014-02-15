@@ -303,11 +303,6 @@ public class MockDatabaseConnection implements DatabaseConnection {
 					symbolSeqNumber+","+"-"+","+"-"+","+"-"+","+tradingSession);
 	}
 
-	@Override
-	public void commit() throws SQLException {
-		// not needed for this test database connection
-		
-	}
 	
 	public void setConnection(Connection connection) {
 		// not needed

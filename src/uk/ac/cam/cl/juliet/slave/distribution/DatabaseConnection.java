@@ -227,13 +227,6 @@ public interface DatabaseConnection {
 	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start, int end) throws SQLException;
 
 	/**
-	 * Commit the database changes that have been accumulated
-	 * 
-	 * @throws SQLException
-	 */
-	public void commit() throws SQLException;
-
-	/**
 	 * Set the connection to the database
 	 * 
 	 * @param connection

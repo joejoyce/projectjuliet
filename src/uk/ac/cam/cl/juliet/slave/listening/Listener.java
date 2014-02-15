@@ -114,7 +114,7 @@ public class Listener {
 				
 				long diff = Math.abs(System.nanoTime() - then);
 				diff /= 1000000;
-				//System.out.println("Time taken for processing ms: " + diff);				
+				Debug.println("Time taken for processing ms: " + diff);				
 			}
 		} catch (ClassNotFoundException | ClassCastException e) {
 			System.err.println("An unexpected object was recieved from the server.");
