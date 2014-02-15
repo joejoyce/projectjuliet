@@ -1,5 +1,7 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -12,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import uk.ac.cam.cl.juliet.common.Container;
@@ -46,9 +49,10 @@ public class Client {
 	private static ScheduledExecutorService workers = null;
 	
 	private ScheduledFuture<?> cleaner = null;
-	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(200);
+	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(50);
 	
 	private static AtomicInteger numberClients = new AtomicInteger(0);
+	private AtomicInteger workCount = new AtomicInteger(0);
 	
 	private static ContainerTimeComparator comparator = new ContainerTimeComparator();
 	//Keep track of the objects in flight
@@ -56,7 +60,6 @@ public class Client {
 	private PriorityBlockingQueue<InFlightContainer> jobqueue = new PriorityBlockingQueue<InFlightContainer>(16,comparator);
 	
 	private long totalPackets = 0;
-	private int workCount = 0;
 	/**
 	 *  Get the IP address of the Client that this Client object is connected to.
 	 * @return The InetAAddress of the client
@@ -69,8 +72,8 @@ public class Client {
 	 * @param container
 	 */
 	private void checkoutContainer(InFlightContainer container) {
-		workCount++;
-		//jobqueue.add(container);
+		workCount.incrementAndGet();
+		jobqueue.add(container);
 		hash.put(container.getPacketId(), container);
 	}
 	
@@ -85,9 +88,9 @@ public class Client {
 		InFlightContainer cont = hash.get(l);
 		Debug.println("Received ack for packet ID: " + l);
 		if(null != cont) {
-			//jobqueue.remove(cont);
+			jobqueue.remove(cont);
 			hash.remove(l);
-			workCount--;
+			workCount.decrementAndGet();
 		} else {
 			Debug.println("Null InFlightContainer recieved from hash");
 		}
@@ -125,14 +128,15 @@ public class Client {
 			workers = Executors.newScheduledThreadPool(numberPooledThreads);
 		}
 		//Schedule queueflush for me
-		//cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0, queueFlushTime, TimeUnit.MILLISECONDS);
+		cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0, queueFlushTime, TimeUnit.MILLISECONDS);
 		
 		address = s.getInetAddress();
 		try {
-			//BufferedOutputStream bos = new BufferedOutputStream(s.getOutputStream());
-			out = new ObjectOutputStream(s.getOutputStream());
-			in = new ObjectInputStream(s.getInputStream());
+			out = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
+			out.flush();
+			in = new ObjectInputStream(new BufferedInputStream(s.getInputStream()));
 			out.writeObject(parent.getConfiguration());
+			out.flush();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -151,6 +155,7 @@ public class Client {
 					} catch (ClassNotFoundException e) {
 						e.printStackTrace();
 					} catch (IOException e) {
+						Debug.println(Debug.SHOWSTOP,e.getMessage());
 						e.printStackTrace();
 						closeClient();
 						return;
@@ -174,24 +179,32 @@ public class Client {
 			@Override
 			public void run() {
 				//This method sends the packets to the client
+				long then = System.nanoTime();
+				int packetsSentThisSecond = 0;
+				//ArrayList<InFlightContainer> containers = new ArrayList<InFlightContainer>();
 				while(true) {
 					try {
 						InFlightContainer container = sendQueue.take();
 						checkoutContainer(container);
 						out.writeObject(container.getContainer());
+						out.flush();												
 						totalPackets++; //TODO this means it won't count objects in the queue
+						packetsSentThisSecond ++;
+						if(Math.abs(System.nanoTime() - then) > 1000000000) {
+							Debug.println(100, "Packets sent this second: " + packetsSentThisSecond);
+							then = System.nanoTime();
+							packetsSentThisSecond = 0;
+						}
 						Debug.println("Written packet ID: " + container.getPacketId());
-					} catch (InterruptedException e){
-						e.printStackTrace();
-						return;
 					} catch (IOException e) {
+						Debug.println(Debug.SHOWSTOP, e.getMessage());
 						e.printStackTrace();
 						closeClient();
 						return;
+					} catch (InterruptedException e) {
+						e.printStackTrace();
 					}
-					if(this.isInterrupted()) {
-						return; //In case it's not thrown whilst waiting?
-					}
+					
 				}
 			}
 		};
@@ -203,7 +216,7 @@ public class Client {
 	 */
 	public int getCurrentWork() {
 		//This is the amount of work which has not been accounted for
-		return workCount;
+		return workCount.get();
 	}
 	/**
 	 * @return The number of Containers that have been sent out to this Client,
@@ -278,6 +291,7 @@ public class Client {
 		if( null != (ifc = jobqueue.peek())) {
 			if( ifc.getDueTime() <= time ) {
 				//Remove and flush the rest of the queue
+				Debug.println(Debug.ERROR,"Timeout waiting for response from client " + address);
 				closeClient();
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.getBroadcast()) {

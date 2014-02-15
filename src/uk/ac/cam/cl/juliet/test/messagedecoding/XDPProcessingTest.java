@@ -1,6 +1,7 @@
 package uk.ac.cam.cl.juliet.test.messagedecoding;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -271,6 +272,12 @@ class TestDatabase implements DatabaseConnection {
 
 	public void setConnection(Connection connection) {
 		
+	}
+
+	@Override
+	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, int start,
+			int end) throws SQLException {
+		return null;
 	}
 	
 

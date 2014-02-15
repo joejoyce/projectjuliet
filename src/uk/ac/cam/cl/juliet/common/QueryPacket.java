@@ -9,5 +9,5 @@ import java.io.Serializable;
  * @author Scott Williams
  */
 public class QueryPacket extends Container implements Serializable {
-	
+	private static final long serialVersionUID = 1L;
 }

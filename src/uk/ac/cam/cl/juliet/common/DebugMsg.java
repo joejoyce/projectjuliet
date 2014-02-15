@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.common;
 import java.io.Serializable;
 
 public class DebugMsg extends Container implements Serializable {
+	private static final long serialVersionUID = 1L;
 	private String msg;
 	private int priority;
 	public DebugMsg(String msg) {

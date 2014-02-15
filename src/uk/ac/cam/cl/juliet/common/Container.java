@@ -9,6 +9,7 @@ import java.io.Serializable;
  * @author Scott Williams
  */
 public abstract class Container implements Serializable {
+	private static final long serialVersionUID = 1L;
 	private long id;
 	
 	public long getPacketId() {

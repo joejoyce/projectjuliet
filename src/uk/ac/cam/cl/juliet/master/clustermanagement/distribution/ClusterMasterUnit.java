@@ -7,6 +7,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -47,6 +49,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	private static ClientLoadComparator clc = new ClientLoadComparator();
 	private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
+	private CopyOnWriteArrayList<Client> allClients = new CopyOnWriteArrayList<Client>();
 	//TODO need to sort out the priorityblocking queue so that it can be efficiently reordered on one update
 	//Make my own queue that also has fast random access so can be used for both ?
 	
@@ -70,7 +73,8 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	@Override
 	public void addClient(Socket skt) {
 		Client c = new Client(skt,this);
-		clientQueue.add(c); 
+		clientQueue.add(c);
+		allClients.add(c);
 		//TODO sort this out
 	}
 	
@@ -144,6 +148,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	@Override
 	public void removeClient( Client ob) {
 		clientQueue.remove(ob);
+		allClients.remove(ob);
 	}
 	
 	@Override
@@ -176,7 +181,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	@Override
 	public Client[] listClients() {
-		Client[] arr = clientQueue.toArray(new Client[0]);
+		Client[] arr = allClients.toArray(new Client[0]);
 		return arr;
 	}
 	

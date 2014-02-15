@@ -39,8 +39,8 @@ class OutputWrap {
 public class Debug {
 	private static String myAddr = null;
 	
-	public static int SHOWSTOP = 30, ERROR = 20, WARN = 10;
-	public static int INFO = 0, DEBUG = -10, ALL = -20; 
+	public static int SHOWSTOP = 40, ERROR = 30, WARN = 20;
+	public static int INFO = 10, DEBUG = 0, ALL = -10; 
 	
 	
 	private static int default_priority = 0;
@@ -103,9 +103,52 @@ public class Debug {
 		if(priority <= pri)
 			send(str,pri);
 	}
+	public static void printStackTrace(int pri, String str) {
+		if(priority <= pri)
+			send(str,pri);
+	}
+	public static void printStackTrace(Exception e) {
+		if(priority <= Debug.ERROR)
+			send(e.getStackTrace().toString(),Debug.ERROR);
+	}
 	
 	public static void recieveDebug( DebugMsg msg ) {
 		if(priority >= msg.getPriority())
 			send(msg.toString(),msg.getPriority()); //TODO also add information about location? 
+	}
+	
+	public static boolean parseDebugArgs(String input) {
+		if(input.matches("debug:\\s*\\w*")) {
+			String dargs[] = input.split(":");
+			if(dargs.length > 1) {
+				switch(dargs[1].trim()) {
+					case "ALL":
+						Debug.setPriority(Debug.ALL);
+						break;
+					case "DEBUG":
+						Debug.setPriority(Debug.DEBUG);
+						break;
+					case "INFO":
+						Debug.setPriority(Debug.INFO);
+						break;
+					case "WARN":
+						Debug.setPriority(Debug.WARN);
+						break;
+					case "ERROR":
+						Debug.setPriority(Debug.ERROR);
+						break;
+					case "SHOWSTOP":
+						Debug.setPriority(Debug.SHOWSTOP);
+						break;
+					default :
+						System.err.println(dargs[1] + " is not a valid debug level");
+				}
+			} else {
+				System.err.println("Malformed debug level expression");
+			}
+		} else {
+			return false;
+		}
+		return true;
 	}
 }

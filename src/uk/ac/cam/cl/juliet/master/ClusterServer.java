@@ -2,10 +2,8 @@ package uk.ac.cam.cl.juliet.master;
 
 import java.io.IOException;
 
-import uk.ac.cam.cl.juliet.common.StringTestPacket;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
-import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 import uk.ac.cam.cl.juliet.common.Debug;
 import java.util.Scanner;
 import uk.ac.cam.cl.juliet.master.dataprocessor.DataProcessor;
@@ -26,7 +24,7 @@ public class ClusterServer {
 	
 	public static void main(String args[]) throws IOException, SQLException {
 		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
-                new WebServerListener(1337, con);
+        WebServerListener wsl = new WebServerListener(1337, con);
 
 		Debug.registerOutputLocation(System.out);
                 Debug.setPriority(10); //Default is 5 so no msg show
@@ -48,7 +46,7 @@ public class ClusterServer {
                 cm.start(5000);
                 final DataProcessor dp = new DataProcessor(ds, cm);
                 Scanner s = new Scanner(System.in);
-                Debug.println(11,"GO?");
+                System.out.println("GO?");
 		s.nextLine();
 		Thread t = new Thread(){
 			public void run() {
@@ -63,6 +61,8 @@ public class ClusterServer {
 			System.out.println("input: " + input);
 			if(input.equals("pause")) {
 				dp.pause = !dp.pause;
+			} else if (Debug.parseDebugArgs(input)) {
+				continue;
 			}
 			
 		}

@@ -58,23 +58,13 @@ public class XDPProcessorUnit implements XDPProcessor {
 				result &= StockSummaryMessage(m, currentPacket.getTimestamp());
 				break;
 			default:
-				System.out.println("XDPProcessor unknown message type");
+				Debug.println("XDPProcessor unknown message type");
 			}
 			m = currentPacket.getNextMessage();
 		}
 		//TODO: Remove this
 		result = true;
-		try {
-			if(result == true) { 
-				Debug.println("Result was true");
-				mDB.commit();
-				return true;
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return true;
-		}
-		return true;
+		return result;
 	}
 
 	private boolean decodeSourceTimeReferenceMessage(Message m) {

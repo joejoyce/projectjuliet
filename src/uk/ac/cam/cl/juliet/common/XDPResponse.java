@@ -9,6 +9,7 @@ import java.io.Serializable;
  * @author Scott Williams
  */
 public class XDPResponse extends XDPPacket implements Serializable {
+	private static final long serialVersionUID = 1L;
 	boolean result;
 	
 	public XDPResponse(long id, boolean result) {

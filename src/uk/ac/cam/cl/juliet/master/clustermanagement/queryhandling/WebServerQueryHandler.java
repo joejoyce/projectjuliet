@@ -7,11 +7,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
 
@@ -53,14 +55,14 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 							   	break;
 				case "cluster": runClusterQuery(splitQuery[1], pw);
 								break;
-				default: Debug.println("Unsupported query type");
+				default: Debug.println(Debug.ERROR,"Unsupported query type");
 			}
 			
 			pw.flush();
 			pw.close();
 			server.close();
 		} catch (IOException e) {
-			Debug.println("Error reading query from webserver");
+			Debug.println(Debug.ERROR,"Error reading query from webserver");
 			e.printStackTrace();
 		} 
     }
@@ -70,9 +72,9 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	public void runStatusQuery(String query, PrintWriter pw) {
 		//Returns a json array of objects of name, totalPackets and currentPackets
 		if(query.equals("listclients")) {
+			Debug.println(Debug.INFO,"Running a status query");
 			ClusterMaster cm = ClusterServer.cm;
 			Client carr[] = cm.listClients();
-			
 			StringBuilder res = new StringBuilder();
 			res.append("[");
 			for(int i = 0; i< carr.length; i++) {
@@ -87,12 +89,45 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 					res.append(",");
 				}
 			}
-			pw.print(res.toString());
+			res.append("]");
+			String rtn = res.toString();
+			Debug.println(Debug.DEBUG,"Status query result" + rtn);
+			pw.print(rtn);
 		}
 	}
 	public void runConfigQuery(String query, PrintWriter pw) {}
-	public void runClusterQuery(String query, PrintWriter pw) {}	
+	public void runClusterQuery(String query, PrintWriter pw) {
+		String type = query.indexOf(' ') == -1 ? query : query.substring(0, query.indexOf(' '));
+		String options = query.indexOf(' ') == -1? "" : query.substring(query.indexOf(' ') + 1);
+		Debug.println(Debug.INFO,"Running a cluster query. type=" + type);
+		
+		switch(type) {
+		case "candlestick":
+			getCandlestickChartData(options, pw);
+		}
+	}
 	
+	private void getCandlestickChartData(String options, PrintWriter pw) throws SQLException {
+		String[] split = options.split(" ");
+		long symbolID = Long.parseLong(split[0]);
+		int secondsPerCandlestick = Integer.parseInt(split[1]);
+		
+	    PreparedStatement rangeStatement = con.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
+	    ResultSet rs;
+	    try {
+	    	rangeStatement.setLong(1, symbolID);
+	    	rs = rangeStatement.executeQuery();
+	    }finally{
+	    	rangeStatement.close();
+	    }
+	    rs.next();
+	    long minTime = rs.getLong("min");
+	    long maxTime = rs.getLong("max");
+	    
+	    long numberOfCandlesticks = (maxTime - minTime) / secondsPerCandlestick;
+	    
+	}
+
 	/**
 	 * Runs a basic query.
 	 * Executes the SQL query string received from the webserver
@@ -103,7 +138,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 */
 	public void runBasicQuery(String query, PrintWriter pw) {
 		try {		
-			Debug.println("Got query: " + query);
+			Debug.println(Debug.INFO,"Got query: " + query);
 			Statement s = con.createStatement();
 			ResultSet res = s.executeQuery(query);
 			if(!res.isBeforeFirst()) {    
@@ -112,10 +147,10 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				return;
 			}
 			String jsonResults = toJSON(res);
-			Debug.println("Writing: " + jsonResults);
+			Debug.println(Debug.DEBUG,"Writing: " + jsonResults);
 			pw.print(jsonResults);
 		} catch(SQLException e) {
-			Debug.println("SQL query exception");
+			Debug.println(Debug.ERROR,"SQL query exception");
 			e.printStackTrace();
 			pw.print("SQL Query Exception");
 		}
