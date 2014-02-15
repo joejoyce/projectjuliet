@@ -8,7 +8,7 @@ package uk.ac.cam.cl.juliet.common;
  * 
  */
 public class CandlestickRequest extends QueryPacket {
-
+	private static final long serialVersionUID = 1L;
 	private long symbolID;
 	private int start;
 	private int candlesticks;
