@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -106,8 +107,25 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 	}
 	
-	private void getCandlestickChartData(String options, PrintWriter pw) {
+	private void getCandlestickChartData(String options, PrintWriter pw) throws SQLException {
+		String[] split = options.split(" ");
+		long symbolID = Long.parseLong(split[0]);
+		int secondsPerCandlestick = Integer.parseInt(split[1]);
 		
+	    PreparedStatement rangeStatement = con.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
+	    ResultSet rs;
+	    try {
+	    	rangeStatement.setLong(1, symbolID);
+	    	rs = rangeStatement.executeQuery();
+	    }finally{
+	    	rangeStatement.close();
+	    }
+	    rs.next();
+	    long minTime = rs.getLong("min");
+	    long maxTime = rs.getLong("max");
+	    
+	    long numberOfCandlesticks = (maxTime - minTime) / secondsPerCandlestick;
+	    
 	}
 
 	/**

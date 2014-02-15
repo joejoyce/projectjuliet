@@ -38,46 +38,43 @@ public class QueryProcessorUnit implements QueryProcessor {
 			ResultSet results = connection.getTradesInTimeRangeForSymbol(
 					p.getSymbolId(),
 					p.getStart(),
-					p.getStart() + p.getNumberOfCandlesticks()
-							* p.getResolution());
-			long[] open = new long[p.getNumberOfCandlesticks()];
-			long[] earliestTradeSeconds = new long[p.getNumberOfCandlesticks()];
-			long[] earliestTradeSeq = new long[p.getNumberOfCandlesticks()];
-			long[] close = new long[p.getNumberOfCandlesticks()];
-			long[] latestTradeSeconds = new long[p.getNumberOfCandlesticks()];
-			long[] latestTradeSeq = new long[p.getNumberOfCandlesticks()];
-			long[] high = new long[p.getNumberOfCandlesticks()];
-			long[] low = new long[p.getNumberOfCandlesticks()];
-			long[] volume = new long[p.getNumberOfCandlesticks()];
+					p.getStart() + p.getResolution());
+			long open = 0;
+			long earliestTradeSeconds = 0;
+			long earliestTradeSeq = 0;
+			long close = 0;
+			long latestTradeSeconds = 0;
+			long latestTradeSeq = 0;
+			long high = 0;
+			long low = 0;
+			long volume = 0;
 
 			while (results.next()) {
-				int index = (int) ((results.getLong("offered_s") - p.getStart()) / p
-						.getNumberOfCandlesticks());
 
 				long s = results.getLong("offered_s");
 				long seq = results.getLong("offered_seq_num");
 				long price = results.getLong("price");
-				if (earliestTradeSeconds[index] == 0
-						|| earliestTradeSeconds[index] > s
-						|| (earliestTradeSeconds[index] == s && earliestTradeSeq[index] > seq)) {
-					earliestTradeSeconds[index] = s;
-					earliestTradeSeq[index] = seq;
-					open[index] = price;
+				if (earliestTradeSeconds == 0
+						|| earliestTradeSeconds > s
+						|| (earliestTradeSeconds == s && earliestTradeSeq > seq)) {
+					earliestTradeSeconds = s;
+					earliestTradeSeq = seq;
+					open = price;
 				}
-				if (latestTradeSeconds[index] == 0
-						|| latestTradeSeconds[index] < s
-						|| (latestTradeSeconds[index] == s && latestTradeSeq[index] < seq)) {
-					latestTradeSeconds[index] = s;
-					latestTradeSeq[index] = seq;
-					close[index] = price;
+				if (latestTradeSeconds == 0
+						|| latestTradeSeconds < s
+						|| (latestTradeSeconds == s && latestTradeSeq < seq)) {
+					latestTradeSeconds = s;
+					latestTradeSeq = seq;
+					close = price;
 				}
 
-				if (high[index] == 0 || price > high[index])
-					high[index] = price;
-				if (low[index] == 0 || price < low[index])
-					low[index] = price;
+				if (high == 0 || price > high)
+					high = price;
+				if (low == 0 || price < low)
+					low = price;
 
-				volume[index] = results.getLong("volume");
+				volume = results.getLong("volume");
 			}
 
 			return new CandlestickResponse(p.getPacketId(), p.getStart(), open,
