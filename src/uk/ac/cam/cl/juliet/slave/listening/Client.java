@@ -19,13 +19,13 @@ import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 public class Client {
 	public static void main(String[] args) {
 		Debug.registerOutputLocation(System.out);
-		Debug.setPriority(-50); // Default priority is 5
+		Debug.setPriority(50); // Default priority is 5
 
 		Listener listener = new Listener();
 		try {
 			DatabaseConnection db = new DatabaseConnectionUnit(
 					DriverManager.getConnection("jdbc:mysql://" + args[0]
-							+ ":3306/juliet", "root", "rootword"));
+							+ ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false", "root", "rootword"));
 			listener.listen(args[0], 5000, db, new XDPProcessorUnit(db),
 					new QueryProcessorUnit(db));
 		} catch (IOException e) {

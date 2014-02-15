@@ -1,5 +1,7 @@
 package uk.ac.cam.cl.juliet.slave.listening;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -26,23 +28,16 @@ import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessor;
  * 
  */
 public class Listener {
-	private static final int numProcessingThreads = 4;
-
 	private Socket socket;
 	private String ip;
 	private int port;
-	private Thread receiveThread;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
-	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(
-			200);
-	private ArrayBlockingQueue<Container> requestQueue = new ArrayBlockingQueue<Container>(
-			200);
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(200);
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
 	private QueryProcessor query;
-	private Thread[] processingThreads = new Thread[numProcessingThreads];
-
+	
 	/**
 	 * Connects to the server and begins to read and process packets.
 	 * 
@@ -52,38 +47,27 @@ public class Listener {
 	 *            The port which packets are being sent from.
 	 * @throws IOException
 	 */
-	public void listen(String server, int port, DatabaseConnection db,
-			XDPProcessor xdpProcessor, QueryProcessor queryProcessor)
-			throws IOException, SQLException {
+	public void listen(String server, int port, DatabaseConnection db, XDPProcessor xdpProcessor, QueryProcessor queryProcessor) throws IOException, SQLException {
 		this.ip = server;
 		this.port = port;
 		this.socket = new Socket(server, port);
-		this.input = new ObjectInputStream(this.socket.getInputStream());
-		this.output = new ObjectOutputStream(this.socket.getOutputStream());
-
+		this.output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+		output.flush();
+		this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+		
 		this.databaseConnection = db;
 		this.xdp = xdpProcessor;
 		this.query = queryProcessor;
 
-		for (int i = 0; i < numProcessingThreads; i++) {
-			this.processingThreads[i] = new Thread() {
-				@Override
-				public void run() {
-					while (true)
-						processPacket();
-				}
-			};
-		}
-
-		this.receiveThread = new Thread() {
+		Thread receiveThread = new Thread() {
 			@Override
 			public void run() {
 				while (true)
 					readPacket();
 			}
 		};
-		this.receiveThread.start();
-
+		receiveThread.start();
+		
 		// Sends any waiting responses back to the server.
 		while (true) {
 			try {
@@ -95,11 +79,10 @@ public class Listener {
 				e.printStackTrace();
 				// Just attempt to reconnect
 				try {
-					this.socket = new Socket(ip, port);
-					this.input = new ObjectInputStream(
-							this.socket.getInputStream());
-					this.output = new ObjectOutputStream(
-							this.socket.getOutputStream());
+					socket = new Socket(ip, port);
+					output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+					output.flush();
+					input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -112,56 +95,42 @@ public class Listener {
 
 	private void readPacket() {
 		try {
-			Container container = (Container) this.input.readObject();
+			Container container = (Container) input.readObject();
 			Debug.println("Got new object");
-			if (container instanceof ConfigurationPacket)
+			
+			if (container instanceof ConfigurationPacket) {
 				handleConfigurationPacket((ConfigurationPacket) container);
+			}
 			else {
-				while (true) {
-					try {
-						this.requestQueue.put(container);
-						break;
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
+				long then = System.nanoTime();
+				
+				if (container instanceof XDPRequest) {
+					processXDPRequest((XDPRequest) container);
+				} else if (container instanceof QueryPacket) {
+					processQueryPacket((QueryPacket) container);
+				} else if (container instanceof StringTestPacket) {
+					System.out.println(container);
+				} 
+				
+				long diff = Math.abs(System.nanoTime() - then);
+				diff /= 1000000;
+				//System.out.println("Time taken for processing ms: " + diff);				
 			}
 		} catch (ClassNotFoundException | ClassCastException e) {
-			System.err
-					.println("An unexpected object was recieved from the server.");
+			System.err.println("An unexpected object was recieved from the server.");
 			e.printStackTrace();
 			System.exit(0);
 		} catch (IOException e) {
-			System.err
-					.println("An error occurred communicating with the server.");
+			System.err.println("An error occurred communicating with the server.");
 			e.printStackTrace();
 			// Just attempt to reconnect
 			try {
 				this.socket = new Socket(ip, port);
 				this.input = new ObjectInputStream(this.socket.getInputStream());
-				this.output = new ObjectOutputStream(
-						this.socket.getOutputStream());
+				this.output = new ObjectOutputStream(this.socket.getOutputStream());
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
-		}
-	}
-
-	private void processPacket() {
-		try {
-			Container container = this.requestQueue.take();
-			Debug.println("Removed packet from requestQueure");
-			if (container instanceof XDPRequest) {
-				processXDPRequest((XDPRequest) container);
-			} else if (container instanceof QueryPacket) {
-				processQueryPacket((QueryPacket) container);
-			} else if (container instanceof StringTestPacket) {
-				System.out.println(container);
-			} else {
-				// TODO: unknown packet - throw exception?
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -201,11 +170,6 @@ public class Listener {
 			 * System.err.println("An error occurred connecting to the database"
 			 * ); e.printStackTrace(); System.exit(1); }
 			 */
-		}
-
-		if (!this.processingThreads[0].isAlive()) {
-			for (int i = 0; i < numProcessingThreads; i++)
-				this.processingThreads[i].start();
-		}
+		}		
 	}
 }

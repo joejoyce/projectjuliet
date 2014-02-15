@@ -1,6 +1,8 @@
 package uk.ac.cam.cl.juliet.slave.xdpprocessing;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
@@ -24,8 +26,10 @@ public class XDPProcessorUnit implements XDPProcessor {
 		Message m = currentPacket.getNextMessage();
 		
 		Debug.println("Got message type: " + m.getMessageType());
+		int totalM = 0;
 		
 		while(m != null) {
+			totalM ++;
 			switch(m.getMessageType()) {
 			case 2:
 				result &= decodeSourceTimeReferenceMessage(m);
@@ -58,20 +62,21 @@ public class XDPProcessorUnit implements XDPProcessor {
 				result &= StockSummaryMessage(m, currentPacket.getTimestamp());
 				break;
 			default:
-				System.out.println("XDPProcessor unknown message type");
+				Debug.println("XDPProcessor unknown message type");
 			}
 			m = currentPacket.getNextMessage();
 		}
+		//System.out.println("Total message in p: " + totalM);
 		//TODO: Remove this
 		result = true;
-		try {
-			if(result == true) { 
-				Debug.println("Result was true");
+		if(result == true) { 
+			Debug.println("Result was true");
+			try {
 				mDB.commit();
-				return true;
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
 			return true;
 		}
 		return true;

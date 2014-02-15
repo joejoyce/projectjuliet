@@ -9,32 +9,42 @@ import uk.ac.cam.cl.juliet.common.Debug;
 
 public class DatabaseConnectionUnit implements DatabaseConnection {
 	private Connection connection;
-	private Statement batchQuery;
+	private PreparedStatement addOrderBatch = null;
+	private int batchSize = 0;
+	
 	
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
-		this.batchQuery = connection.createStatement();
+		
 	}
 	
 	@Override
-	public void addOrder(long orderID, long symbolIndex, long time_ns, 
-			long symbolSeqNumber, long price, long volume, boolean isSell, 
-			int tradeSession, long packetTimestamp) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement(
+	public void addOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, boolean isSell, int tradeSession, long packetTimestamp) throws SQLException {
+		if(addOrderBatch == null) {
+			addOrderBatch = connection.prepareStatement(
+					"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s, "
+							  + "placed_seq_num, updated_s, updated_seq_num) "
+							  + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+						);
+		}
+		
+		
+		/*PreparedStatement statement = this.connection.prepareStatement(
 				"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s, "
 			  + "placed_seq_num, updated_s, updated_seq_num) "
 			  + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-		);
-		statement.setLong(1, orderID);
-		statement.setLong(2, symbolIndex);
-		statement.setLong(3, price);
-		statement.setLong(4, volume);
-		statement.setBoolean(5, isSell);
-		statement.setLong(6, packetTimestamp);
-		statement.setLong(7, symbolSeqNumber);
-		statement.setLong(8, packetTimestamp);
-		statement.setLong(9, symbolSeqNumber);
-		batchQuery.addBatch(statement.toString().split(":")[1]);
+		);*/		
+		addOrderBatch.setLong(1, orderID);
+		addOrderBatch.setLong(2, symbolIndex);
+		addOrderBatch.setLong(3, price);
+		addOrderBatch.setLong(4, volume);
+		addOrderBatch.setBoolean(5, isSell);
+		addOrderBatch.setLong(6, packetTimestamp);
+		addOrderBatch.setLong(7, symbolSeqNumber);
+		addOrderBatch.setLong(8, packetTimestamp);
+		addOrderBatch.setLong(9, symbolSeqNumber);
+		addOrderBatch.addBatch();
+		batchSize ++;
 	}
 	
 	@Override
@@ -52,7 +62,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(4, symbolSeqNumber);
 		statement.setLong(5, orderID);
 		statement.setLong(6, symbolIndex);
-		batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchSize ++;
 		
 	}
 	
@@ -66,7 +77,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(1, volumeReduction);
 		statement.setLong(2, orderID);
 		statement.setLong(3, symbolIndex);
-		batchQuery.addBatch(statement.toString().split(":")[1]);		
+		//batchQuery.addBatch(statement.toString().split(":")[1]);	
+		//batchSize ++;
 	}
 	
 	@Override
@@ -78,7 +90,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		);
 		statement.setLong(1, orderID);
 		statement.setLong(2, symbolIndex);
-		batchQuery.addBatch(statement.toString().split(":")[1]);		
+		//batchQuery.addBatch(statement.toString().split(":")[1]);	
+		//batchSize ++;
 	}
 	
 	@Override
@@ -96,7 +109,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(4, volume);
 		statement.setLong(5, packetTimestamp);
 		statement.setLong(6, symbolSeqNumber);
-		batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchSize ++;
 		Debug.println("Added trade------------========");
 	}
 
@@ -115,7 +129,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(4, totalVolume);
 		statement.setLong(5, time_s);
 		statement.setLong(6, time_ns);
-		batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchSize ++;
 	}
 
 	@Override
@@ -131,7 +146,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(3, price);
 		statement.setLong(4, volume);
 		statement.setLong(5, originalTradeID);
-		batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchSize ++;
 	}
 
 	@Override
@@ -148,7 +164,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 				"DELETE FROM trade WHERE (trade_id = ?)"
 		);
 		statement.setLong(1, tradeID);
-		batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchQuery.addBatch(statement.toString().split(":")[1]);
+		//batchSize ++;
 	}
 
 	@Override
@@ -175,11 +192,18 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 	
 	@Override
-	public void commit() throws SQLException{
-		batchQuery.executeBatch();
-		batchQuery.close();
+	public void commit() throws SQLException {
+		//System.out.println("Exectuing batch size: " + batchSize);
+		long then = System.nanoTime();
+		if(addOrderBatch == null) return;
+		addOrderBatch.executeBatch();
+		addOrderBatch.close();
+		addOrderBatch = null;
+		double diff = Math.abs(System.nanoTime() - then);
+		diff /= 1000000;
+		//System.out.println("Took: " + diff + "ms");
 		Debug.println("Executed batch");
-		batchQuery = connection.createStatement();
+		batchSize = 0;
 	}
 	
 	public void setConnection(Connection connection) {

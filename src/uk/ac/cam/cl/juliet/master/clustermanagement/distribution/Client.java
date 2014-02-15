@@ -1,11 +1,15 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -46,7 +50,7 @@ public class Client {
 	private static ScheduledExecutorService workers = null;
 	
 	private ScheduledFuture<?> cleaner = null;
-	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(200);
+	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(50);
 	
 	private static AtomicInteger numberClients = new AtomicInteger(0);
 	private AtomicInteger workCount = new AtomicInteger(0);
@@ -129,10 +133,11 @@ public class Client {
 		
 		address = s.getInetAddress();
 		try {
-			//BufferedOutputStream bos = new BufferedOutputStream(s.getOutputStream());
-			out = new ObjectOutputStream(s.getOutputStream());
-			in = new ObjectInputStream(s.getInputStream());
+			out = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
+			out.flush();
+			in = new ObjectInputStream(new BufferedInputStream(s.getInputStream()));
 			out.writeObject(parent.getConfiguration());
+			out.flush();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -174,24 +179,33 @@ public class Client {
 			@Override
 			public void run() {
 				//This method sends the packets to the client
+				long then = System.nanoTime();
+				int packetsSentThisSecond = 0;
+				//ArrayList<InFlightContainer> containers = new ArrayList<InFlightContainer>();
+				boolean print = false;
 				while(true) {
 					try {
 						InFlightContainer container = sendQueue.take();
 						checkoutContainer(container);
 						out.writeObject(container.getContainer());
+						out.flush();												
 						totalPackets++; //TODO this means it won't count objects in the queue
+						packetsSentThisSecond ++;
+						if(Math.abs(System.nanoTime() - then) > 1000000000) {
+							System.out.println("Packets sent this second: " + packetsSentThisSecond);
+							then = System.nanoTime();
+							packetsSentThisSecond = 0;
+						}
 						Debug.println("Written packet ID: " + container.getPacketId());
-					} catch (InterruptedException e){
-						e.printStackTrace();
-						return;
 					} catch (IOException e) {
 						e.printStackTrace();
 						closeClient();
 						return;
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					if(this.isInterrupted()) {
-						return; //In case it's not thrown whilst waiting?
-					}
+					
 				}
 			}
 		};
