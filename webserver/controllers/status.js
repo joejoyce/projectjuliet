@@ -30,7 +30,6 @@ exports.getTime = function(req, res) {
   client.write('status|time\n');
 
   client.on('data', function(time) {
-    console.log(time);
     res.end(time);
     client.end();
   });

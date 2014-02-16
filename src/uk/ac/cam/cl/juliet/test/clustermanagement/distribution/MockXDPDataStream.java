@@ -8,6 +8,7 @@ import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
 public class MockXDPDataStream implements XDPDataStream {
 	private long timeDifference_ns;
 	private long timeOfNextPacket;
+	private long accumulated_ns;
 	private int noOfPackets;
 	private int packetCounter;
 	private int packetSize;
@@ -37,6 +38,7 @@ public class MockXDPDataStream implements XDPDataStream {
 		timeOfNextPacket = 0;
 		noOfPackets = pNoOfPackets;
 		packetCounter = 0;
+		accumulated_ns = 0;
 		if(pPacketSize < 50 || pPacketSize > 1500) packetSize = 300;
 		else packetSize = pPacketSize;
 	}
@@ -62,7 +64,14 @@ public class MockXDPDataStream implements XDPDataStream {
 		//System.out.println("packet no "+packetCounter+" generated.");
 		tracker.ackPacketGenerated(packetCounter);
 	
-		timeOfNextPacket = System.currentTimeMillis() + timeDifference_ns / 1000000;
+		accumulated_ns += timeDifference_ns;
+		if(accumulated_ns >= 500000) {
+			// if the accumulated time difference is greater than half a millisecond
+			// increase the time of the next packet by 1 ms and substract 1 ms from the
+			// accumulated time in ns.
+			accumulated_ns -= 1000000;
+			timeOfNextPacket++;
+		}
 		this.packetCounter++;
 		return packet;
 	}

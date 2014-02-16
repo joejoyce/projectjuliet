@@ -157,4 +157,10 @@ public class MockClusterMaster implements ClusterMaster {
 		return 0;
 	}
 
+	@Override
+	public int getClientCount() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }
