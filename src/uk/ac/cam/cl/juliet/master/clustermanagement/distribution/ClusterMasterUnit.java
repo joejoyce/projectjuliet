@@ -196,4 +196,9 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		while(iter.hasNext())
 			iter.next().broadcast(c,cb);	
 	}
+
+	@Override
+	public int getClientCount() {
+		return allClients.size();
+	}
 }

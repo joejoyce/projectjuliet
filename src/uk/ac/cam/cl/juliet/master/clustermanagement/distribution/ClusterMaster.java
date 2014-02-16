@@ -118,4 +118,10 @@ public interface ClusterMaster {
 	 */
 	public abstract void broadcast(Container c, Callback cb);
 
+	/**
+	 * 
+	 * @return The number of clients currently connected
+	 */
+	public abstract int getClientCount();
+
 }
