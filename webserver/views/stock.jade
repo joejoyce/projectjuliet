@@ -2,6 +2,7 @@ extends layout
 
 block jsStuff
   script(src='/js/main.js')
+  script(src='/js/time.js')
   meta(name='stock-data', content='#{dataString}')
   meta(name='price-scale', content='#{priceScale}')
   meta(name='symbol', content='#{companySymbol}')
@@ -9,7 +10,8 @@ block jsStuff
 block content
   .page-header
     h3 Stock Price - #{companyName} (#{companySymbol})
-    
+    canvas#display(width='200', height='60')
+  
     center
       #chartcontainer 
 

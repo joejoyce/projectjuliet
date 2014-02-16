@@ -4,10 +4,8 @@ $(document).ready(function() {
  	var priceScale = Number($('meta[name=price-scale]').attr("content"));
  	var symbol = $('meta[name=symbol]').attr("content");
  	var chartData = [];
- 	var x = 0;
  	$(stockData).each(function(i, data) {
- 		chartData.push(["Volume: " + data.volume,data.price*priceScale]);
- 		x += 1;
+ 		chartData.push([data.offered_s*1000,data.price*priceScale]);
  	});
  	$('#chartcontainer').highcharts('StockChart', {
 			rangeSelector : {

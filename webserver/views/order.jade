@@ -1,8 +1,12 @@
 extends layout
 
+block jsStuff
+  script(src='/js/time.js')
+
 block content
   #stat-container
     h4 Current order book for #{companyName} (#{companySymbol})
+    canvas#display(width='200', height='60')
     #stats
       #stat-first Last: 
       #stat Volume: 
@@ -17,7 +21,7 @@ block content
         tr
           th Price
           th Volume
-          th Total
+          th Value
           th Time        
         each row in offers
           tr
@@ -31,7 +35,7 @@ block content
         tr
           th Price
           th Volume
-          th Total
+          th Value
           th Time        
         each row in bids
           tr

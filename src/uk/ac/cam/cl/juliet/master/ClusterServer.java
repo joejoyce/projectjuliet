@@ -5,10 +5,13 @@ import java.io.IOException;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
 import uk.ac.cam.cl.juliet.common.Debug;
+
 import java.util.Scanner;
+
 import uk.ac.cam.cl.juliet.master.dataprocessor.DataProcessor;
 import uk.ac.cam.cl.juliet.master.dataprocessor.SampleXDPDataStream;
 import uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling.WebServerListener;
+
 import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,12 +25,13 @@ public class ClusterServer {
 
 	public static ClusterMaster cm;
 	
+	@SuppressWarnings("unused")
 	public static void main(String args[]) throws IOException, SQLException {
 		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
         WebServerListener wsl = new WebServerListener(1337, con);
 
 		Debug.registerOutputLocation(System.out);
-        Debug.setPriority(10); //Default is 5 so no msg show
+        Debug.setPriority(10);
 
         String file1, file2, file3, file4;
         float skipBoundary;

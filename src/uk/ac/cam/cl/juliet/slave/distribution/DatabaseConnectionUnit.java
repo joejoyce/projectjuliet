@@ -8,43 +8,56 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import uk.ac.cam.cl.juliet.common.Debug;
-
 public class DatabaseConnectionUnit implements DatabaseConnection {
 	private Connection connection;
 	private PreparedStatement addOrderBatch;
+	private PreparedStatement addTradeBatch;
+	private PreparedStatement deleteOrderBatch;
+	private PreparedStatement modifyOrderBatch;
 	private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 	private int batchSize = 0;
-	
+
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
-		this.addOrderBatch = connection.prepareStatement(
-				"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s, "
-						  + "placed_seq_num, updated_s, updated_seq_num) "
-						  + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-					);	
+		this.addOrderBatch = connection.prepareStatement("INSERT INTO order_book VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		this.addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)");
+		this.deleteOrderBatch = connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
+		this.modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
 		
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
 				try {
-					System.out.println("About to execute batch size: " + batchSize);
+					System.out.println("About to execute addOrder batch, size: " + batchSize);
 					long then = System.nanoTime();
 					addOrderBatch.executeBatch();
-					
-					synchronized(addOrderBatch) {
+					synchronized (addOrderBatch) {
 						addOrderBatch.close();
-						addOrderBatch = connection.prepareStatement(
-								"INSERT INTO order_book (order_id, symbol_id, price, volume, is_ask, placed_s, "
-										  + "placed_seq_num, updated_s, updated_seq_num) "
-										  + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-									);	
+						addOrderBatch = connection.prepareStatement("INSERT INTO order_book VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					}
+					
+					addTradeBatch.executeBatch();
+					synchronized (addTradeBatch) {
+						addTradeBatch.close();
+						addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)");
+					}
+					
+					deleteOrderBatch.executeBatch();
+					synchronized (deleteOrderBatch) {
+						deleteOrderBatch.close();
+						deleteOrderBatch = connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
+					}
+					
+					modifyOrderBatch.executeBatch();
+					synchronized(modifyOrderBatch) {
+						modifyOrderBatch.close();
+						modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
 					}
 					
 					double diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
 					System.out.println("Taken: " + diff);
 					batchSize = 0;
-				} catch (SQLException e) {					
+				} catch (SQLException e) {
 					e.printStackTrace();
 				}
 			}
@@ -54,7 +67,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public void addOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, boolean isSell, int tradeSession, long packetTimestamp) throws SQLException {
-		synchronized(addOrderBatch) {			
+		synchronized (addOrderBatch) {
 			addOrderBatch.setLong(1, orderID);
 			addOrderBatch.setLong(2, symbolIndex);
 			addOrderBatch.setLong(3, price);
@@ -66,136 +79,107 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			addOrderBatch.setLong(9, symbolSeqNumber);
 			addOrderBatch.addBatch();
 		}
-		batchSize ++;
+		batchSize++;
 	}
 
 	@Override
-	public void modifyOrder(long orderID, long symbolIndex, long time_ns,
-			long symbolSeqNumber, long price, long volume, boolean isSell,
-			long packetTimestamp) throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? "
-						+ "WHERE (order_id = ?) AND (symbol_id = ?)");
-		statement.setLong(1, price);
-		statement.setLong(2, volume);
-		statement.setLong(3, packetTimestamp);
-		statement.setLong(4, symbolSeqNumber);
-		statement.setLong(5, orderID);
-		statement.setLong(6, symbolIndex);
-		//batchQuery.addBatch(statement.toString().split(":")[1]);
-		//batchSize ++;
+	public void modifyOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, boolean isSell, long packetTimestamp) throws SQLException {
+		synchronized(modifyOrderBatch) {
+			modifyOrderBatch.setLong(1, price);
+			modifyOrderBatch.setLong(2, volume);
+			modifyOrderBatch.setLong(3, packetTimestamp);
+			modifyOrderBatch.setLong(4, symbolSeqNumber);
+			modifyOrderBatch.setLong(5, orderID);
+			modifyOrderBatch.setLong(6, symbolIndex);
+			modifyOrderBatch.addBatch();
+		}
+		batchSize++;
 	}
 
 	@Override
-	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns,
-			long symbolSeqNumber, long volumeReduction) throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("UPDATE order_book SET volume = volume - ? "
-						+ "WHERE (order_id = ?) AND (symbol_id = ?)");
+	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long volumeReduction) throws SQLException {
+		PreparedStatement statement = connection.prepareStatement("UPDATE order_book SET volume = volume - ? WHERE (order_id = ?) AND (symbol_id = ?)");
 		statement.setLong(1, volumeReduction);
 		statement.setLong(2, orderID);
 		statement.setLong(3, symbolIndex);
-		//batchQuery.addBatch(statement.toString().split(":")[1]);	
-		//batchSize ++;
+		statement.execute();
+		statement.close();
 	}
 
 	@Override
-	public void deleteOrder(long orderID, long symbolIndex, long time_ns,
-			long symbolSeqNumber, long packetTimestamp) throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("DELETE FROM order_book "
-						+ "WHERE (order_id = ?) AND (symbol_id = ?)");
-		statement.setLong(1, orderID);
-		statement.setLong(2, symbolIndex);
-		//batchQuery.addBatch(statement.toString().split(":")[1]);	
-		//batchSize ++;
+	public void deleteOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long packetTimestamp) throws SQLException {
+		synchronized (deleteOrderBatch) {
+			deleteOrderBatch.setLong(1, orderID);
+			deleteOrderBatch.setLong(2, symbolIndex);
+			deleteOrderBatch.addBatch();
+		}
+		batchSize++;
 	}
 
 	@Override
-	public void addTrade(long tradeID, long symbolIndex, long time_ns,
-			long symbolSeqNumber, long price, long volume, long packetTimestamp)
-			throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("INSERT INTO trade (trade_id, symbol_id, price, volume, offered_s, "
-						+ "offered_seq_num) " + "VALUES (?, ?, ?, ?, ?, ?)");
-		statement.setLong(1, tradeID);
-		statement.setLong(2, symbolIndex);
-		statement.setLong(3, price);
-		statement.setLong(4, volume);
-		statement.setLong(5, packetTimestamp);
-		statement.setLong(6, symbolSeqNumber);
-		//batchQuery.addBatch(statement.toString().split(":")[1]);
-		//batchSize ++;
-		Debug.println("Added trade");
+	public void addTrade(long tradeID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, long packetTimestamp) throws SQLException {
+		synchronized (addOrderBatch) {
+			addTradeBatch.setLong(1, tradeID);
+			addTradeBatch.setLong(2, symbolIndex);
+			addTradeBatch.setLong(3, price);
+			addTradeBatch.setLong(4, volume);
+			addTradeBatch.setLong(5, packetTimestamp);
+			addTradeBatch.setLong(6, symbolSeqNumber);
+			addTradeBatch.addBatch();
+		}
+		batchSize++;
 	}
 
 	@Override
-	public void addStockSummary(long symbolIndex, long time_s, long time_ns,
-			long highPrice, long lowPrice, long openPrice, long closePrice,
-			long totalVolume) throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("INSERT INTO stock_summary (symbol_id, high_price, low_price, total_volume, "
-						+ "updated_s, updated_ns) "
-						+ "VALUES (?, ?, ?, ?, ?, ?)");
+	public void addStockSummary(long symbolIndex, long time_s, long time_ns, long highPrice, long lowPrice, long openPrice, long closePrice, long totalVolume) throws SQLException {
+		PreparedStatement statement = this.connection.prepareStatement("INSERT INTO stock_summary (symbol_id, high_price, low_price, total_volume, " + "updated_s, updated_ns) " + "VALUES (?, ?, ?, ?, ?, ?)");
 		statement.setLong(1, symbolIndex);
 		statement.setLong(2, highPrice);
 		statement.setLong(3, lowPrice);
 		statement.setLong(4, totalVolume);
 		statement.setLong(5, time_s);
 		statement.setLong(6, time_ns);
-		//batchQuery.addBatch(statement.toString().split(":")[1]);
-		//batchSize ++;
+		// batchQuery.addBatch(statement.toString().split(":")[1]);
+		// batchSize ++;
 	}
 
 	@Override
-	public void correctTrade(long originalTradeID, long tradeID,
-			long symbolIndex, long time_s, long time_ns, long symbolSeqNumber,
-			long price, long volume) throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("UPDATE trade SET trade_id = ?, symbol_id = ?, price = ?, volume = ? "
-						+ "WHERE (trade_id = ?)");
+	public void correctTrade(long originalTradeID, long tradeID, long symbolIndex, long time_s, long time_ns, long symbolSeqNumber, long price, long volume) throws SQLException {
+		PreparedStatement statement = this.connection.prepareStatement("UPDATE trade SET trade_id = ?, symbol_id = ?, price = ?, volume = ? WHERE (trade_id = ?)");
 		statement.setLong(1, tradeID);
 		statement.setLong(2, symbolIndex);
 		statement.setLong(3, price);
 		statement.setLong(4, volume);
 		statement.setLong(5, originalTradeID);
-		//batchQuery.addBatch(statement.toString().split(":")[1]);
-		//batchSize ++;
+		statement.execute();
+		statement.close();
 	}
 
 	@Override
-	public void addSourceTimeReference(long symbolIndex, long symbolSeqNumber,
-			long referenceTime) throws SQLException {
-		// TODO implement method. Not sure how to add a source time reference to the database
+	public void addSourceTimeReference(long symbolIndex, long symbolSeqNumber, long referenceTime) throws SQLException {
+		// TODO implement method. Not sure how to add a source time reference to
+		// the database
 	}
 
 	@Override
-	public void cancelTrade(long tradeID, long symbolIndex, long time_s,
-			long time_ns, long symbolSeqNumber) throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("DELETE FROM trade WHERE (trade_id = ?)");
+	public void cancelTrade(long tradeID, long symbolIndex, long time_s, long time_ns, long symbolSeqNumber) throws SQLException {
+		PreparedStatement statement = this.connection.prepareStatement("DELETE FROM trade WHERE (trade_id = ?)");
 		statement.setLong(1, tradeID);
-		//batchQuery.addBatch(statement.toString().split(":")[1]);
-		//batchSize ++;
+		statement.execute();
 	}
 
 	@Override
-	public void addSymbolMappingEntry(long symbolIndex, String symbol,
-			long priceScaleCode, long prevClosingPrice, long prevClosingVolume)
-			throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("INSERT INTO symbol (symbol_id, symbol, company_name, price_scale, open_price) VALUES (?,?,?,?,?)");
+	public void addSymbolMappingEntry(long symbolIndex, String symbol, long priceScaleCode, long prevClosingPrice, long prevClosingVolume) throws SQLException {
+		/*PreparedStatement statement = this.connection.prepareStatement("INSERT INTO symbol (symbol_id, symbol, company_name, price_scale, open_price) VALUES (?,?,?,?,?)");
 		statement.setLong(1, symbolIndex);
 		statement.setString(2, symbol);
 		statement.setString(3, "");
 		statement.setLong(4, priceScaleCode);
-		statement.setLong(5, prevClosingPrice);
-		// batchQuery.addBatch(statement.toString().split(":")[1]);
+		statement.setLong(5, prevClosingPrice);*/
 	}
 
 	@Override
-	public void changeTradeSession(long symbolIndex, long time_s, long time_ns,
-			long symbolSeqNumber, int tradingSession) throws SQLException {
+	public void changeTradeSession(long symbolIndex, long time_s, long time_ns, long symbolSeqNumber, int tradingSession) throws SQLException {
 		// TODO implement method. Not sure how to change over a trade session.
 		// It will probably involve deleting all orders from that expire within
 		// the current trade
@@ -209,7 +193,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			statement.setLong(1, symbolID);
 			statement.setLong(2, start);
 			statement.setLong(3, end);
-			result =  statement.executeQuery();
+			result = statement.executeQuery();
 		} finally {
 			statement.close();
 		}

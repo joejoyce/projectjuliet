@@ -40,7 +40,6 @@ CREATE TABLE IF NOT EXISTS stock_summary (
 
 DROP TABLE IF EXISTS trade;
 CREATE TABLE IF NOT EXISTS trade (
-  id int(10) unsigned NOT NULL AUTO_INCREMENT,
   trade_id int(10) unsigned NOT NULL,
   symbol_id int(10) unsigned NOT NULL,
   price int(10) unsigned NOT NULL,
@@ -49,7 +48,7 @@ CREATE TABLE IF NOT EXISTS trade (
   offered_seq_num int(10) unsigned NOT NULL,
   completed_s int(10) unsigned NULL,
   completed_seq_num int(10) unsigned NULL,
-  PRIMARY KEY(id)
+  PRIMARY KEY(trade_id, symbol_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
 DROP TABLE IF EXISTS order_book;

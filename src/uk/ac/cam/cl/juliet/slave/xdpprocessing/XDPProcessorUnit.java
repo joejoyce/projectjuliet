@@ -154,7 +154,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long orderID = m.readLong(4);
 		long price = m.readLong(4);
 		long volume = m.readLong(4);
-		boolean isGTC = (m.readUnsignedByte()== 1);
+		//boolean isGTC = (m.readUnsignedByte()== 1);
 		int reasonCode = m.readUnsignedByte();
 		long tradeID = m.readLong(4);
 		
@@ -189,7 +189,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long symbolIndex = m.readLong(4);
 		long symbolSequenceNumber = m.readLong(4);
 		long orderID = m.readLong(4);
-		boolean isSell = m.readChar()== 'S';
+		//boolean isSell = m.readChar()== 'S';
 		// there are two more bytes containing OrderIDGTCIndicator and a ReasonCode
 		// but we don't need them now
 
@@ -234,7 +234,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long price = m.readLong(4);
 		long volume = m.readLong(4);
 		boolean isSell = (m.readChar() == 'S');
-		boolean isGTC = (m.readUnsignedByte()== 1);
+		//boolean isGTC = (m.readUnsignedByte()== 1);
 		int tradeSession = m.readUnsignedByte();
 		
 		try {
@@ -273,18 +273,18 @@ public class XDPProcessorUnit implements XDPProcessor {
 		String symbol = m.readString(11); 
 		// Jump the filler
 		m.readChar();
-		long marketID = m.readLong(2);
-		long systemID = m.readLong(1);
+		//long marketID = m.readLong(2);
+		//long systemID = m.readLong(1);
 		
-		long exchangeCode = m.readChar();
+		//long exchangeCode = m.readChar();
 		long priceScaleCode = m.readLong(1);
-		long securityType = m.readChar();
-		long lotSize = m.readLong(2);
+		//long securityType = m.readChar();
+		//long lotSize = m.readLong(2);
 
 		long prevClosePrice = m.readLong(4);
 		long prevCloseVolume = m.readLong(4);
-		long priceResolution = m.readLong(1);
-		long roundLot = m.readChar();
+		//long priceResolution = m.readLong(1);
+		//long roundLot = m.readChar();
 		
 		try {
 			mDB.addSymbolMappingEntry(symbolIndex, symbol, priceScaleCode, 
