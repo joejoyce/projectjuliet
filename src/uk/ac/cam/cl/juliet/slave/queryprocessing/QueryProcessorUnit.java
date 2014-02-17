@@ -11,6 +11,8 @@ import uk.ac.cam.cl.juliet.common.MovingAverageRequest;
 import uk.ac.cam.cl.juliet.common.MovingAverageResponse;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.QueryResponse;
+import uk.ac.cam.cl.juliet.common.SpikeDetectionRequest;
+import uk.ac.cam.cl.juliet.common.SpikeDetectionResponse;
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
 
 /**
@@ -33,9 +35,76 @@ public class QueryProcessorUnit implements QueryProcessor {
 			return handleCandlestickRequest((CandlestickRequest) p);
 		if (p instanceof MovingAverageRequest)
 			return handleMovingAverageRequest((MovingAverageRequest) p);
+		if (p instanceof SpikeDetectionRequest)
+			return handleSpikeDetecionRequest((SpikeDetectionRequest) p);
 		else {
 			// Unknown query
 			return new QueryResponse(p.getPacketId(), false);
+		}
+	}
+
+	private QueryResponse handleSpikeDetecionRequest(SpikeDetectionRequest p) {
+		SpikeDetectionResponse response = new SpikeDetectionResponse(
+				p.getPacketId(), true);
+		try {
+			//get data from database
+			ResultSet queryResults = connection.getAllTradesInRecentHistory(
+					p.getStartTimeAverage());
+			Boolean thereAreMoreQueryResults = queryResults.next();
+			while(thereAreMoreQueryResults) {
+				//get all trades for one stock
+				ArrayList<Trade> tradeList = new ArrayList<Trade>();
+				long currentSymbol = queryResults.getLong("symbol_id");
+				tradeList.add(new Trade(queryResults.getLong("offered_s"),
+						queryResults.getLong("offered_ns"), queryResults.getLong("price")));
+				thereAreMoreQueryResults = queryResults.next();
+				while(thereAreMoreQueryResults && 
+						queryResults.getLong("symbol_id") == currentSymbol) {
+						tradeList.add(new Trade(queryResults.getLong("offered_s"),
+								queryResults.getLong("offered_ns"), queryResults.getLong("price")));
+						thereAreMoreQueryResults = queryResults.next();
+				}
+				//detect spike for this stock and add to response packet
+				if(!tradeList.isEmpty()) {
+					detectSpike(tradeList, response, p.getStartTimeSpikes(), p.getLimit());
+				}
+			}
+			
+		} catch (SQLException e) {
+			return new QueryResponse(p.getPacketId(), false); // query failed
+		}
+		
+		return response;
+	}
+	/**
+	 * 
+	 * @param tradeList the list of trades in which a spike shall be detected
+	 * @param response 
+	 * @precondition the size of the tradeList must not be 0!
+	 */
+	private void detectSpike(ArrayList<Trade> tradeList, 
+			SpikeDetectionResponse response, long pStartTime, float limit) {
+		//compute average price
+		int counter = 0;
+		int spikeDetectionPointer = -1;
+		long averagePrice = 0;
+		for(Trade trade : tradeList) {
+			averagePrice += trade.price;
+			//test whether the trade you looked at is within the time frame for spike detection
+			if(trade.seconds >= pStartTime && spikeDetectionPointer < 0)
+				spikeDetectionPointer = counter;
+			counter++;
+		}
+		//look for a spike
+		while(spikeDetectionPointer < counter) {
+			double price = tradeList.get(spikeDetectionPointer).price*counter;
+			double highBoundary = (double) averagePrice * (1.0+limit);
+			double lowBoundary = (double) averagePrice * (1.0 - limit);
+			if( price <= lowBoundary || price >= highBoundary){
+				//we have a spike
+				//TODO: get Symbol of traded stock
+				//TODO: add to response
+			}
 		}
 	}
 
@@ -44,32 +113,6 @@ public class QueryProcessorUnit implements QueryProcessor {
 			ResultSet results = connection
 					.getTradesInTimeRangeForSymbol(p.getSymbolId(),
 							p.getStart(), p.getStart() + p.getLength());
-
-			class Trade implements Comparable<Trade> {
-				public long seconds;
-				public long nanoseconds;
-				public long price;
-
-				public Trade(long seconds, long nanoseconds, long price) {
-					this.seconds = seconds;
-					this.nanoseconds = nanoseconds;
-					this.price = price;
-				}
-
-				@Override
-				public int compareTo(Trade o) {
-					if (this.seconds < o.seconds)
-						return -1;
-					else if (this.seconds > o.seconds)
-						return 1;
-					else if (this.nanoseconds < o.nanoseconds)
-						return -1;
-					else if (this.nanoseconds > o.nanoseconds)
-						return 1;
-					else
-						return 0;
-				}
-			}
 
 			ArrayList<Trade> resultList = new ArrayList<Trade>();
 
@@ -160,6 +203,32 @@ public class QueryProcessorUnit implements QueryProcessor {
 					close, high, low, volume);
 		} catch (SQLException e) {
 			return new QueryResponse(p.getPacketId(), false); // Fail query
+		}
+	}
+	
+	private class Trade implements Comparable<Trade> {
+		public long seconds;
+		public long nanoseconds;
+		public long price;
+
+		public Trade(long seconds, long nanoseconds, long price) {
+			this.seconds = seconds;
+			this.nanoseconds = nanoseconds;
+			this.price = price;
+		}
+
+		@Override
+		public int compareTo(Trade o) {
+			if (this.seconds < o.seconds)
+				return -1;
+			else if (this.seconds > o.seconds)
+				return 1;
+			else if (this.nanoseconds < o.nanoseconds)
+				return -1;
+			else if (this.nanoseconds > o.nanoseconds)
+				return 1;
+			else
+				return 0;
 		}
 	}
 

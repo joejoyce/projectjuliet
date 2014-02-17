@@ -277,6 +277,13 @@ class TestDatabase implements DatabaseConnection {
 			long end) throws SQLException {
 		return null;
 	}
+
+	@Override
+	public ResultSet getAllTradesInRecentHistory(long start)
+			throws SQLException {
+		// not needed
+		return null;
+	}
 	
 
 }
