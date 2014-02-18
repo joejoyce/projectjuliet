@@ -90,7 +90,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 						Socket connection = socket.accept();
 						Debug.println("About to add a new client!");						
 						addClient(connection);
-						Debug.println("Added a new client!");					
+						Debug.println(100, "Added a new client!\nTotal Clients: " + allClients.size());					
 					} catch (IOException e) {
 						System.out.println("There was an error establishing a connection and spawning a client");
 						e.printStackTrace();

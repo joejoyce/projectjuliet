@@ -57,10 +57,11 @@ CREATE TABLE IF NOT EXISTS order_book (
   symbol_id int(10) unsigned NOT NULL,
   price int(10) unsigned NOT NULL,
   volume int(10) unsigned NOT NULL,
-  is_ask bit(1) NOT NULL, 
+  is_ask bit(1) NOT NULL,
   placed_s int(10) unsigned NOT NULL,
   placed_seq_num int(10) unsigned NOT NULL,
   updated_s int(10) unsigned NOT NULL,
   updated_seq_num int(10) unsigned NOT NULL,
-  PRIMARY KEY(order_id, symbol_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
+  PRIMARY KEY(order_id, symbol_id),
+  INDEX name (order_id,symbol_id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;

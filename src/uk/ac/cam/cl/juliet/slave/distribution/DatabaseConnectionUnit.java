@@ -1,7 +1,6 @@
 package uk.ac.cam.cl.juliet.slave.distribution;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,6 +22,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		this.connection = c;
 		this.addOrderBatch = connection.prepareStatement("INSERT INTO order_book VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		this.addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)");
+		//this.deleteOrderBatch = connection.prepareStatement("UPDATE order_book SET is_deleted=1 WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.deleteOrderBatch = connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
 		
@@ -84,7 +84,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 				}
 			}
 		};
-		scheduler.scheduleAtFixedRate(executeBatch, 5, 5, TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(executeBatch, 5, 1, TimeUnit.SECONDS);
 	}
 
 	@Override
