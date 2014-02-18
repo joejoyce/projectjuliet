@@ -1,6 +1,7 @@
 package uk.ac.cam.cl.juliet.slave.distribution;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +17,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private PreparedStatement modifyOrderBatch;
 	private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 	private int batchSize = 0;
+	private int delete = 0;
 
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
@@ -27,36 +29,56 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
 				try {
-					System.out.println("About to execute addOrder batch, size: " + batchSize);
+					System.out.println("Total batch size: " + batchSize);
+					long start = System.nanoTime();
+					
+					System.out.println("About to execute addOrder batch");
 					long then = System.nanoTime();
-					addOrderBatch.executeBatch();
 					synchronized (addOrderBatch) {
-						addOrderBatch.close();
-						addOrderBatch = connection.prepareStatement("INSERT INTO order_book VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+						addOrderBatch.executeBatch();
+						addOrderBatch.clearBatch();
 					}
-					
-					addTradeBatch.executeBatch();
-					synchronized (addTradeBatch) {
-						addTradeBatch.close();
-						addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)");
-					}
-					
-					deleteOrderBatch.executeBatch();
-					synchronized (deleteOrderBatch) {
-						deleteOrderBatch.close();
-						deleteOrderBatch = connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
-					}
-					
-					modifyOrderBatch.executeBatch();
-					synchronized(modifyOrderBatch) {
-						modifyOrderBatch.close();
-						modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
-					}
-					
 					double diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
 					System.out.println("Taken: " + diff);
+		
+					System.out.println("About to execute addTrade batch");
+					then = System.nanoTime();
+					synchronized (addTradeBatch) {
+						addTradeBatch.executeBatch();
+						addTradeBatch.clearBatch();
+					}
+					diff = Math.abs(System.nanoTime() - then);
+					diff /= 1000000;
+					System.out.println("Taken: " + diff);
+		
+					System.out.println("About to execute deleteOrder batch: " + delete);
+					delete = 0;
+					then = System.nanoTime();
+					synchronized (deleteOrderBatch) {
+						deleteOrderBatch.executeBatch();
+						deleteOrderBatch.clearBatch();
+					}
+					diff = Math.abs(System.nanoTime() - then);
+					diff /= 1000000;
+					System.out.println("Taken: " + diff);
+					
+					System.out.println("About to execute modifyOrderBatch batch");
+					then = System.nanoTime();
+					synchronized(modifyOrderBatch) {
+						modifyOrderBatch.executeBatch();
+						modifyOrderBatch.clearBatch();
+					}
+					diff = Math.abs(System.nanoTime() - then);
+					diff /= 1000000;
+					System.out.println("Taken: " + diff);				
+					
 					batchSize = 0;
+					
+					long totalTaken = Math.abs(System.nanoTime() - start);
+					totalTaken /= 1000000;
+					System.out.println("Total time taken: " + totalTaken);
+					System.out.println("-------------------------------------");
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -114,6 +136,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			deleteOrderBatch.addBatch();
 		}
 		batchSize++;
+		delete++;
 	}
 
 	@Override
