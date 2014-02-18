@@ -226,6 +226,15 @@ public interface DatabaseConnection {
 	 */
 	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start, long end) throws SQLException;
 
+	
+	/**
+	 * gets all trades that happened in the time frame from start up to now 
+	 * ordered by the symbol ID
+	 * @param start		lower limit of time frame
+	 * @return
+	 */
+	public ResultSet getAllTradesInRecentHistory(long start) throws SQLException;
+	
 	/**
 	 * Set the connection to the database
 	 * 

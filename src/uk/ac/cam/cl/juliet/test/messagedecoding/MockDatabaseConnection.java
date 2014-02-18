@@ -313,4 +313,11 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		// not needed
 		return null;
 	}
+
+	@Override
+	public ResultSet getAllTradesInRecentHistory(long start)
+			throws SQLException {
+		// not needed
+		return null;
+	}
 }

@@ -9,6 +9,6 @@ java -classpath ../mysql-connector-java-5.1.29-bin.jar:.:uk/ac/cam/cl/juliet/mas
 
 sudo java -Xms1024M -Xmx1024M -classpath .:../mysql-connector-java-5.1.29-bin.jar:uk/ac/cam/cl/juliet/master/ uk.ac.cam.cl.juliet.master.ClusterServer /home/juliet_data/20111219-ARCA_XDP_IBF_1.dat /home/juliet_data/20111219-ARCA_XDP_IBF_2.dat /home/juliet_data/20111219-ARCA_XDP_IBF_3.dat /home/juliet_data/20111219-ARCA_XDP_IBF_4.dat 0
 
-
-
-
+find -name "*.java" > sources.txt
+javac @sources.txt
+rm sources.txt

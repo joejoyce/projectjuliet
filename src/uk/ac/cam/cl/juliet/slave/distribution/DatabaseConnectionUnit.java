@@ -222,6 +222,19 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		}
 		return result;
 	}
+	
+	public ResultSet getAllTradesInRecentHistory(long start) throws SQLException{
+		PreparedStatement statement = this.connection.prepareStatement(
+				"SELECT * FROM trade WHERE offered_s >= ? ORDER BY symbol_id ASC");
+		ResultSet result;
+		try {
+			statement.setLong(1, start);
+			result = statement.executeQuery();
+		} finally {
+			statement.close();
+		}
+		return result;
+	}
 
 	public void setConnection(Connection connection) {
 		this.connection = connection;
