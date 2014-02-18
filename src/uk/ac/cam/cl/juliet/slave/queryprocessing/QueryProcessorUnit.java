@@ -66,7 +66,8 @@ public class QueryProcessorUnit implements QueryProcessor {
 				}
 				//detect spike for this stock and add to response packet
 				if(!tradeList.isEmpty()) {
-					detectSpike(tradeList, response, p.getStartTimeSpikes(), p.getLimit());
+					detectSpike(tradeList, response, p.getStartTimeSpikes(), 
+							p.getLimit(), currentSymbol);
 				}
 			}
 			
@@ -83,7 +84,8 @@ public class QueryProcessorUnit implements QueryProcessor {
 	 * @precondition the size of the tradeList must not be 0!
 	 */
 	private void detectSpike(ArrayList<Trade> tradeList, 
-			SpikeDetectionResponse response, long pStartTime, float limit) {
+			SpikeDetectionResponse response, long pStartTime, float limit,
+			long symbolIndex) throws SQLException{
 		//compute average price
 		int counter = 0;
 		int spikeDetectionPointer = -1;
@@ -97,13 +99,14 @@ public class QueryProcessorUnit implements QueryProcessor {
 		}
 		//look for a spike
 		while(spikeDetectionPointer < counter) {
-			double price = tradeList.get(spikeDetectionPointer).price*counter;
+			Trade consideredTrade = tradeList.get(spikeDetectionPointer);
+			double price = consideredTrade.price*counter;
 			double highBoundary = (double) averagePrice * (1.0+limit);
 			double lowBoundary = (double) averagePrice * (1.0 - limit);
 			if( price <= lowBoundary || price >= highBoundary){
 				//we have a spike
-				//TODO: get Symbol of traded stock
-				//TODO: add to response
+				String symbol = this.connection.getSymbol(symbolIndex);
+				response.addSpike(symbol, consideredTrade.seconds);
 			}
 		}
 	}

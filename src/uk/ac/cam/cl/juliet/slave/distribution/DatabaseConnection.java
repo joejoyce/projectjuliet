@@ -248,6 +248,13 @@ public interface DatabaseConnection {
 	public ResultSet getAllTradesInRecentHistory(long start) throws SQLException;
 	
 	/**
+	 * Returns the stock symbol that is associated with the symbolIndex
+	 * @param symbolIndex
+	 * @return
+	 * @throws SQLException
+	 */
+	public String getSymbol(long symbolIndex) throws SQLException;
+	/**
 	 * Set the connection to the database
 	 * 
 	 * @param connection
