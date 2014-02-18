@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
+import uk.ac.cam.cl.juliet.common.LatencyMonitor;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 
 final class ContainerTimeComparator implements Comparator<InFlightContainer> {
@@ -106,14 +107,14 @@ public class Client {
 	public void closeClient() {
 		parent.removeClient(this);
 		//Close the streams
-		/*if(0 == numberClients.decrementAndGet()) {
+		if(0 == numberClients.decrementAndGet()) {
 			workers.shutdownNow();
-		//	workers = null;
-		}*/
+			workers = null;
+		}
 				
 		cleaner.cancel(false); //Try to stop the regular operation flushing my queue, waiting until finished
 		try {
-			Debug.println("---------------Close Client has been called----------------");
+			Debug.println(Debug.DEBUG,"---------------Close Client has been called----------------");
 			out.close();
 			in.close(); //Should also have the effect of closing the threads that read and write on them
 			s.close();
@@ -186,7 +187,12 @@ public class Client {
 					try {
 						InFlightContainer container = sendQueue.take();
 						checkoutContainer(container);
-						out.writeObject(container.getContainer());
+						Container c = container.getContainer();
+						if(c instanceof LatencyMonitor) {
+							LatencyMonitor m = (LatencyMonitor)c;
+							m.outboundDepart = System.nanoTime();
+						}
+						out.writeObject(c);
 						out.flush();												
 						totalPackets++; //TODO this means it won't count objects in the queue
 						packetsSentThisSecond ++;
@@ -233,6 +239,10 @@ public class Client {
 		ifc.setBroadcast(bcast);
 		try {
 			Debug.println("About to add to send queue: " + sendQueue.size());
+			if(c instanceof LatencyMonitor) {
+				LatencyMonitor m = (LatencyMonitor)c;
+				m.outboundQueue = System.nanoTime();
+			}
 			sendQueue.put(ifc);
 			Debug.println("Added to send queue: " + sendQueue.size());
 		} catch (InterruptedException e) {
@@ -296,7 +306,7 @@ public class Client {
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.getBroadcast()) {
 						//Reply hasn't been received and not broadcast so resend
-						Debug.println("Resending packet: " + ifc.getPacketId());
+						Debug.println(Debug.INFO,"Resending packet: " + ifc.getPacketId());
 						try {
 							parent.sendPacket(ifc.getContainer(),ifc.getCallback());
 						} catch (NoClusterException e) {
