@@ -241,4 +241,10 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		// not needed (only for testing purposes)
 
 	}
+
+	@Override
+	public String getSymbol(long symbolIndex) throws SQLException {
+		//TODO (Lucas): implement this method to get the symbol name
+		return "Oops, not yet implemented";
+	}
 }
