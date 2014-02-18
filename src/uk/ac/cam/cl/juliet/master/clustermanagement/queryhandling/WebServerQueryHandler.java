@@ -171,34 +171,22 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		final long n = numberOfCandlesticks;
 
 		ClusterMaster cm = ClusterServer.cm;
-
-		Callback c = new Callback() {
-			private PrintWriter writer = pw;
-			private long recieved = 0;
-			private long total = n;
-
-			@Override
-			public void callback(Container data) {
+		
+		DistributedQueryCallback c = new DistributedQueryCallback(n) {
+			PrintWriter writer = pw;
+			
+			protected void processContainer(Container data) {
 				CandlestickResponse response = (CandlestickResponse) data;
-				synchronized (writer) {
-					recieved++;
-					writer.write("{");
-					writer.write("\"start\":\"" + response.getStart() + "\", ");
-					writer.write("\"open\":\"" + response.getOpenValue()
-							+ "\", ");
-					writer.write("\"close\":\"" + response.getCloseValue()
-							+ "\", ");
-					writer.write("\"high\":\"" + response.getHighValue()
-							+ "\", ");
-					writer.write("\"low\":\"" + response.getLowValue() + "\", ");
-					writer.write("\"volume\":\"" + response.getVolumeValue()
-							+ "\"");
-					writer.write("}");
-					if (recieved != total)
-						writer.write(",");
-				}
-				if (recieved == total)
-					this.notifyAll();
+				writer.write("{");
+				writer.write("\"start\":\"" + response.getStart() + "\", ");
+				writer.write("\"open\":\"" + response.getOpenValue() + "\", ");
+				writer.write("\"close\":\"" + response.getCloseValue() + "\", ");
+				writer.write("\"high\":\"" + response.getHighValue() + "\", ");
+				writer.write("\"low\":\"" + response.getLowValue() + "\", ");
+				writer.write("\"volume\":\"" + response.getVolumeValue() + "\"");
+				writer.write("}");
+				if (received != total)
+					writer.write(",");
 			}
 		};
 
@@ -209,11 +197,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			cm.sendPacket(request, c);
 		}
 
-		try {
-			// Block until all data is received
-			c.wait();
-		} catch (InterruptedException e) {
-		}
+		c.waitUntilDone();
 		pw.write("]");
 	}
 
@@ -237,57 +221,47 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		long maxTime = rs.getLong("max");
 
 		ClusterMaster cm = ClusterServer.cm;
-		final long numberOfQueries = Math.min(
-				(maxTime - minTime) - secondsPerAverage,
-				cm.getClientCount() * 2);
+		final long numberOfQueries = Math.min((maxTime - minTime)
+				- secondsPerAverage, cm.getClientCount() * 2);
 
-		Callback c = new Callback() {
-			private PrintWriter writer = pw;
-			private long recieved = 0;
-			private long total = numberOfQueries;
-
-			@Override
-			public void callback(Container data) {
+		DistributedQueryCallback c = new DistributedQueryCallback(numberOfQueries) {
+			PrintWriter writer = pw;
+			
+			protected void processContainer(Container data) {
 				MovingAverageResponse response = (MovingAverageResponse) data;
-				synchronized (writer) {
-					recieved++;
 					for (int i = 0; i < response.getAverageCount(); i++) {
 						writer.write("{");
-						writer.write("\"time\":\""+response.getTime(i)+"\"");
-						writer.write("\"average\":\""+response.getAverage(i)+"\"");
+						writer.write("\"time\":\"" + response.getTime(i) + "\"");
+						writer.write("\"average\":\"" + response.getAverage(i)
+								+ "\"");
 						writer.write("}");
-						if (recieved != total
+						if (received != total
 								&& i < response.getAverageCount() - 1)
 							writer.write(",");
 					}
 				}
-				if (recieved == total)
-					this.notifyAll();
-			}
 		};
+
 
 		pw.write("[");
 
-		long length = maxTime-minTime + 1;
+		long length = maxTime - minTime + 1;
 		long numberOfAverages = length - secondsPerAverage + 1;
 		long averagesPerQuery = numberOfAverages / numberOfQueries;
-		
+
 		long currentStart = minTime;
-		for (int i=0;i<numberOfQueries-1;i++) {
+		for (int i = 0; i < numberOfQueries - 1; i++) {
 			MovingAverageRequest request = new MovingAverageRequest(symbolID,
-					currentStart, secondsPerAverage+(averagesPerQuery-1), secondsPerAverage);
+					currentStart, secondsPerAverage + (averagesPerQuery - 1),
+					secondsPerAverage);
 			cm.sendPacket(request, c);
-			currentStart+=averagesPerQuery;
+			currentStart += averagesPerQuery;
 		}
 		MovingAverageRequest request = new MovingAverageRequest(symbolID,
-				currentStart, (maxTime-currentStart)+1, secondsPerAverage);
+				currentStart, (maxTime - currentStart) + 1, secondsPerAverage);
 		cm.sendPacket(request, c);
 
-		try {
-			// Block until all data is received
-			c.wait();
-		} catch (InterruptedException e) {
-		}
+		c.waitUntilDone();
 		pw.write("]");
 	}
 
