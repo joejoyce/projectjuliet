@@ -2,7 +2,6 @@ package uk.ac.cam.cl.juliet.slave.distribution;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import java.sql.Connection;
 
 /**
@@ -226,6 +225,19 @@ public interface DatabaseConnection {
 	 */
 	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start, long end) throws SQLException;
 
+	/**
+	 * Insert information about a new imbalance message into the database.
+	 * Right now this is only used for collecting information during a test
+	 * (see test.messageDecoding)
+	 * @param symbolIndex
+	 * @param time_s
+	 * @param time_ns
+	 * @param symbolSeqNumber
+	 * @param referencePrice
+	 * @throws SQLException
+	 */
+	public void addImbalanceMessage(long symbolIndex, long time_s, long time_ns,
+			long symbolSeqNumber, long referencePrice) throws SQLException;
 	
 	/**
 	 * gets all trades that happened in the time frame from start up to now 

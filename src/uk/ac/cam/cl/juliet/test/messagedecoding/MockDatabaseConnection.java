@@ -31,6 +31,7 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		public int noMsgsTradeCancel;
 		public int noMsgsTradeCorrection;
 		public int noMsgsStockSummary;
+		public int noMsgsImbalance;
 		
 		public MessageStatisticsDatum() {
 			noMsgsAddOrder = 0;
@@ -43,6 +44,7 @@ public class MockDatabaseConnection implements DatabaseConnection {
 			noMsgsTradeCancel = 0;
 			noMsgsTradeCorrection = 0;
 			noMsgsStockSummary = 0;
+			noMsgsImbalance = 0;
 		}
 		
 	}
@@ -301,6 +303,20 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		if(symbolIndex == singleStockSymbolIndex)
 			singleStockMessageLog.add("changeTradeSession,"+"-"+","+"-"+","+time_s+","+time_ns+","+
 					symbolSeqNumber+","+"-"+","+"-"+","+"-"+","+tradingSession);
+	}
+	@Override
+	public void addImbalanceMessage(long symbolIndex, long time_s, long time_ns,
+			long symbolSeqNumber, long referencePrice) throws SQLException {
+		if(!sMessageStatistics.containsKey(symbolIndex)) {
+			MessageStatisticsDatum newDatum = new MessageStatisticsDatum();
+			newDatum.noMsgsImbalance++;
+			sMessageStatistics.put(symbolIndex, newDatum);
+		} else {
+			sMessageStatistics.get(symbolIndex).noMsgsImbalance++;
+		}
+		if(symbolIndex == singleStockSymbolIndex)
+			singleStockMessageLog.add("Imbalance,"+"-"+","+"-"+","+time_ns+","+time_ns+","+
+					symbolSeqNumber+","+referencePrice+","+"-"+","+"-"+","+"-");
 	}
 
 	

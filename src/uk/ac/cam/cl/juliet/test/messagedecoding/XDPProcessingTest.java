@@ -284,6 +284,14 @@ class TestDatabase implements DatabaseConnection {
 		// not needed
 		return null;
 	}
+
+	@Override
+	public void addImbalanceMessage(long symbolIndex, long time_s,
+			long time_ns, long symbolSeqNumber, long referencePrice)
+			throws SQLException {
+		// not needed
+		
+	}
 	
 
 }

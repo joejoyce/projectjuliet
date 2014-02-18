@@ -239,4 +239,12 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	public void setConnection(Connection connection) {
 		this.connection = connection;
 	}
+
+	@Override
+	public void addImbalanceMessage(long symbolIndex, long time_s,
+			long time_ns, long symbolSeqNumber, long referencePrice)
+			throws SQLException {
+		// not needed (only for testing purposes)
+		
+	}
 }
