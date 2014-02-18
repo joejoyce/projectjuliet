@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 //import org.dhcp4java.DHCPCoreServer;
@@ -120,8 +121,15 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	@Override
 	public long sendPacket(Container msg, Callback cb) throws NoClusterException {
-		Client c;
-		while((c = clientQueue.poll()) == null) {/*System.out.println("Was null: " + clientQueue.size());*/}
+		Client c = clientQueue.poll();
+		while (c == null) {
+			/*System.out.println("Was null: " + clientQueue.size());*/
+			try {
+				c = clientQueue.poll(1, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+			}
+		}
+
 		long l = c.send(msg,cb);
 		clientQueue.put(c);
 		currentSystemTime = msg.getTimeStampS();
