@@ -12,7 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
-import uk.ac.cam.cl.juliet.common.LatencyMonitor;
+//import uk.ac.cam.cl.juliet.common.LatencyMonitor;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.StringTestPacket;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
@@ -73,10 +73,10 @@ public class Listener {
 		while (true) {
 			try {
 				Container response = responseQueue.take();
-				if(response instanceof LatencyMonitor) {
-					LatencyMonitor m = (LatencyMonitor)response;
-					m.inboundDepart = System.nanoTime();
-				}
+		//		if(response instanceof LatencyMonitor) {
+		//			LatencyMonitor m = (LatencyMonitor)response;
+		//			m.inboundDepart = System.nanoTime();
+		//		}
 				output.writeObject(response);
 				output.flush();
 				Debug.println("sent: size: " + responseQueue.size());
@@ -105,9 +105,9 @@ public class Listener {
 			
 			if (container instanceof ConfigurationPacket) {
 				handleConfigurationPacket((ConfigurationPacket) container);
-			} else if(container instanceof LatencyMonitor) {
-				LatencyMonitor m = (LatencyMonitor)container;
-				handleLatencyMonitor(m);
+		//	} else if(container instanceof LatencyMonitor) {
+			//	LatencyMonitor m = (LatencyMonitor)container;
+				//handleLatencyMonitor(m);
 			} else {
 				long then = System.nanoTime();
 				
@@ -179,7 +179,7 @@ public class Listener {
 			 */
 		}		
 	}
-	private void handleLatencyMonitor(LatencyMonitor m) {
+/*	private void handleLatencyMonitor(LatencyMonitor m) {
 		m.outboundArrive = System.nanoTime();
 		m.databaseDepart = m.outboundArrive;
 		//Need to do a SQL thing to check
@@ -191,5 +191,5 @@ public class Listener {
 			Debug.println(Debug.ERROR,"Unable to queue up latencyMonitor return");
 			e.printStackTrace();
 		}
-	}
+	}*/
 }

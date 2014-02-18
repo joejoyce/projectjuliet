@@ -31,8 +31,9 @@ public class QueryProcessorUnit implements QueryProcessor {
 
 	@Override
 	public QueryResponse runQuery(QueryPacket p) {
-		if (p instanceof CandlestickRequest)
+		if (p instanceof CandlestickRequest) {
 			return handleCandlestickRequest((CandlestickRequest) p);
+		}
 		if (p instanceof MovingAverageRequest)
 			return handleMovingAverageRequest((MovingAverageRequest) p);
 		if (p instanceof SpikeDetectionRequest)
@@ -44,97 +45,88 @@ public class QueryProcessorUnit implements QueryProcessor {
 	}
 
 	private QueryResponse handleSpikeDetecionRequest(SpikeDetectionRequest p) {
-		SpikeDetectionResponse response = new SpikeDetectionResponse(
-				p.getPacketId(), true);
+		SpikeDetectionResponse response = new SpikeDetectionResponse(p.getPacketId(), true);
 		try {
-			//get data from database
-			ResultSet queryResults = connection.getAllTradesInRecentHistory(
-					p.getStartTimeAverage());
+			// get data from database
+			ResultSet queryResults = connection.getAllTradesInRecentHistory(p.getStartTimeAverage());
 			Boolean thereAreMoreQueryResults = queryResults.next();
-			while(thereAreMoreQueryResults) {
-				//get all trades for one stock
+			while (thereAreMoreQueryResults) {
+				// get all trades for one stock
 				ArrayList<Trade> tradeList = new ArrayList<Trade>();
 				long currentSymbol = queryResults.getLong("symbol_id");
-				tradeList.add(new Trade(queryResults.getLong("offered_s"),
-						queryResults.getLong("offered_ns"), queryResults.getLong("price")));
+				tradeList.add(new Trade(queryResults.getLong("offered_s"), queryResults.getLong("offered_ns"), queryResults.getLong("price")));
 				thereAreMoreQueryResults = queryResults.next();
-				while(thereAreMoreQueryResults && 
-						queryResults.getLong("symbol_id") == currentSymbol) {
-						tradeList.add(new Trade(queryResults.getLong("offered_s"),
-								queryResults.getLong("offered_ns"), queryResults.getLong("price")));
-						thereAreMoreQueryResults = queryResults.next();
+				while (thereAreMoreQueryResults && queryResults.getLong("symbol_id") == currentSymbol) {
+					tradeList.add(new Trade(queryResults.getLong("offered_s"), queryResults.getLong("offered_ns"), queryResults.getLong("price")));
+					thereAreMoreQueryResults = queryResults.next();
 				}
-				//detect spike for this stock and add to response packet
-				if(!tradeList.isEmpty()) {
+				// detect spike for this stock and add to response packet
+				if (!tradeList.isEmpty()) {
 					detectSpike(tradeList, response, p.getStartTimeSpikes(), p.getLimit());
 				}
 			}
-			
+
 		} catch (SQLException e) {
 			return new QueryResponse(p.getPacketId(), false); // query failed
 		}
-		
+
 		return response;
 	}
+
 	/**
 	 * 
-	 * @param tradeList the list of trades in which a spike shall be detected
-	 * @param response 
+	 * @param tradeList
+	 *            the list of trades in which a spike shall be detected
+	 * @param response
 	 * @precondition the size of the tradeList must not be 0!
 	 */
-	private void detectSpike(ArrayList<Trade> tradeList, 
-			SpikeDetectionResponse response, long pStartTime, float limit) {
-		//compute average price
+	private void detectSpike(ArrayList<Trade> tradeList, SpikeDetectionResponse response, long pStartTime, float limit) {
+		// compute average price
 		int counter = 0;
 		int spikeDetectionPointer = -1;
 		long averagePrice = 0;
-		for(Trade trade : tradeList) {
+		for (Trade trade : tradeList) {
 			averagePrice += trade.price;
-			//test whether the trade you looked at is within the time frame for spike detection
-			if(trade.seconds >= pStartTime && spikeDetectionPointer < 0)
+			// test whether the trade you looked at is within the time frame for
+			// spike detection
+			if (trade.seconds >= pStartTime && spikeDetectionPointer < 0)
 				spikeDetectionPointer = counter;
 			counter++;
 		}
-		//look for a spike
-		while(spikeDetectionPointer < counter) {
-			double price = tradeList.get(spikeDetectionPointer).price*counter;
-			double highBoundary = (double) averagePrice * (1.0+limit);
+		// look for a spike
+		while (spikeDetectionPointer < counter) {
+			double price = tradeList.get(spikeDetectionPointer).price * counter;
+			double highBoundary = (double) averagePrice * (1.0 + limit);
 			double lowBoundary = (double) averagePrice * (1.0 - limit);
-			if( price <= lowBoundary || price >= highBoundary){
-				//we have a spike
-				//TODO: get Symbol of traded stock
-				//TODO: add to response
+			if (price <= lowBoundary || price >= highBoundary) {
+				// we have a spike
+				// TODO: get Symbol of traded stock
+				// TODO: add to response
 			}
 		}
 	}
 
 	private QueryResponse handleMovingAverageRequest(MovingAverageRequest p) {
 		try {
-			ResultSet results = connection
-					.getTradesInTimeRangeForSymbol(p.getSymbolId(),
-							p.getStart(), p.getStart() + p.getLength());
+			ResultSet results = connection.getTradesInTimeRangeForSymbol(p.getSymbolId(), p.getStart(), p.getStart() + p.getLength());
 
 			ArrayList<Trade> resultList = new ArrayList<Trade>();
 
 			while (results.next())
-				resultList.add(new Trade(results.getLong("offered_s"), results
-						.getLong("offered_ns"), results.getLong("price")));
+				resultList.add(new Trade(results.getLong("offered_s"), results.getLong("offered_ns"), results.getLong("price")));
 
 			Collections.sort(resultList);
 
 			ArrayList<Long> times = new ArrayList<Long>();
 			ArrayList<Double> averages = new ArrayList<Double>();
 
-			long lastAverageTime = p.getStart() + p.getLength()
-					- p.getSecondsPerAverage();
-			for (int i = 0; i < resultList.size()
-					&& resultList.get(i).seconds <= lastAverageTime; i++) {
+			long lastAverageTime = p.getStart() + p.getLength() - p.getSecondsPerAverage();
+			for (int i = 0; i < resultList.size() && resultList.get(i).seconds <= lastAverageTime; i++) {
 				long total = 0;
 				long start = resultList.get(i).seconds;
 				long end = start + p.getSecondsPerAverage();
 				int count = 0;
-				for (int j = i; j < resultList.size()
-						&& resultList.get(j).seconds <= end; j++, count++)
+				for (int j = i; j < resultList.size() && resultList.get(j).seconds <= end; j++, count++)
 					total += resultList.get(j).price;
 				if (count > 0) {
 					times.add(start);
@@ -149,8 +141,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 			for (int i = 0; i < averages.size(); i++)
 				averagesArray[i] = averages.get(i);
 
-			return new MovingAverageResponse(p.getPacketId(), timesArray,
-					averagesArray);
+			return new MovingAverageResponse(p.getPacketId(), timesArray, averagesArray);
 
 		} catch (SQLException e) {
 			return new QueryResponse(p.getPacketId(), false); // Fail query
@@ -159,9 +150,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 
 	private QueryResponse handleCandlestickRequest(CandlestickRequest p) {
 		try {
-			ResultSet results = connection.getTradesInTimeRangeForSymbol(
-					p.getSymbolId(), p.getStart(),
-					p.getStart() + p.getResolution());
+			ResultSet results = connection.getTradesInTimeRangeForSymbol(p.getSymbolId(), p.getStart(), p.getStart() + p.getResolution());
 			long open = 0;
 			long earliestTradeSeconds = 0;
 			long earliestTradeSeq = 0;
@@ -173,19 +162,15 @@ public class QueryProcessorUnit implements QueryProcessor {
 			long volume = 0;
 
 			while (results.next()) {
-
 				long s = results.getLong("offered_s");
 				long seq = results.getLong("offered_seq_num");
 				long price = results.getLong("price");
-				if (earliestTradeSeconds == 0
-						|| earliestTradeSeconds > s
-						|| (earliestTradeSeconds == s && earliestTradeSeq > seq)) {
+				if (earliestTradeSeconds == 0 || earliestTradeSeconds > s || (earliestTradeSeconds == s && earliestTradeSeq > seq)) {
 					earliestTradeSeconds = s;
 					earliestTradeSeq = seq;
 					open = price;
 				}
-				if (latestTradeSeconds == 0 || latestTradeSeconds < s
-						|| (latestTradeSeconds == s && latestTradeSeq < seq)) {
+				if (latestTradeSeconds == 0 || latestTradeSeconds < s || (latestTradeSeconds == s && latestTradeSeq < seq)) {
 					latestTradeSeconds = s;
 					latestTradeSeq = seq;
 					close = price;
@@ -198,14 +183,15 @@ public class QueryProcessorUnit implements QueryProcessor {
 
 				volume = results.getLong("volume");
 			}
-
-			return new CandlestickResponse(p.getPacketId(), p.getStart(), open,
-					close, high, low, volume);
+			
+			results.close();
+			return new CandlestickResponse(p.getPacketId(), p.getStart(), open, close, high, low, volume);
 		} catch (SQLException e) {
+			e.printStackTrace();
 			return new QueryResponse(p.getPacketId(), false); // Fail query
 		}
 	}
-	
+
 	private class Trade implements Comparable<Trade> {
 		public long seconds;
 		public long nanoseconds;

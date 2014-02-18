@@ -67,8 +67,14 @@ public class ClusterServer {
 				dp.pause = !dp.pause;
 			} else if (Debug.parseDebugArgs(input)) {
 				continue;
+			} else {
+				try {
+					float skip = Float.parseFloat(input);
+					ds.skipBoundary = (long) (1000000000*skip);
+				} catch(NumberFormatException e) {
+					e.printStackTrace();
+				}
 			}
-			
 		}
 		s.close();
 		System.exit(0);

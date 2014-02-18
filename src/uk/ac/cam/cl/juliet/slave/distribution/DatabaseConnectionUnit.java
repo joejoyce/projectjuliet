@@ -22,16 +22,16 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		this.connection = c;
 		this.addOrderBatch = connection.prepareStatement("INSERT INTO order_book VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		this.addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)");
-		//this.deleteOrderBatch = connection.prepareStatement("UPDATE order_book SET is_deleted=1 WHERE (order_id = ?) AND (symbol_id = ?)");
+		// this.deleteOrderBatch = connection.prepareStatement("UPDATE order_book SET is_deleted=1 WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.deleteOrderBatch = connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
-		
+
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
 				try {
 					System.out.println("Total batch size: " + batchSize);
 					long start = System.nanoTime();
-					
+
 					System.out.println("About to execute addOrder batch");
 					long then = System.nanoTime();
 					synchronized (addOrderBatch) {
@@ -41,7 +41,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					double diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
 					System.out.println("Taken: " + diff);
-		
+
 					System.out.println("About to execute addTrade batch");
 					then = System.nanoTime();
 					synchronized (addTradeBatch) {
@@ -51,7 +51,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
 					System.out.println("Taken: " + diff);
-		
+
 					System.out.println("About to execute deleteOrder batch: " + delete);
 					delete = 0;
 					then = System.nanoTime();
@@ -62,19 +62,19 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
 					System.out.println("Taken: " + diff);
-					
+
 					System.out.println("About to execute modifyOrderBatch batch");
 					then = System.nanoTime();
-					synchronized(modifyOrderBatch) {
+					synchronized (modifyOrderBatch) {
 						modifyOrderBatch.executeBatch();
 						modifyOrderBatch.clearBatch();
 					}
 					diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
-					System.out.println("Taken: " + diff);				
-					
+					System.out.println("Taken: " + diff);
+
 					batchSize = 0;
-					
+
 					long totalTaken = Math.abs(System.nanoTime() - start);
 					totalTaken /= 1000000;
 					System.out.println("Total time taken: " + totalTaken);
@@ -106,7 +106,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public void modifyOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, boolean isSell, long packetTimestamp) throws SQLException {
-		synchronized(modifyOrderBatch) {
+		synchronized (modifyOrderBatch) {
 			modifyOrderBatch.setLong(1, price);
 			modifyOrderBatch.setLong(2, volume);
 			modifyOrderBatch.setLong(3, packetTimestamp);
@@ -193,12 +193,13 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public void addSymbolMappingEntry(long symbolIndex, String symbol, long priceScaleCode, long prevClosingPrice, long prevClosingVolume) throws SQLException {
-		/*PreparedStatement statement = this.connection.prepareStatement("INSERT INTO symbol (symbol_id, symbol, company_name, price_scale, open_price) VALUES (?,?,?,?,?)");
-		statement.setLong(1, symbolIndex);
-		statement.setString(2, symbol);
-		statement.setString(3, "");
-		statement.setLong(4, priceScaleCode);
-		statement.setLong(5, prevClosingPrice);*/
+		/*
+		 * PreparedStatement statement = this.connection.prepareStatement(
+		 * "INSERT INTO symbol (symbol_id, symbol, company_name, price_scale, open_price) VALUES (?,?,?,?,?)"
+		 * ); statement.setLong(1, symbolIndex); statement.setString(2, symbol);
+		 * statement.setString(3, ""); statement.setLong(4, priceScaleCode);
+		 * statement.setLong(5, prevClosingPrice);
+		 */
 	}
 
 	@Override
@@ -212,20 +213,15 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start, long end) throws SQLException {
 		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE symbol_id=? and offered_s>=? and offered_s<?");
 		ResultSet result;
-		try {
-			statement.setLong(1, symbolID);
-			statement.setLong(2, start);
-			statement.setLong(3, end);
-			result = statement.executeQuery();
-		} finally {
-			statement.close();
-		}
+		statement.setLong(1, symbolID);
+		statement.setLong(2, start);
+		statement.setLong(3, end);
+		result = statement.executeQuery();
 		return result;
 	}
-	
-	public ResultSet getAllTradesInRecentHistory(long start) throws SQLException{
-		PreparedStatement statement = this.connection.prepareStatement(
-				"SELECT * FROM trade WHERE offered_s >= ? ORDER BY symbol_id ASC");
+
+	public ResultSet getAllTradesInRecentHistory(long start) throws SQLException {
+		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE offered_s >= ? ORDER BY symbol_id ASC");
 		ResultSet result;
 		try {
 			statement.setLong(1, start);
@@ -241,10 +237,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public void addImbalanceMessage(long symbolIndex, long time_s,
-			long time_ns, long symbolSeqNumber, long referencePrice)
-			throws SQLException {
+	public void addImbalanceMessage(long symbolIndex, long time_s, long time_ns, long symbolSeqNumber, long referencePrice) throws SQLException {
 		// not needed (only for testing purposes)
-		
+
 	}
 }
