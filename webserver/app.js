@@ -9,19 +9,7 @@ var less = require('less-middleware');
 var app = express();
 app.locals.moment = require('moment');
 
-/**
- * Load controllers.
- */
-
-var homeController = require('./controllers/home');
-var stockController = require('./controllers/stock');
-var orderController = require('./controllers/order');
-var statusController = require('./controllers/status');
-var settingsController = require('./controllers/settings');
-
-
-
-app.set('port', 80);
+app.set('port', 8080);
 app.use(express.favicon(__dirname + '/public/img/favicon.ico')); 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -40,18 +28,34 @@ app.use(function(req, res) {
 app.use(express.errorHandler());
 
 /**
- * Application routes.
+ * Load controllers
  */
+var homeController = require('./controllers/home');
+var settingsController = require('./controllers/settings');
+var stockPriceController = require('./controllers/stockPrice');
+var orderBookController = require('./controllers/orderBook');
+var symbolController = require('./controllers/symbol');
+var orderController = require('./controllers/order');
+var statusController = require('./controllers/status');
 
+/**
+ * Application routes
+ */
+// Pages
 app.get('/', homeController.index);
-app.get('/orderBook', orderController.getOrder);
-app.get('/order', orderController.orderBook);
-app.get('/stockPrice', stockController.getStockPrice);
-app.get('/stock', stockController.stock);
-app.get('/status', statusController.getStatus);
-app.get('/getTime', statusController.getTime);
-app.get('/settings', settingsController.getSettings);
+app.get('/stock-price/:symbol_index', stockPriceController.index);
+app.get('/order-book/:symbol_index', orderBookController.index);
+app.get('/status', statusController.index);
+app.get('/settings', settingsController.index);
 
+// API
+app.get('/api/v1/symbol/:symbol_index', symbolController.index);
+app.get('/api/v1/symbols', symbolController.list);
+app.get('/api/v1/orders/:symbol_index', orderController.index);
+app.get('/api/v1/orders/bids/:symbol_index', orderController.bids);
+app.get('/api/v1/orders/offers/:symbol_index', orderController.offers);
+app.get('/api/v1/status/clients', statusController.clients);
+app.get('/api/v1/status/time', statusController.time);
 
 app.listen(app.get('port'), function() {
   console.log("Express server listening on port %d in %s mode", app.get('port'), app.settings.env);
