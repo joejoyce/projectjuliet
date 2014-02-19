@@ -10,8 +10,10 @@ var symbol = models.Symbol;
  * Home page
  */
 exports.index = function(req, res) {
-  res.render('home', {
-    title: 'Home',
-    symbol_list: symbol.list()
-  });
+	symbol.list(function(list) {
+	 res.render('home', {
+	    title: 'Home',
+	    symbol_list: list
+	  });
+	}); 
 };

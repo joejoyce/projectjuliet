@@ -10,8 +10,8 @@ var net = require('net');
  * symbolIndex  the index of the specified symbol (this is NOT the same as the stock symbol)
  * criteria     an array of criteria that order records must satisfy
  */
-exports.getOrders = function(symbolIndex, criteria) {
-/*
+exports.getOrders = function(symbolIndex, criteria, callback) {
+
   var symbolIndex = parseInt(symbolIndex);
   
   // Construct WHERE clause
@@ -24,17 +24,22 @@ exports.getOrders = function(symbolIndex, criteria) {
 
   var client = net.connect(1337, 'localhost');
   client.setEncoding('utf8');
-  client.write('basic|SELECT * FROM order_book WHERE symbol_id = ' + symbolIndex
-             + where + ' ORDER BY price LIMIT 25\n');
+  client.write('basic|SELECT * FROM order_book WHERE symbol_id = ' + symbolIndex + where + ' ORDER BY price LIMIT 25\n');
 
   var orderList = '';
+
   client.on('data', function(data) {
-    orderList = JSON.parse(data);
+    orderList += data;
     client.end();
   });
 
-  return orderList;
-*/
+  client.on('end', function() {
+    orderList = JSON.parse(orderList);
+    client.end();
+    callback(orderList);
+  });
+ 
+/*
   var symbolList = '';
   if (criteria[0].value == 1) {
     symbolList = [
@@ -53,8 +58,8 @@ exports.getOrders = function(symbolIndex, criteria) {
   }
   return symbolList;
 }
-
-
+*/
+};
 
 /*
   

@@ -26,10 +26,12 @@ exports.index = function(req, res) {
  */
 exports.bids = function(req, res) {
   if (req.params.symbol_index) {
-    res.send({
-      kind: 'list',
-      data: order.getOrders(req.params.symbol_index, [{field: 'is_ask', value: 0}])
-    });
+    order.getOrders(req.params.symbol_index, [{field: 'is_ask', value: 0}], function(orders) {
+      res.send({
+        kind: 'list',
+        data: orders 
+      });
+    });   
   } else {
     res.send(400);
   }
@@ -41,10 +43,12 @@ exports.bids = function(req, res) {
  */
 exports.offers = function(req, res) {
   if (req.params.symbol_index) {
-    res.send({
-      kind: 'list',
-      data: order.getOrders(req.params.symbol_index, [{field: 'is_ask', value: 1}])
-    });
+    order.getOrders(req.params.symbol_index, [{field: 'is_ask', value: 1}], function(orders) {
+      res.send({
+        kind: 'list',
+        data: orders
+      });
+    });  
   } else {
     res.send(400);
   }

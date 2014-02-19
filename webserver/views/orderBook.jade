@@ -3,35 +3,37 @@ extends layout
 block content
   +symbol_summary(symbol)
   
-  h1 Offers
-  table.data
-    thead
-      tr
-        th Price
-        th Volume
-        th Value
-        th Time
-    tbody
-    each offer in offer_list
-      tr
-        td=(offer.price*symbol.price_scale).toFixed(2)
-        td=offer.volume
-        td=(offer.price*symbol.price_scale*offer.volume).toFixed(2)
-        td=moment(offer.placed_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
+  #offer-table
+    h1 Offers
+    table.data
+      thead
+        tr
+          th Price
+          th Volume
+          th Value
+          th Time
+      tbody
+      each offer in offer_list
+        tr
+          td=(offer.price*symbol.price_scale).toFixed(2)
+          td=offer.volume
+          td=(offer.price*symbol.price_scale*offer.volume).toFixed(2)
+          td=moment(offer.placed_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
 
-  h1 Bids
-  table.data
-    thead
-      tr
-        th Price
-        th Volume
-        th Value
-        th Time
-    tbody
-    each bid in bid_list
-      tr
-        td=(bid.price*symbol.price_scale).toFixed(2)
-        td=bid.volume
-        td=(bid.price*symbol.price_scale*bid.volume).toFixed(2)
-        td=moment(bid.placed_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
+  #bid-table
+    h1 Bids
+    table.data
+      thead
+        tr
+          th Price
+          th Volume
+          th Value
+          th Time
+      tbody
+      each bid in bid_list
+        tr
+          td=(bid.price*symbol.price_scale).toFixed(2)
+          td=bid.volume
+          td=(bid.price*symbol.price_scale*bid.volume).toFixed(2)
+          td=moment(bid.placed_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
   table.data

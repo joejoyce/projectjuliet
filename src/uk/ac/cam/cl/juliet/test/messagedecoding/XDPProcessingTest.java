@@ -292,6 +292,12 @@ class TestDatabase implements DatabaseConnection {
 		// not needed
 		
 	}
+
+	@Override
+	public String getSymbol(long symbolIndex) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 
 }

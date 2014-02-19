@@ -336,4 +336,10 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		// not needed
 		return null;
 	}
+
+	@Override
+	public String getSymbol(long symbolIndex) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
