@@ -45,8 +45,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 	public void run() {
 		try {
-			BufferedReader din = new BufferedReader(new InputStreamReader(
-					new BufferedInputStream(server.getInputStream())));
+			BufferedReader din = new BufferedReader(new InputStreamReader(new BufferedInputStream(server.getInputStream())));
 			PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
 
 			String query = din.readLine();
@@ -125,18 +124,18 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	}
 
 	public void runClusterQuery(String query, PrintWriter pw) {
-		String type = query.indexOf(' ') == -1 ? query : query.substring(0,
-				query.indexOf(' '));
-		String options = query.indexOf(' ') == -1 ? "" : query.substring(query
-				.indexOf(' ') + 1);
+		String type = query.indexOf(' ') == -1 ? query : query.substring(0, query.indexOf(' '));
+		String options = query.indexOf(' ') == -1 ? "" : query.substring(query.indexOf(' ') + 1);
 		Debug.println(Debug.INFO, "Running a cluster query. type=" + type);
 
 		try {
 			switch (type) {
 			case "candlestick":
 				getCandlestickChartData(options, pw);
+				break;
 			case "movingAverage":
 				getMovingAverageData(options, pw);
+				break;
 			}
 		} catch (SQLException e) {
 			Debug.println(Debug.ERROR, "Cluster query exception");
@@ -146,24 +145,20 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 	}
 
-	private void getCandlestickChartData(String options, final PrintWriter pw)
-			throws SQLException, NoClusterException {
+	private void getCandlestickChartData(String options, final PrintWriter pw) throws SQLException, NoClusterException {
 		String[] split = options.split(" ");
 		long symbolID = Long.parseLong(split[0]);
 		int secondsPerCandlestick = Integer.parseInt(split[1]);
 
-		PreparedStatement rangeStatement = con
-				.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
+		PreparedStatement rangeStatement = con.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
 		ResultSet rs;
-		try {
-			rangeStatement.setLong(1, symbolID);
-			rs = rangeStatement.executeQuery();
-		} finally {
-			rangeStatement.close();
-		}
+		rangeStatement.setLong(1, symbolID);
+		rs = rangeStatement.executeQuery();
 		rs.next();
 		long minTime = rs.getLong("min");
 		long maxTime = rs.getLong("max");
+
+		rs.close();
 
 		long numberOfCandlesticks = (maxTime - minTime) / secondsPerCandlestick;
 		if ((numberOfCandlesticks * secondsPerCandlestick) < (maxTime - minTime))
@@ -172,122 +167,83 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		ClusterMaster cm = ClusterServer.cm;
 
-		Callback c = new Callback() {
-			private PrintWriter writer = pw;
-			private long recieved = 0;
-			private long total = n;
+		DistributedQueryCallback c = new DistributedQueryCallback(n) {
+			PrintWriter writer = pw;
 
-			@Override
-			public void callback(Container data) {
+			protected void processContainer(Container data) {
 				CandlestickResponse response = (CandlestickResponse) data;
-				synchronized (writer) {
-					recieved++;
-					writer.write("{");
-					writer.write("\"start\":\"" + response.getStart() + "\", ");
-					writer.write("\"open\":\"" + response.getOpenValue()
-							+ "\", ");
-					writer.write("\"close\":\"" + response.getCloseValue()
-							+ "\", ");
-					writer.write("\"high\":\"" + response.getHighValue()
-							+ "\", ");
-					writer.write("\"low\":\"" + response.getLowValue() + "\", ");
-					writer.write("\"volume\":\"" + response.getVolumeValue()
-							+ "\"");
-					writer.write("}");
-					if (recieved != total)
-						writer.write(",");
-				}
-				if (recieved == total)
-					this.notifyAll();
+				writer.write("{");
+				writer.write("\"start\":\"" + response.getStart() + "\", ");
+				writer.write("\"open\":\"" + response.getOpenValue() + "\", ");
+				writer.write("\"close\":\"" + response.getCloseValue() + "\", ");
+				writer.write("\"high\":\"" + response.getHighValue() + "\", ");
+				writer.write("\"low\":\"" + response.getLowValue() + "\", ");
+				writer.write("\"volume\":\"" + response.getVolumeValue() + "\"");
+				writer.write("}");
+				if (received != total)
+					writer.write(",");
 			}
 		};
 
 		pw.write("[");
 		while (minTime < maxTime) {
-			CandlestickRequest request = new CandlestickRequest(symbolID,
-					minTime, secondsPerCandlestick);
+			CandlestickRequest request = new CandlestickRequest(symbolID, minTime, secondsPerCandlestick);
+			minTime += secondsPerCandlestick;
 			cm.sendPacket(request, c);
 		}
 
-		try {
-			// Block until all data is received
-			c.wait();
-		} catch (InterruptedException e) {
-		}
+		c.waitUntilDone();
 		pw.write("]");
 	}
 
-	private void getMovingAverageData(String options, final PrintWriter pw)
-			throws SQLException, NoClusterException {
+	private void getMovingAverageData(String options, final PrintWriter pw) throws SQLException, NoClusterException {
 		String[] split = options.split(" ");
 		long symbolID = Long.parseLong(split[0]);
 		int secondsPerAverage = Integer.parseInt(split[1]);
 
-		PreparedStatement rangeStatement = con
-				.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
+		PreparedStatement rangeStatement = con.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
 		ResultSet rs;
-		try {
-			rangeStatement.setLong(1, symbolID);
-			rs = rangeStatement.executeQuery();
-		} finally {
-			rangeStatement.close();
-		}
+		rangeStatement.setLong(1, symbolID);
+		rs = rangeStatement.executeQuery();
 		rs.next();
 		long minTime = rs.getLong("min");
 		long maxTime = rs.getLong("max");
-
+		rs.close();
 		ClusterMaster cm = ClusterServer.cm;
-		final long numberOfQueries = Math.min(
-				(maxTime - minTime) - secondsPerAverage,
-				cm.getClientCount() * 2);
+		final long numberOfQueries = Math.min((maxTime - minTime) - secondsPerAverage, cm.getClientCount() * 2);
 
-		Callback c = new Callback() {
-			private PrintWriter writer = pw;
-			private long recieved = 0;
-			private long total = numberOfQueries;
+		DistributedQueryCallback c = new DistributedQueryCallback(numberOfQueries) {
+			PrintWriter writer = pw;
 
-			@Override
-			public void callback(Container data) {
+			protected void processContainer(Container data) {
 				MovingAverageResponse response = (MovingAverageResponse) data;
-				synchronized (writer) {
-					recieved++;
-					for (int i = 0; i < response.getAverageCount(); i++) {
-						writer.write("{");
-						writer.write("\"time\":\""+response.getTime(i)+"\"");
-						writer.write("\"average\":\""+response.getAverage(i)+"\"");
-						writer.write("}");
-						if (recieved != total
-								&& i < response.getAverageCount() - 1)
-							writer.write(",");
-					}
+				for (int i = 0; i < response.getAverageCount(); i++) {
+					writer.write("{");
+					writer.write("\"time\":\"" + response.getTime(i) + "\"");
+					writer.write("\"average\":\"" + response.getAverage(i) + "\"");
+					writer.write("}");
+					if (received != total && i < response.getAverageCount() - 1)
+						writer.write(",");
 				}
-				if (recieved == total)
-					this.notifyAll();
 			}
 		};
 
 		pw.write("[");
 
-		long length = maxTime-minTime + 1;
+		long length = maxTime - minTime + 1;
 		long numberOfAverages = length - secondsPerAverage + 1;
 		long averagesPerQuery = numberOfAverages / numberOfQueries;
-		
+
 		long currentStart = minTime;
-		for (int i=0;i<numberOfQueries-1;i++) {
-			MovingAverageRequest request = new MovingAverageRequest(symbolID,
-					currentStart, secondsPerAverage+(averagesPerQuery-1), secondsPerAverage);
+		for (int i = 0; i < numberOfQueries - 1; i++) {
+			MovingAverageRequest request = new MovingAverageRequest(symbolID, currentStart, secondsPerAverage + (averagesPerQuery - 1), secondsPerAverage);
 			cm.sendPacket(request, c);
-			currentStart+=averagesPerQuery;
+			currentStart += averagesPerQuery;
 		}
-		MovingAverageRequest request = new MovingAverageRequest(symbolID,
-				currentStart, (maxTime-currentStart)+1, secondsPerAverage);
+		MovingAverageRequest request = new MovingAverageRequest(symbolID, currentStart, (maxTime - currentStart) + 1, secondsPerAverage);
 		cm.sendPacket(request, c);
 
-		try {
-			// Block until all data is received
-			c.wait();
-		} catch (InterruptedException e) {
-		}
+		c.waitUntilDone();
 		pw.write("]");
 	}
 
@@ -372,8 +328,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	private String singleRowToJSON(ArrayList<String> row, String[] columnNames) {
 		String result = "";
 		for (int i = 0; i < row.size(); i++) {
-			result += "\"" + columnNames[i] + "\": " + "\"" + row.get(i) + "\""
-					+ ",";
+			result += "\"" + columnNames[i] + "\": " + "\"" + row.get(i) + "\"" + ",";
 		}
 
 		return "{" + result.substring(0, result.length() - 1) + "}";

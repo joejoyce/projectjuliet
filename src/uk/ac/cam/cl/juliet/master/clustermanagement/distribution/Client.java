@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
-import uk.ac.cam.cl.juliet.common.LatencyMonitor;
+//import uk.ac.cam.cl.juliet.common.LatencyMonitor;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 
 final class ContainerTimeComparator implements Comparator<InFlightContainer> {
@@ -188,10 +188,10 @@ public class Client {
 						InFlightContainer container = sendQueue.take();
 						checkoutContainer(container);
 						Container c = container.getContainer();
-						if(c instanceof LatencyMonitor) {
-							LatencyMonitor m = (LatencyMonitor)c;
-							m.outboundDepart = System.nanoTime();
-						}
+				//		if(c instanceof LatencyMonitor) {
+				//			LatencyMonitor m = (LatencyMonitor)c;
+				//			m.outboundDepart = System.nanoTime();
+				//		}
 						out.writeObject(c);
 						out.flush();												
 						totalPackets++; //TODO this means it won't count objects in the queue
@@ -239,10 +239,10 @@ public class Client {
 		ifc.setBroadcast(bcast);
 		try {
 			Debug.println("About to add to send queue: " + sendQueue.size());
-			if(c instanceof LatencyMonitor) {
-				LatencyMonitor m = (LatencyMonitor)c;
-				m.outboundQueue = System.nanoTime();
-			}
+		//	if(c instanceof LatencyMonitor) {
+		//		LatencyMonitor m = (LatencyMonitor)c;
+		//		m.outboundQueue = System.nanoTime();
+		//	}
 			sendQueue.put(ifc);
 			Debug.println("Added to send queue: " + sendQueue.size());
 		} catch (InterruptedException e) {
