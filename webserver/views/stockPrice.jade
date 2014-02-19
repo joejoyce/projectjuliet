@@ -1,18 +1,12 @@
 extends layout
 
-block jsStuff
-  script(src='/js/error.js')
+block head
+  script(src='/js/main.js')
+  script(src='/js/stock-graph.js')
+  meta(name="stock-data", content="#{JSON.stringify(trade_list)}")
+  meta(name="price-scale", content="#{symbol.price_scale}")
+  meta(name="symbol", content="#{symbol.symbol}")
 
 block content
-  .page-header
-    h3 Stock Price
-    center
-      h4 Please enter company symbol:
-      if locals.error
-        p.error.alert-danger #{error}
-      form(role='form', name="input", action="/stockPrice/", method="get")
-        #row
-          .input-group        
-            input.form-control(type="text", title="Company Symbol", name="companySymbol")
-            span.input-group-btn
-              button.btn.btn-primary Go!
+  +symbol_summary(symbol)
+  div#chart-container
