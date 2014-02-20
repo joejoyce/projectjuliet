@@ -110,7 +110,7 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		PrintWriter out = new PrintWriter(fw);
 		out.print("symbolIndex,symbolIndexMappings,addOrder,modifyOrder,"+
 				"executeOrder,deleteOrder,tradeSessionChanges,tradeCancel,"+
-				"tradeCorrections,summaries,TimeSourceReference\n");
+				"tradeCorrections,summaries,TimeSourceReference,Imbalance\n");
 		out.flush();
 		
 		for(Entry<Long, MessageStatisticsDatum> e : sMessageStatistics.entrySet()) {
@@ -120,7 +120,8 @@ public class MockDatabaseConnection implements DatabaseConnection {
 					msd.noMsgsModifyOrder+","+msd.noMsgsExecuteOrder+","+
 					msd.noMsgsDeleteOrder+","+msd.noMsgsTradeSessionChange+","+
 					msd.noMsgsTradeCancel+","+msd.noMsgsTradeCorrection+","+
-					msd.noMsgsStockSummary+","+msd.noMsgsTimeReference+"\n");
+					msd.noMsgsStockSummary+","+msd.noMsgsTimeReference+","+
+					msd.noMsgsImbalance+"\n");
 			out.flush();
 		}
 		out.close();

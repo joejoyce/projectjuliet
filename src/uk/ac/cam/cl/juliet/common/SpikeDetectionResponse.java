@@ -23,7 +23,32 @@ public class SpikeDetectionResponse extends QueryResponse {
 		this.symbolsOfstockWithSpike = new String[initialArraySize];
 		this.timesOfSpike = new long[initialArraySize];
 	}
-	
+	/**
+	 * 
+	 * @return the number of spikes that has been detected
+	 */
+	public int getNumberOfSpikes() {return this.numberOfDetectedSpikes;}
+	/**
+	 * Returns an array of strings with all the symbols for which spikes have
+	 * been detected. The time at which the spike occurred is in the timesOfSpikes
+	 * array (retrievable via {@link #getSpikyTimes()} at the same position 
+	 * in the array.
+	 * @return
+	 */
+	public String[] getSpikySymbols() {return this.symbolsOfstockWithSpike;}
+	/**
+	 * Returns an array of longs representing EPOCH times in seconds of the time
+	 * when a spiky transaction happened. The symbol of the traded stock is 
+	 * in the symbolsOfstockWithSpike array and retrievable using 
+	 * {@link #getSpikySymbols()} at the same position in the array.
+	 * @return
+	 */
+	public long[] getSpikyTimes() {return this.timesOfSpike;}
+	/**
+	 * Add a new spike record into the response
+	 * @param symbol	symbol of the traded stock for which the spike occurred
+	 * @param time		time when the spike occurred
+	 */
 	public void addSpike(String symbol, long time) {
 		//in case the array to store the spikes is not large enough
 		if(this.symbolsOfstockWithSpike.length >= numberOfDetectedSpikes) {
