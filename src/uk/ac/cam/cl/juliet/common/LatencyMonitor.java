@@ -8,4 +8,5 @@ public class LatencyMonitor extends Container {
 	public long databaseArrive;
 	public long inboundDepart;
 	public long inboundArrive;
+	public String addr = null;
 }
