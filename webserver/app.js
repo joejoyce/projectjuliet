@@ -9,7 +9,7 @@ var less = require('less-middleware');
 var app = express();
 app.locals.moment = require('moment');
 
-app.set('port', 8080);
+app.set('port', 80);
 app.use(express.favicon(__dirname + '/public/img/favicon.ico')); 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');

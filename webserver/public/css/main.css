@@ -307,3 +307,11 @@ p {
   padding: 5px;
   float: right;
 }
+
+#display {
+  padding-left: 0;
+  padding-right: 0;
+  float: right;
+  display: block;
+  margin-top: 15px;
+}

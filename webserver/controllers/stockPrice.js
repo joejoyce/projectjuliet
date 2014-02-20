@@ -11,9 +11,7 @@ var trade = models.Trade;
  * Stock price page
  */
 exports.index = function(req, res) {
-  console.log("helloscott");
   if (req.params.symbol_index) {
-    console.log("param: " + req.params.symbol_index);
     symbol.get(req.params.symbol_index, function(symbolData) {      
       symbol.list(function(list) {
        res.render('stockPrice', {

@@ -3,6 +3,7 @@ extends layout
 block head
   script(src='/js/main.js')
   script(src='/js/stock-graph.js')
+  script(src='/js/time.js')
   meta(name="stock-data", content="#{JSON.stringify(trade_list)}")
   meta(name="price-scale", content="#{symbol.price_scale}")
   meta(name="symbol", content="#{symbol.symbol}")

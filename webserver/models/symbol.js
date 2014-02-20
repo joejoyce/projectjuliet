@@ -19,23 +19,20 @@ exports.get = function(symbolIndex, callback) {
     symbol = JSON.parse(data);
     client.end();
     callback(symbol[0]);
-  });
-  
-  /*var symbol = '';
-  switch(symbolIndex) {
-    case 1: symbol = {id: 1, symbol: 'AAPL', company_name: 'Apple Inc.', price_scale: 0.0001}; break;
-    case 2: symbol = {id: 2, symbol: 'MSFT', company_name: 'Microsoft Corporation', price_scale: 0.0001}; break;
-    case 3: symbol = {id: 3, symbol: 'GOOG', company_name: 'Google Inc.', price_scale: 0.0001}; break;
-    default: symbol = {id: 0, symbol: 'IDUNNO', company_name: 'Mystery Inc.', price_scale: 0.0001}
-  }
-
-  return symbol;*/
+  }); 
 };
 
 /**
  * List all symbols
  */
+
+var listCache = [];
+
 exports.list = function(callback) {
+  if(listCache.length != 0) {
+    callback(listCache);
+    return;
+  }
   var client = net.connect(1337, 'localhost');
   client.setEncoding('utf8');
   client.write('basic|SELECT * FROM symbol\n');
@@ -55,12 +52,7 @@ exports.list = function(callback) {
       output.push(row);
     });
     client.end();
+    listCache = output;
     callback(output);
   });
-
-  /* return [
-          {kind: 'symbol', id:1,symbol:'AAPL',company_name:'Apple Inc.'},
-          {kind: 'symbol', id:2,symbol:'MSFT',company_name:'Microsoft Corporation'},
-          {kind: 'symbol', id:3,symbol:'GOOG',company_name:'Google'}
-        ];*/
 };
