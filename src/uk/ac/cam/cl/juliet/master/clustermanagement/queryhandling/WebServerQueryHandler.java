@@ -178,7 +178,8 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				writer.write("\"close\":\"" + response.getCloseValue() + "\", ");
 				writer.write("\"high\":\"" + response.getHighValue() + "\", ");
 				writer.write("\"low\":\"" + response.getLowValue() + "\", ");
-				writer.write("\"volume\":\"" + response.getVolumeValue() + "\"");
+				writer.write("\"volume\":\"" + response.getVolumeValue() + "\",");
+				writer.write("\"time\":\"" + response.getTimeStampS() + "\"");				
 				writer.write("}");
 				if (received != total)
 					writer.write(",");
@@ -187,7 +188,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		pw.write("[");
 		while (minTime < maxTime) {
-			CandlestickRequest request = new CandlestickRequest(symbolID, minTime, secondsPerCandlestick);
+			CandlestickRequest request = new CandlestickRequest(symbolID, minTime, secondsPerCandlestick, minTime);
 			minTime += secondsPerCandlestick;
 			cm.sendPacket(request, c);
 		}

@@ -12,6 +12,7 @@ public class CandlestickRequest extends QueryPacket {
 	private long symbolID;
 	private long start;
 	private int resolution;
+	private long timeStamp;
 
 	/**
 	 * Creates a new candlestick request.
@@ -24,10 +25,11 @@ public class CandlestickRequest extends QueryPacket {
 	 * @param resolution
 	 *            The number of seconds which the candlestick covers
 	 */
-	public CandlestickRequest(long symbolID, long start, int resolution) {
+	public CandlestickRequest(long symbolID, long start, int resolution, long timeS) {
 		this.symbolID = symbolID;
 		this.start = start;
 		this.resolution = resolution;
+		this.timeStamp = timeS;
 	}
 
 	public long getSymbolId() {
@@ -39,5 +41,9 @@ public class CandlestickRequest extends QueryPacket {
 
 	public int getResolution() {
 		return resolution;
+	}
+	
+	public long getTime() {
+		return timeStamp;
 	}
 }
