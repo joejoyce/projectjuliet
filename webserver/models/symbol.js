@@ -30,9 +30,9 @@ var listCache = [];
 
 exports.list = function(callback) {
   callback([
-    {kind: 'symbol', data: {symbol_id: 9, symbol: 'AAPL', company_name: 'Apple Inc.'}},
-    {kind: 'symbol', data: {symbol_id: 10, symbol: 'MSFT', company_name: 'Microsoft Corporation'}},
-    {kind: 'symbol', data: {symbol_id: 10, symbol: 'VALU', company_name: 'Value Line, Inc'}}
+    {kind: 'symbol', symbol_id: 9, symbol: 'AAPL', company_name: 'Apple Inc.'},
+    {kind: 'symbol', symbol_id: 10, symbol: 'MSFT', company_name: 'Microsoft Corporation'},
+    {kind: 'symbol', symbol_id: 10, symbol: 'VALU', company_name: 'Value Line, Inc'}
   ]);
   return;
   
