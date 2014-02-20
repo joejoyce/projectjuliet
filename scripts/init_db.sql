@@ -46,8 +46,6 @@ CREATE TABLE IF NOT EXISTS trade (
   volume int(10) unsigned NOT NULL,
   offered_s int(10) unsigned NOT NULL,
   offered_seq_num int(10) unsigned NOT NULL,
-  completed_s int(10) unsigned NULL,
-  completed_seq_num int(10) unsigned NULL,
   PRIMARY KEY(trade_id, symbol_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
@@ -62,6 +60,54 @@ CREATE TABLE IF NOT EXISTS order_book (
   placed_seq_num int(10) unsigned NOT NULL,
   updated_s int(10) unsigned NOT NULL,
   updated_seq_num int(10) unsigned NOT NULL,
+  added bit(1) NOT NULL,
+  deleted bit(1) NOT NULL,
   PRIMARY KEY(order_id, symbol_id),
   INDEX name (order_id,symbol_id)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
+
+
+DROP PROCEDURE IF EXISTS addOrder;
+
+DELIMITER //
+CREATE PROCEDURE addOrder(IN p_order_id int(10) unsigned,
+                          IN p_symbol_id int(10) unsigned,
+                          IN p_price int(10) unsigned,
+                          IN p_volume int(10) unsigned,
+                          IN p_is_ask bit(1),
+                          IN p_placed_s int(10) unsigned,
+                          IN p_placed_seq_num int(10) unsigned,
+                          IN p_updated_s int(10) unsigned,
+                          IN p_updated_seq_num int(10) unsigned)
+BEGIN
+    DECLARE last_updated_s int(10) unsigned;        
+    DECLARE last_updated_seq_num int(10) unsigned;
+    SELECT updated_s, updated_seq_num FROM order_book
+                     WHERE order_id = p_order_id AND symbol_id = p_symbol_id
+                     INTO last_updated_s, last_updated_seq_num;
+
+    IF last_updated_s IS NULL THEN
+        INSERT INTO order_book VALUES (p_order_id, p_symbol_id, p_price, 
+                                       p_volume, p_is_ask, p_placed_s, 
+                                       p_placed_seq_num, p_updated_s, 
+                                       p_updated_seq_num, 1, 0);
+    ELSEIF last_updated_s < p_updated_s OR (last_updated_s = p_updated_s
+                            AND last_updated_seq_num < p_updated_seq_num) THEN
+        UPDATE order_book SET price = p_price, volume = p_volume,                 
+                              is_ask = p_is_ask, placed_s = p_placed_s, 
+                              placed_seq_num = p_placed_seq_num, 
+                              updated_s = p_updated_s,
+                              updated_seq_num = p_updated_seq_num,
+                              added = 1, deleted = 0
+                           WHERE (order_id = p_order_id AND 
+                                  symbol_id = p_symbol_id);
+    ELSE                        
+        UPDATE order_book SET is_ask = p_is_ask, placed_s = p_placed_s,
+                              placed_seq_num = p_placed_seq_num, added = 1
+                          WHERE (order_id = p_order_id AND
+                                 symbol_id = p_symbol_id);
+    END IF;
+END //
+DELIMITER ;
+
+

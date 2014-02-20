@@ -20,8 +20,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
-		this.addOrderBatch = connection.prepareStatement("INSERT INTO order_book VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-		this.addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)");
+		this.addOrderBatch = connection.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		this.addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?)");
 		// this.deleteOrderBatch = connection.prepareStatement("UPDATE order_book SET is_deleted=1 WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.deleteOrderBatch = connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
@@ -244,7 +244,16 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public String getSymbol(long symbolIndex) throws SQLException {
-		//TODO (Lucas): implement this method to get the symbol name
-		return "Oops, not yet implemented";
+		PreparedStatement statement = this.connection.prepareStatement(
+				"SELECT symbol FROM symbol WHERE symbol_id = ?");
+		ResultSet result;
+		try {
+			statement.setLong(1, symbolIndex);
+			result = statement.executeQuery();
+		} finally {
+			statement.close();
+		}
+		result.next();
+		return result.getString(1);
 	}
 }

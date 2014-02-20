@@ -29,7 +29,11 @@ exports.get = function(symbolIndex, callback) {
 var listCache = [];
 
 exports.list = function(callback) {
-  callback([]);
+  callback([
+    {kind: 'symbol', symbol_id: 9, symbol: 'AAPL', company_name: 'Apple Inc.'},
+    {kind: 'symbol', symbol_id: 10, symbol: 'MSFT', company_name: 'Microsoft Corporation'},
+    {kind: 'symbol', symbol_id: 10, symbol: 'VALU', company_name: 'Value Line, Inc'}
+  ]);
   return;
   
   if(listCache.length != 0) {
