@@ -13,9 +13,9 @@ var order = models.Order;
 exports.index = function(req, res) {
   if (req.params.symbol_index) {
     symbol.get(req.params.symbol_index, function(symbolD) {
-      symbolD.priceScale = 1/(Math.pow(10, symbolD.priceScale)); 
-      order.getOrders(req.params.symbol_index, [{field: 'is_ask', value: 0}], function(bid_list) {
-        order.getOrders(req.params.symbol_index, [{field: 'is_ask', value: 1}], function(offer_list) {
+      symbolD.price_scale = 1/(Math.pow(10, symbolD.price_scale)); 
+      order.getBids(req.params.symbol_index, function(bid_list) {
+        order.getOffers(req.params.symbol_index, function(offer_list) {
           symbol.list(function(list) {
             res.render('orderBook', {
               title: 'Order Book',

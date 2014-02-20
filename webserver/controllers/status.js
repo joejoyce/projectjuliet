@@ -34,8 +34,10 @@ exports.clients = function(req, res) {
  * Get the current simulation system time
  */
 exports.time = function(req, res) {
-  res.send({
-    kind: 'time',
-    data: status.getTime()
-  })
+  status.getTime(function(time) {
+   res.send({
+      kind: 'time',
+      data: time
+    });
+  }); 
 };
