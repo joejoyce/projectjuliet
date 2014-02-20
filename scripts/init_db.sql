@@ -46,8 +46,6 @@ CREATE TABLE IF NOT EXISTS trade (
   volume int(10) unsigned NOT NULL,
   offered_s int(10) unsigned NOT NULL,
   offered_seq_num int(10) unsigned NOT NULL,
-  completed_s int(10) unsigned NULL,
-  completed_seq_num int(10) unsigned NULL,
   PRIMARY KEY(trade_id, symbol_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
@@ -62,6 +60,8 @@ CREATE TABLE IF NOT EXISTS order_book (
   placed_seq_num int(10) unsigned NOT NULL,
   updated_s int(10) unsigned NOT NULL,
   updated_seq_num int(10) unsigned NOT NULL,
+  added bit(1) NOT NULL,
+  deleted bit(1) NOT NULL,
   PRIMARY KEY(order_id, symbol_id),
   INDEX name (order_id,symbol_id)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
