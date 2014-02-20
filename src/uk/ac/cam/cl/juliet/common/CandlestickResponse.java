@@ -15,6 +15,7 @@ public class CandlestickResponse extends QueryResponse {
 	private long high;
 	private long low;
 	private long volume;
+	private long timeS;
 	
 	/**
 	 * Creates a candlestick response.
@@ -26,7 +27,7 @@ public class CandlestickResponse extends QueryResponse {
 	 * @param low The low value of the candlestick.
 	 * @param volume The volume of trades in the candlestick.
 	 */
-	public CandlestickResponse(long id, long start, long open, long close, long high, long low, long volume){
+	public CandlestickResponse(long id, long start, long open, long close, long high, long low, long volume, long timeS) {
 		super(id, true);
 		this.start = start;
 		this.open = open;
@@ -34,6 +35,7 @@ public class CandlestickResponse extends QueryResponse {
 		this.high = high;
 		this.low = low;
 		this.volume = volume;
+		this.timeS = timeS;
 	}
 	
 	public long getStart() {
@@ -58,5 +60,9 @@ public class CandlestickResponse extends QueryResponse {
 	
 	public long getVolumeValue() {
 		return volume;
+	}
+	
+	public long getTimeStampS() {
+		return timeS;
 	}
 }

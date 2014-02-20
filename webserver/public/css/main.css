@@ -319,3 +319,13 @@ p {
   display: block;
   margin-top: 15px;
 }
+
+#stock-graph {
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+#candle-graph {
+  height: 500px;
+  padding: 10px;
+}
