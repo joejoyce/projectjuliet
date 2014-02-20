@@ -13,6 +13,8 @@ import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.QueryResponse;
 import uk.ac.cam.cl.juliet.common.SpikeDetectionRequest;
 import uk.ac.cam.cl.juliet.common.SpikeDetectionResponse;
+import uk.ac.cam.cl.juliet.common.StockStatisticsRequest;
+import uk.ac.cam.cl.juliet.common.StockStatisticsResponse;
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
 
 /**
@@ -34,14 +36,67 @@ public class QueryProcessorUnit implements QueryProcessor {
 		if (p instanceof CandlestickRequest) {
 			return handleCandlestickRequest((CandlestickRequest) p);
 		}
-		if (p instanceof MovingAverageRequest)
+		else if (p instanceof MovingAverageRequest)
 			return handleMovingAverageRequest((MovingAverageRequest) p);
-		if (p instanceof SpikeDetectionRequest)
+		else if (p instanceof SpikeDetectionRequest)
 			return handleSpikeDetecionRequest((SpikeDetectionRequest) p);
+		else if (p instanceof StockStatisticsRequest)
+			return handleStatisticsRequest((StockStatisticsRequest) p);
 		else {
 			// Unknown query
 			return new QueryResponse(p.getPacketId(), false);
 		}
+	}
+
+	private QueryResponse handleStatisticsRequest(StockStatisticsRequest p) {
+		// TODO Auto-generated method stub
+		StockStatisticsResponse response = null;
+		try {
+			//1. get all Trade related things
+			ResultSet results = connection.getTradesInTimeRangeForSymbol(
+					p.getSymbolID(), 0, Long.MAX_VALUE);
+			Trade lastTrade = null;
+			Trade secondLastTrade = null;
+			long totalTradeVolume = 0;
+			long highestPrice = 0;
+			long lowestPrice = Long.MAX_VALUE;
+			
+			while (results.next()) {
+				Trade trade = new Trade(results.getLong("offered_s"), 
+						results.getLong("offered_ns"), results.getLong("price"), 
+						results.getLong("volume"));
+				if (lastTrade == null) lastTrade = trade;
+				else if (secondLastTrade == null) secondLastTrade = trade;
+				else if(trade.compareTo(secondLastTrade) > 0) {
+					//if the trade is later than the second last trade
+					if(trade.compareTo(secondLastTrade) > 0) {
+						//if the trade is the last trade
+						secondLastTrade = lastTrade;
+						lastTrade = trade;
+					} else {
+						//the trade is between the last and the second last
+						secondLastTrade = trade;
+					}
+				}
+				
+				if (trade.price > highestPrice) highestPrice = trade.price;
+				if (trade.price < lowestPrice) lowestPrice = trade.price;
+				totalTradeVolume += trade.volume;
+			}
+			long lastTradePrice = lastTrade.price;
+			long change = lastTradePrice - secondLastTrade.price;
+			// in case the default lowest price was not updated because there were no
+			// trades, set the lowestPrice to 0
+			if(lowestPrice == Long.MAX_VALUE) lowestPrice = 0;
+			
+			//2. get the spread
+			//TODO
+			
+			
+		} catch (SQLException e) {
+			return new QueryResponse(p.getPacketId(), false); // query failed
+		}
+		return response;
 	}
 
 	private QueryResponse handleSpikeDetecionRequest(SpikeDetectionRequest p) {
@@ -197,11 +252,18 @@ public class QueryProcessorUnit implements QueryProcessor {
 		public long seconds;
 		public long nanoseconds;
 		public long price;
+		public long volume;
 
 		public Trade(long seconds, long nanoseconds, long price) {
 			this.seconds = seconds;
 			this.nanoseconds = nanoseconds;
 			this.price = price;
+		}
+		public Trade(long seconds, long nanoseconds, long price, long volume) {
+			this.seconds = seconds;
+			this.nanoseconds = nanoseconds;
+			this.price = price;
+			this.volume = volume;
 		}
 
 		@Override

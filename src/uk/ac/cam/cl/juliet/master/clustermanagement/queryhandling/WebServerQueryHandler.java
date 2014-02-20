@@ -21,6 +21,7 @@ import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.MovingAverageRequest;
 import uk.ac.cam.cl.juliet.common.MovingAverageResponse;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
+import uk.ac.cam.cl.juliet.common.StockStatisticsRequest;
 import uk.ac.cam.cl.juliet.master.ClusterServer;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
@@ -64,6 +65,9 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			case "cluster":
 				runClusterQuery(splitQuery[1], pw);
 				break;
+			case "statistics":
+				runStatisticsQuery(splitQuery[1],pw);
+				break;
 			default:
 				Debug.println(Debug.ERROR, "Unsupported query type");
 			}
@@ -75,6 +79,28 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			Debug.println(Debug.ERROR, "Error reading query from webserver");
 			e.printStackTrace();
 		}
+	}
+
+	private void runStatisticsQuery(String symbolID, PrintWriter pw) {
+		Debug.println(Debug.INFO, "Running a stock statistics query");
+		Callback statisticsCallback = new Callback() {
+			
+			@Override
+			public void callback(Container data) {
+				// TODO Auto-generated method stub
+				
+			}
+		};
+		Long symbol_id = Long.parseLong(symbolID);
+		ClusterMaster cm = ClusterServer.cm;
+		try {
+			cm.sendPacket(new StockStatisticsRequest(symbol_id), statisticsCallback);
+		} catch (NoClusterException e) {
+			Debug.println(Debug.ERROR, "Cluster query exception while trying to execute"
+					+ "a stock statistics query.");
+		}
+		// TODO method not yet finished
+		
 	}
 
 	public void runQuery(QueryPacket p, int id) {
