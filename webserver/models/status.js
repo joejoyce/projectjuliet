@@ -32,19 +32,13 @@ exports.listClients = function() {
 /**
  * Get the current simulation system time
  */
-exports.getTime = function() {
-  /*
+exports.getTime = function(callback) {
   var client = net.connect(1337, 'localhost');
   client.setEncoding('utf8');
   client.write('status|time\n');
 
-  var time = '';
   client.on('data', function(data) {
-    time = data;
     client.end();
+    callback(data);
   });
-  
-  return time;
-  */
-  return ((new Date).getTime() / 1000);
 }
