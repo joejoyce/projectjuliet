@@ -244,7 +244,16 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public String getSymbol(long symbolIndex) throws SQLException {
-		//TODO (Lucas): implement this method to get the symbol name
-		return "Oops, not yet implemented";
+		PreparedStatement statement = this.connection.prepareStatement(
+				"SELECT symbol FROM symbol WHERE symbol_id = ?");
+		ResultSet result;
+		try {
+			statement.setLong(1, symbolIndex);
+			result = statement.executeQuery();
+		} finally {
+			statement.close();
+		}
+		result.next();
+		return result.getString(1);
 	}
 }
