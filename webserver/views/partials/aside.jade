@@ -14,5 +14,6 @@ aside#aside
         i.icon.icon-settings
         |  Settings
   div#filter-container.aside-item
-    input#filter(placeholder='Filter symbols', autofocus='autofocus')
+    form#filter-form(action='#', method='get')
+      input#filter(placeholder='Filter symbols', autofocus='autofocus')
   +symbol_list(symbol_list)

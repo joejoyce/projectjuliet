@@ -2,6 +2,7 @@ $(document).ready(function() {
 	var cData = $('meta[name=cData]').attr("content");
 	console.log(cData);
  	cData = $.parseJSON(cData);
+ 	var symbol = $('meta[name=symbol]').attr("content");
 
  	$('#candle').highcharts('StockChart', {
 		rangeSelector : {

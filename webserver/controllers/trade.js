@@ -12,11 +12,13 @@ var trade = models.Trade;
 
 exports.index = function(req, res) {
   if (req.params.symbol_index) {
-    res.send({
-      kind: 'list',
-      data: trade.getTrades(req.params.symbol_index)
-    });
+    trade.getTrades(req.params.symbol_index, function(trades) {
+		  res.send({
+		    kind: 'list',
+		    data: trades
+		  });
+    });   
   } else {
     res.send(400);
   }
-}
+};

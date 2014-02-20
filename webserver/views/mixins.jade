@@ -40,16 +40,15 @@ mixin symbol_summary(symbol)
           |  Order Book
 
 mixin client_list(list)
-  //- table.table.table-hover.table-striped
-  table.display
+  table.table.table-hover.table-striped
     thead
       tr
         th IP
         th Total Packets
         th Current Packets
     tbody
-    each client in list
-      tr
-        td=client.name
-        td=client.totalPackets
-        td=client.currentPackets
+      each client in list
+        tr
+          td=client.name
+          td=client.totalPackets
+          td=client.currentPackets
