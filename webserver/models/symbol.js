@@ -29,8 +29,8 @@ exports.get = function(symbolIndex, callback) {
 var listCache = [];
 
 exports.list = function(callback) {
-  callback([]);
-  return;
+  //callback([]);
+  //return;
   
   if(listCache.length != 0) {
     callback(listCache);
