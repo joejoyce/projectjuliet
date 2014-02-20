@@ -23,8 +23,10 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		this.addOrderBatch = connection.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		this.addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?)");
 		// this.deleteOrderBatch = connection.prepareStatement("UPDATE order_book SET is_deleted=1 WHERE (order_id = ?) AND (symbol_id = ?)");
-		this.deleteOrderBatch = connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
-		this.modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
+		//this.deleteOrderBatch = connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
+		this.deleteOrderBatch = connection.prepareStatement("CALL deleteOrder(?, ?, ?, ?)");
+		//this.modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
+		this.modifyOrderBatch = connection.prepareStatement("CALL modifyOrder(?, ?, ?, ?, ?, ?)");
 
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
@@ -107,12 +109,12 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	@Override
 	public void modifyOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, boolean isSell, long packetTimestamp) throws SQLException {
 		synchronized (modifyOrderBatch) {
-			modifyOrderBatch.setLong(1, price);
-			modifyOrderBatch.setLong(2, volume);
-			modifyOrderBatch.setLong(3, packetTimestamp);
-			modifyOrderBatch.setLong(4, symbolSeqNumber);
-			modifyOrderBatch.setLong(5, orderID);
-			modifyOrderBatch.setLong(6, symbolIndex);
+			modifyOrderBatch.setLong(1, orderID);
+			modifyOrderBatch.setLong(2, symbolIndex);
+			modifyOrderBatch.setLong(3, price);
+			modifyOrderBatch.setLong(4, volume);
+			modifyOrderBatch.setLong(5, packetTimestamp);
+			modifyOrderBatch.setLong(6, symbolSeqNumber);
 			modifyOrderBatch.addBatch();
 		}
 		batchSize++;
@@ -133,6 +135,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		synchronized (deleteOrderBatch) {
 			deleteOrderBatch.setLong(1, orderID);
 			deleteOrderBatch.setLong(2, symbolIndex);
+			deleteOrderBatch.setLong(3, packetTimestamp);
+			deleteOrderBatch.setLong(4, symbolSeqNumber);
 			deleteOrderBatch.addBatch();
 		}
 		batchSize++;
