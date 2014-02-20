@@ -31,6 +31,7 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		public int noMsgsTradeCancel;
 		public int noMsgsTradeCorrection;
 		public int noMsgsStockSummary;
+		public int noMsgsImbalance;
 		
 		public MessageStatisticsDatum() {
 			noMsgsAddOrder = 0;
@@ -43,6 +44,7 @@ public class MockDatabaseConnection implements DatabaseConnection {
 			noMsgsTradeCancel = 0;
 			noMsgsTradeCorrection = 0;
 			noMsgsStockSummary = 0;
+			noMsgsImbalance = 0;
 		}
 		
 	}
@@ -108,7 +110,7 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		PrintWriter out = new PrintWriter(fw);
 		out.print("symbolIndex,symbolIndexMappings,addOrder,modifyOrder,"+
 				"executeOrder,deleteOrder,tradeSessionChanges,tradeCancel,"+
-				"tradeCorrections,summaries,TimeSourceReference\n");
+				"tradeCorrections,summaries,TimeSourceReference,Imbalance\n");
 		out.flush();
 		
 		for(Entry<Long, MessageStatisticsDatum> e : sMessageStatistics.entrySet()) {
@@ -118,7 +120,8 @@ public class MockDatabaseConnection implements DatabaseConnection {
 					msd.noMsgsModifyOrder+","+msd.noMsgsExecuteOrder+","+
 					msd.noMsgsDeleteOrder+","+msd.noMsgsTradeSessionChange+","+
 					msd.noMsgsTradeCancel+","+msd.noMsgsTradeCorrection+","+
-					msd.noMsgsStockSummary+","+msd.noMsgsTimeReference+"\n");
+					msd.noMsgsStockSummary+","+msd.noMsgsTimeReference+","+
+					msd.noMsgsImbalance+"\n");
 			out.flush();
 		}
 		out.close();
@@ -302,6 +305,20 @@ public class MockDatabaseConnection implements DatabaseConnection {
 			singleStockMessageLog.add("changeTradeSession,"+"-"+","+"-"+","+time_s+","+time_ns+","+
 					symbolSeqNumber+","+"-"+","+"-"+","+"-"+","+tradingSession);
 	}
+	@Override
+	public void addImbalanceMessage(long symbolIndex, long time_s, long time_ns,
+			long symbolSeqNumber, long referencePrice) throws SQLException {
+		if(!sMessageStatistics.containsKey(symbolIndex)) {
+			MessageStatisticsDatum newDatum = new MessageStatisticsDatum();
+			newDatum.noMsgsImbalance++;
+			sMessageStatistics.put(symbolIndex, newDatum);
+		} else {
+			sMessageStatistics.get(symbolIndex).noMsgsImbalance++;
+		}
+		if(symbolIndex == singleStockSymbolIndex)
+			singleStockMessageLog.add("Imbalance,"+"-"+","+"-"+","+time_ns+","+time_ns+","+
+					symbolSeqNumber+","+referencePrice+","+"-"+","+"-"+","+"-");
+	}
 
 	
 	public void setConnection(Connection connection) {
@@ -318,6 +335,12 @@ public class MockDatabaseConnection implements DatabaseConnection {
 	public ResultSet getAllTradesInRecentHistory(long start)
 			throws SQLException {
 		// not needed
+		return null;
+	}
+
+	@Override
+	public String getSymbol(long symbolIndex) throws SQLException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

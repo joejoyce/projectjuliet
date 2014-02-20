@@ -14,6 +14,9 @@ exports.getStockPrice = function(req, res) {
 	var client2 = net.connect(1337, 'localhost');
 	client2.setEncoding('utf8');
 
+	var client3 = net.connect(1337, 'localhost');
+	client3.setEncoding('utf8');
+
 
 	var totalTradeData = "";
 	var companyName = "";
@@ -46,16 +49,38 @@ exports.getStockPrice = function(req, res) {
 	});
 
 	client2.on('end', function() {
-		console.log(totalTradeData);
-		var dataObj = JSON.parse(totalTradeData);		
-		
+			client3.write('cluster|candlestick '+symbolIndex+' 900\n');
+	});
+
+	var cData = "";
+
+	client3.on('data', function(data) {
+		cData += data;
+	});
+
+	client3.on('end', function() {
+		var priceJSON = JSON.parse(totalTradeData);
+		console.log(cData);
+		var cJSON = JSON.parse(cData);
+		var candles = [];
+		cJSON.forEach(function(candle) {
+			if(candle.open == 0) return true;
+			candle.start *= priceScale;
+			candle.open *= priceScale;
+			candle.close *= priceScale;
+			candle.high *= priceScale;
+			candle.low *= priceScale;
+			candles.push(candle);
+		});
+	  console.log(candles);
 		res.render('stock', {
     	title: 'Stock Price',
-    	data: dataObj,
+    	data: priceJSON,
     	dataString: totalTradeData,
     	companyName: companyName,
     	priceScale: priceScale,
-    	companySymbol: companySymbol
+    	companySymbol: companySymbol,
+    	cData: JSON.stringify(candles)
     });
 	});
 };

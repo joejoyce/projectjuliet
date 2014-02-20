@@ -1,0 +1,18 @@
+aside#aside
+  header#brand
+    h1.brand-title.aside-item
+      a(href="/") Resilient &amp; Rapid Raspberries
+    h2.brand-author.aside-item
+      a(href="http://gaben.co.uk/") Team Juliet
+  ul#nav.aside-item
+    li
+      a(href='/status')
+        i.icon.icon-high_voltage
+        |  Status
+    li
+      a(href='/settings')
+        i.icon.icon-settings
+        |  Settings
+  div#filter-container.aside-item
+    input#filter(placeholder='Filter symbols', autofocus='autofocus')
+  +symbol_list(symbol_list)

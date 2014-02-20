@@ -8,7 +8,10 @@ import java.net.Socket;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -30,6 +33,28 @@ final class ClientLoadComparator implements Comparator<Client> {
 	}
 }
 
+
+class RepeatedSend implements Runnable{
+	private ClusterMaster cm;
+	private Container c;
+	private Callback cb;
+	public RepeatedSend(ClusterMaster cm, Container c, Callback cb) {
+		this.c = c;
+		this.cm = cm;
+		this.cb = cb;
+	}
+
+	@Override
+	public void run() {
+		try {
+			cm.sendPacket(c,cb);
+		} catch (NoClusterException e) {
+			// TODO Auto-generated catch block
+			Debug.println(Debug.ERROR,"Problems sending a packet scheduled for repeated Send");
+			e.printStackTrace();
+		}
+	}
+}
 /**
  * This class handles all data being sent to the cluster - when it recieves a packet it allocates
  * it to the Client with least work currently.
@@ -52,6 +77,8 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	private static ClientLoadComparator clc = new ClientLoadComparator();
 	private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
 	private CopyOnWriteArrayList<Client> allClients = new CopyOnWriteArrayList<Client>();
+	
+	private ScheduledExecutorService workers = null;
 	
 	public ClusterMasterUnit(String filename) {
 		StringReader r = new StringReader(filename);
@@ -78,6 +105,8 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	@Override
 	public void start(int port) throws IOException {
+		if(workers == null)
+			workers = Executors.newScheduledThreadPool(1);
 		if(null != socket)
 			socket.close();
 		socket = new ServerSocket(port);
@@ -104,6 +133,10 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	@Override
 	public void stop() {
 		if(null != socket) {
+			if(null != workers) {
+				workers.shutdownNow();
+				workers = null;
+			}
 			try {
 				socket.close();
 			} catch (IOException e) {
@@ -209,4 +242,19 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public int getClientCount() {
 		return allClients.size();
 	}
+	
+	/**
+	 * Repeatedly send the packet to a client, getting a callback each time.
+	 * BEWARE if this fails it will retry after five seconds so this could easily fill the
+	 * system!!
+	 * @param c The container to send
+	 * @param cb The callback to be run
+	 * @param time In milliseconds between them - this is the time between attempted send
+	 * @return A sechduledFuture - this can be used to cancel it etc...
+	 */
+	public ScheduledFuture<?> repeatedSend(Container c, Callback cb, long time) {
+		RepeatedSend rs = new RepeatedSend(this,c,cb);
+		return workers.scheduleAtFixedRate(rs, 0, time, TimeUnit.MILLISECONDS);
+	}
+	
 }

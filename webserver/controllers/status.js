@@ -1,36 +1,41 @@
-var net = require('net');
+/**
+ * Status controller
+ */
+
+var models = require('../models');
+var status = models.Status;
+var symbol = models.Symbol;
 
 /**
  * GET /status
- * System status page
+ * Status page
  */
-
-exports.getStatus = function(req, res) {
-  var client = net.connect(1337, 'localhost');
-  client.setEncoding('utf8');
-
-  client.write('status|listclients\n');
-
-  client.on('data', function(data) {
-    var dataObj = JSON.parse(data);
-    console.dir(dataObj);
-    res.render('status', {
-      title: 'Status',
-      data: dataObj
-    });
-    client.end();
+exports.index = function(req, res) {
+  res.render('status', {
+    title: 'System Status',
+    symbol_list: symbol.list(),
+    client_list: status.listClients()
   });
 };
 
-
-exports.getTime = function(req, res) {
-  var client = net.connect(1337, 'localhost');
-  client.setEncoding('utf8');
-
-  client.write('status|time\n');
-
-  client.on('data', function(time) {
-    res.end(time);
-    client.end();
+/**
+ * GET /api/v1/status/clients
+ * Get all cluster clients
+ */
+exports.clients = function(req, res) {
+  res.send({
+    kind: 'list',
+    data: status.listClients()
   });
+};
+
+/**
+ * GET /api/v1/status/time
+ * Get the current simulation system time
+ */
+exports.time = function(req, res) {
+  res.send({
+    kind: 'time',
+    data: status.getTime()
+  })
 };

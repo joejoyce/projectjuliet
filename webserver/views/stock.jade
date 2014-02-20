@@ -6,6 +6,7 @@ block jsStuff
   meta(name='stock-data', content='#{dataString}')
   meta(name='price-scale', content='#{priceScale}')
   meta(name='symbol', content='#{companySymbol}')
+  meta(name='cData', content='#{cData}')
   
 block content
   .page-header
@@ -14,6 +15,7 @@ block content
   
     center
       #chartcontainer 
+      #candle
 
  //   table.table.table-hover.table-striped
  //     tr

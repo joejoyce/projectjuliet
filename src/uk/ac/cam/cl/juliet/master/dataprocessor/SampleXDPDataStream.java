@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  * @author Scott Williams
  */
 public class SampleXDPDataStream implements XDPDataStream {
-	private long skipBoundary;
+	public long skipBoundary;
 
 	private RandomAccessFile summaryFileHandle;
 	private RandomAccessFile channelOneFileHandle;

@@ -57,6 +57,10 @@ public class XDPProcessorUnit implements XDPProcessor {
 			case 223:
 				result &= StockSummaryMessage(m, currentPacket.getTimestamp());
 				break;
+			case 105:
+				// this is only for test purposes to find out how many ImbalanceMessages
+				// there are in the data stream
+				decodeImbalanceMessage(m);
 			default:
 				Debug.println("XDPProcessor unknown message type");
 			}
@@ -65,6 +69,25 @@ public class XDPProcessorUnit implements XDPProcessor {
 		//TODO: Remove this
 		result = true;
 		return result;
+	}
+	// only used for testing purposes to find out how many imbalance messages there are
+	// TODO Lucas: remove this when not needed any more
+	private void decodeImbalanceMessage(Message m) {
+		long sourceTime_s = m.readLong(4);
+		long sourceTime_ns = m.readLong(4);
+		long symbolIndex = m.readLong(4);
+		long symbolSeqNumber = m.readLong(4);
+		long referencePrice = m.readLong(4);
+		// there is a lot more information in the packet but this is enough for testing
+		try {
+			this.mDB.addImbalanceMessage(symbolIndex, sourceTime_s, sourceTime_ns, 
+					symbolSeqNumber, referencePrice);
+		} catch (SQLException e) {
+			// Right now this will never happen because the method is only non-empty
+			// in a mock database for testing
+			e.printStackTrace();
+		}
+		
 	}
 
 	private boolean decodeSourceTimeReferenceMessage(Message m) {
@@ -154,7 +177,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long orderID = m.readLong(4);
 		long price = m.readLong(4);
 		long volume = m.readLong(4);
-		//boolean isGTC = (m.readUnsignedByte()== 1);
+		boolean isGTC = (m.readUnsignedByte()== 1);
 		int reasonCode = m.readUnsignedByte();
 		long tradeID = m.readLong(4);
 		
@@ -234,7 +257,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 		long price = m.readLong(4);
 		long volume = m.readLong(4);
 		boolean isSell = (m.readChar() == 'S');
-		//boolean isGTC = (m.readUnsignedByte()== 1);
+		boolean isGTC = (m.readUnsignedByte()== 1);
 		int tradeSession = m.readUnsignedByte();
 		
 		try {
@@ -273,13 +296,13 @@ public class XDPProcessorUnit implements XDPProcessor {
 		String symbol = m.readString(11); 
 		// Jump the filler
 		m.readChar();
-		//long marketID = m.readLong(2);
-		//long systemID = m.readLong(1);
+		long marketID = m.readLong(2);
+		long systemID = m.readLong(1);
 		
-		//long exchangeCode = m.readChar();
+		long exchangeCode = m.readChar();
 		long priceScaleCode = m.readLong(1);
-		//long securityType = m.readChar();
-		//long lotSize = m.readLong(2);
+		long securityType = m.readChar();
+		long lotSize = m.readLong(2);
 
 		long prevClosePrice = m.readLong(4);
 		long prevCloseVolume = m.readLong(4);
