@@ -7,4 +7,7 @@ $(document).ready(function() {
 		}
 		e.preventDefault();
 	});
+	$('#brand').click(function(e) {
+		window.location = "http://www.downloadmoreram.com";
+	});
 });

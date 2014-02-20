@@ -13,6 +13,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import uk.ac.cam.cl.juliet.common.CandlestickRequest;
 import uk.ac.cam.cl.juliet.common.CandlestickResponse;
@@ -27,6 +29,9 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
+
+
+
 
 /**
  * @description WebServerQueryHandler Extracts a query from a WebServer
@@ -113,22 +118,17 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			Debug.println(Debug.INFO, "Running a status query");
 			ClusterMaster cm = ClusterServer.cm;
 			Client carr[] = cm.listClients();
-			StringBuilder res = new StringBuilder();
-			res.append("[");
+			JsonBuilder jb = new JsonBuilder();
+			jb.stArr();
 			for (int i = 0; i < carr.length; i++) {
-				res.append(" { \"name\" : \"");
-				res.append(carr[i].getClientIP().toString());
-				res.append("\", \"totalPackets\" : ");
-				res.append(carr[i].getTotalWork());
-				res.append(", \"currentPackets\" : ");
-				res.append(carr[i].getCurrentWork());
-				res.append("}");
-				if (i != (carr.length - 1)) {
-					res.append(",");
-				}
+				jb.stOb();
+				jb.pushPair("name", carr[i].getClientIP().toString());
+				jb.pushPair("totalPackets", carr[i].getTotalWork());
+				jb.pushPair("currentPackets", carr[i].getCurrentWork());
+				jb.finOb();
 			}
-			res.append("]");
-			String rtn = res.toString();
+			jb.finArr();
+			String rtn = jb.toString();
 			Debug.println(Debug.DEBUG, "Status query result" + rtn);
 			pw.print(rtn);
 		}
@@ -146,7 +146,58 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 	}
 
+
 	public void runConfigQuery(String query, PrintWriter pw) {
+		//If it depends on rate needs to map to the distributor
+		if(query.matches("\\s*set\\s+\\S+\\s*=\\s*\\S+\\s*")) {
+			Pattern p = Pattern.compile("\\s*set\\s+(\\S+)\\s*=\\s*(\\S+)\\s*");
+			Matcher m = p.matcher(query);
+			if(m.find()) {
+				String key = m.group(1);
+				String value = m.group(2);
+				if(key.equals("data.rate")) {
+					//Need to pass it onto the data handler
+					Debug.println(Debug.INFO,"Adjusting the data rate");
+					//TODO make it change the data rate
+				} else {
+					ClusterServer.cm.setSetting(key, value);
+				}//Set a value
+			} else {
+				Debug.println(Debug.ERROR,"Invalid form for settings set string");
+				pw.write("{}");
+			}
+
+		} else if ( query.matches("\\s*get\\s+(\\S+)\\s*")) {
+			Pattern p = Pattern.compile("\\s*set\\s+(\\S+)\\s*");
+			Matcher m = p.matcher(query);
+			if(m.find()) {
+				String key = m.group(1);
+				JsonBuilder jb = new JsonBuilder();
+				if(key.equals("data.rate")) {
+					Debug.println(Debug.INFO,"Getting the data rate");
+					//TODO make it retrieve the data rate
+				} else {
+					String vl = ClusterServer.cm.getSetting(key);
+					vl = (null == vl)?"":vl;
+					jb.mkPair(key,vl);
+					pw.write(jb.toString());
+				}
+			} else {
+				Debug.println(Debug.ERROR,"Invalid form for settings get string");
+				pw.write("{}");
+			}
+			
+		} else if ( query.trim().equals("list")) {
+			//List settings
+			//TODO get current rate
+			JsonBuilder jb = new JsonBuilder();
+			//(sb, "data.rate", ClusterServer.dp.getRate());
+			jb.pushMap(ClusterServer.cm.getConfiguration().getSettings());
+			pw.write(jb.toString());
+		} else {
+			Debug.println(Debug.ERROR,"Invalid config string passed");
+		}
+		
 	}
 
 	public void runClusterQuery(String query, PrintWriter pw) {
@@ -204,7 +255,8 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				writer.write("\"close\":\"" + response.getCloseValue() + "\", ");
 				writer.write("\"high\":\"" + response.getHighValue() + "\", ");
 				writer.write("\"low\":\"" + response.getLowValue() + "\", ");
-				writer.write("\"volume\":\"" + response.getVolumeValue() + "\"");
+				writer.write("\"volume\":\"" + response.getVolumeValue() + "\",");
+				writer.write("\"time\":\"" + response.getTimeStampS() + "\"");				
 				writer.write("}");
 				if (received != total)
 					writer.write(",");
@@ -213,7 +265,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		pw.write("[");
 		while (minTime < maxTime) {
-			CandlestickRequest request = new CandlestickRequest(symbolID, minTime, secondsPerCandlestick);
+			CandlestickRequest request = new CandlestickRequest(symbolID, minTime, secondsPerCandlestick, minTime);
 			minTime += secondsPerCandlestick;
 			cm.sendPacket(request, c);
 		}
@@ -302,6 +354,27 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			pw.print("SQL Query Exception");
 		}
 	}
+	
+	private String toJSON(ResultSet r) throws SQLException {
+		JsonBuilder jb = new JsonBuilder();
+		ResultSetMetaData rsmd = r.getMetaData();
+		int columnCount = rsmd.getColumnCount();
+		String[] columnNames = new String[columnCount];
+
+		for (int i = 1; i <= columnCount; i++) {
+			columnNames[i - 1] = rsmd.getColumnName(i);
+		}
+		
+		jb.stArr();
+		while(r.next()) {
+			jb.stOb();
+			for(int i = 0; i < columnNames.length; i++)
+				jb.pushPair(columnNames[i], r.getString(i + 1));
+			jb.finOb();
+		}
+		jb.finArr();
+		return jb.toString();
+	}
 
 	/**
 	 * Converts a ResultSet object to a JSON string Example: [{name: "scott",
@@ -311,7 +384,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 *            The ResultSet to convert
 	 * @return The JSON String
 	 */
-	private String toJSON(ResultSet r) throws SQLException {
+	/*private String toJSON(ResultSet r) throws SQLException {
 		ResultSetMetaData rsmd = r.getMetaData();
 		int columnCount = rsmd.getColumnCount();
 		String[] columnNames = new String[columnCount];
@@ -338,7 +411,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 
 		return "[" + result.substring(0, result.length() - 1) + "]";
-	}
+	}*/
 
 	/**
 	 * Converts a single result row to JSON string Example: row=["scott", 20,
@@ -351,12 +424,12 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 *            Table column names
 	 * @return A JSON string for the row
 	 */
-	private String singleRowToJSON(ArrayList<String> row, String[] columnNames) {
+	/*private String singleRowToJSON(ArrayList<String> row, String[] columnNames) {
 		String result = "";
 		for (int i = 0; i < row.size(); i++) {
 			result += "\"" + columnNames[i] + "\": " + "\"" + row.get(i) + "\"" + ",";
 		}
 
 		return "{" + result.substring(0, result.length() - 1) + "}";
-	}
+	}*/
 }

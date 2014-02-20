@@ -1,12 +1,18 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -38,19 +44,59 @@ class RepeatedSend implements Runnable{
 	private ClusterMaster cm;
 	private Container c;
 	private Callback cb;
+	private boolean repeat = false;
 	public RepeatedSend(ClusterMaster cm, Container c, Callback cb) {
 		this.c = c;
 		this.cm = cm;
 		this.cb = cb;
 	}
+	public RepeatedSend(ClusterMaster cm, Container c, Callback cb, boolean repeat ) {
+		this.c = c;
+		this.cm = cm;
+		this.cb = cb;
+		this.repeat = repeat;
+	}
 
 	@Override
 	public void run() {
 		try {
-			cm.sendPacket(c,cb);
+			if(repeat)
+				cm.broadcast(c,cb);
+			else
+				cm.sendPacket(c,cb);
 		} catch (NoClusterException e) {
 			// TODO Auto-generated catch block
 			Debug.println(Debug.ERROR,"Problems sending a packet scheduled for repeated Send");
+			e.printStackTrace();
+		}
+	}
+}
+
+class ShutdownSettingsSaver extends Thread {
+	private String filename;
+	private ConfigurationPacket cp = null;
+	public ShutdownSettingsSaver (String filename, ConfigurationPacket cp) {
+		this.filename = filename;
+		this.cp = cp;
+	}
+	public void run (){
+        try {
+        	Debug.println(Debug.INFO,"Saving settings on exit");
+			File f = new File(filename);
+	        FileWriter fw = new FileWriter(f);
+	        StringBuilder sb = new StringBuilder();
+	        for (Entry<String, String> entry : cp.getSettings().entrySet()) {
+	            String key = entry.getKey();
+	            String value = entry.getValue();
+				fw.write(key);
+	            fw.write(" ");
+	            fw.write(value);
+	            fw.write("\n");
+	        }
+	        fw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			Debug.println(Debug.SHOWSTOP,"Error saving settings on exit");
 			e.printStackTrace();
 		}
 	}
@@ -91,9 +137,12 @@ public class ClusterMasterUnit implements ClusterMaster  {
 				if(arr.length > 1)
 					cp.setSetting(arr[0],arr[1]);
 			}
+			bf.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		//Register to save settings on shutdown
+		Runtime.getRuntime().addShutdownHook(new ShutdownSettingsSaver(filename,cp));
 	}
 	
 	@Override
@@ -255,6 +304,11 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public ScheduledFuture<?> repeatedSend(Container c, Callback cb, long time) {
 		RepeatedSend rs = new RepeatedSend(this,c,cb);
 		return workers.scheduleAtFixedRate(rs, 0, time, TimeUnit.MILLISECONDS);
+	}
+	
+	public ScheduledFuture<?> repeatedBroadcast(Container c, Callback cb, long time) {
+		RepeatedSend rs = new RepeatedSend(this,c,cb,true);
+		return workers.scheduleAtFixedRate(rs,0,time,TimeUnit.MILLISECONDS);
 	}
 	
 }

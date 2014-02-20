@@ -241,7 +241,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 			}
 
 			results.close();
-			return new CandlestickResponse(p.getPacketId(), p.getStart(), open, close, high, low, volume);
+			return new CandlestickResponse(p.getPacketId(), p.getStart(), open, close, high, low, volume, p.getTime());
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return new QueryResponse(p.getPacketId(), false); // Fail query

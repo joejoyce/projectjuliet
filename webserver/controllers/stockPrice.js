@@ -14,8 +14,8 @@ exports.index = function(req, res) {
   if (req.params.symbol_index) {
     symbol.get(req.params.symbol_index, function(symbolData) {    
       trade.getTrades(req.params.symbol_index, function(trades) {
-        var priceScale = 1/(Math.pow(10,symbolData.price_scale));
-        trade.getCandle(req.params.symbol_index, priceScale, function(cData) {
+        symbolData.price_scale = 1/(Math.pow(10,symbolData.price_scale));
+        trade.getCandle(req.params.symbol_index, symbolData.price_scale, function(cData) {
           symbol.list(function(list) {
            res.render('stockPrice', {
               title: 'Stock Price',
