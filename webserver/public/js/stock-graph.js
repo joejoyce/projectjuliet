@@ -9,7 +9,7 @@ $(document).ready(function() {
     chartData.push([data.offered_s*1000,data.price*priceScale]);
   });
   
-  $('\#chart-container').highcharts('StockChart', {
+  $('#stock-graph').highcharts('StockChart', {
     rangeSelector : {
     selected : 1
     },
