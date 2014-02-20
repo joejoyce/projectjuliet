@@ -11,12 +11,15 @@ var symbol = models.Symbol;
  * Status page
  */
 exports.index = function(req, res) {
-  res.render('status', {
-    title: 'System Status',
-    symbol_list: symbol.list(),
-    client_list: status.listClients()
+  symbol.list(function(list) {
+    res.render('status', {
+      title: 'System Status',
+      symbol_list: list,
+      client_list: status.listClients()
+    });  
   });
 };
+  
 
 /**
  * GET /api/v1/status/clients
