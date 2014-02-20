@@ -6,4 +6,7 @@ $(document).ready(function() {
 			window.location.href = visibleSymbols.find('a').attr('href');
 		}
 	});
+	$('#brand').click(function(e) {
+		window.location = "http://www.downloadmoreram.com";
+	});
 });
