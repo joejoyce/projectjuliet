@@ -2,6 +2,8 @@
  * Order Book controller
  */
 
+var async = require('async');
+
 var models = require('../models');
 var symbol = models.Symbol;
 var order = models.Order;
