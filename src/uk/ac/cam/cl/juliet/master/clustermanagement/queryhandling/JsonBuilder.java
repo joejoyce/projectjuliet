@@ -76,4 +76,27 @@ public class JsonBuilder {
 	public String toString() {
 		return sb.toString();
 	}
+	
+	public static void main(String args[]) {
+		JsonBuilder jb = new JsonBuilder();
+		HashMap<String,String> hm = new HashMap<String,String>();
+		
+		for(int i=0;i<1000000;i++) {
+			hm.put(Integer.toString(i), Integer.toString(i));
+		}
+		long init = System.currentTimeMillis();
+		jb.pushMap(hm);
+		/*jb.stArr();
+		jb.stOb();
+		jb.pushPair("One", "Two");
+		jb.finOb();
+		jb.stOb();
+		jb.pushPair("four","five");
+		jb.finOb();
+		jb.finArr();*/
+		String str = jb.toString();
+		System.out.println("duration " + (System.currentTimeMillis() - init));
+		//System.out.println(str);
+		
+	}
 }
