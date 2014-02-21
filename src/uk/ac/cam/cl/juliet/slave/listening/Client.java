@@ -36,7 +36,7 @@ public class Client {
 				}
 				s.close();
 				System.exit(0);
-				//Not pretty but it works.
+				//Not pretty but it should work.
 			}
 		};
 		

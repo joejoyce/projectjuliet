@@ -24,6 +24,7 @@ import java.sql.SQLException;
 public class ClusterServer {
 
 	public static ClusterMaster cm;
+	public static DataProcessor dp;
 	
 	@SuppressWarnings("unused")
 	public static void main(String args[]) throws IOException, SQLException {
@@ -46,9 +47,10 @@ public class ClusterServer {
                 return;
         }
         SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4, skipBoundary);
-        cm = new ClusterMasterUnit("");
+        cm = new ClusterMasterUnit("settings");
         cm.start(5000);
         final DataProcessor dp = new DataProcessor(ds, cm);
+        ClusterServer.dp = dp;
         Scanner s = new Scanner(System.in);
         System.out.println("GO?");
 		s.nextLine();

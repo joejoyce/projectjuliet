@@ -261,4 +261,10 @@ public interface DatabaseConnection {
 	 *            The new connection to use.
 	 */
 	public void setConnection(Connection connection);
+	
+	/**
+	 * Return the time in nanoseconds that the last commit took.
+	 * @return
+	 */
+	public long getLastCommitNS();
 }

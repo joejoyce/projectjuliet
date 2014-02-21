@@ -155,6 +155,7 @@ public class Client {
 					try {
 						recieve = in.readObject();
 						Debug.println("Received an object from client...");
+
 					} catch (ClassNotFoundException e) {
 						e.printStackTrace();
 					} catch (IOException e) {
@@ -168,6 +169,12 @@ public class Client {
 						//fantastic!
 						//Count the packets back in
 						Container container = (Container)recieve;
+						if(container instanceof LatencyMonitor) {
+							LatencyMonitor lm = (LatencyMonitor)container;
+							lm.inboundArrive = System.nanoTime();
+							lm.addr = getClientIP().toString();
+							//Identify which Pi this came from
+						}
 						InFlightContainer record = checkbackContainer(container);
 						if(record != null)
 							record.executeCallback(container);

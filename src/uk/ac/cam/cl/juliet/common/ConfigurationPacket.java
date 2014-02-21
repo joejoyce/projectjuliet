@@ -1,6 +1,7 @@
 package uk.ac.cam.cl.juliet.common;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigurationPacket extends Container implements Serializable {
@@ -11,5 +12,9 @@ public class ConfigurationPacket extends Container implements Serializable {
 	}
 	public void setSetting(String name, Object ob) {
 		h.put(name,ob.toString());
+	}
+	
+	public Map<String,String> getSettings() {
+		return h;
 	}
 }
