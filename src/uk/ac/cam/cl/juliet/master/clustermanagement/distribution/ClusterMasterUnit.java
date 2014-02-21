@@ -160,7 +160,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 			workers = Executors.newScheduledThreadPool(1);
 		if(null != socket)
 			socket.close();
-		socket = new ServerSocket(port, 10, InetAddress.getByName("192.168.0.1"));
+		socket = new ServerSocket(port);
 		
 		Thread t = new Thread () {
 			@Override
