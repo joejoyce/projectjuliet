@@ -23,7 +23,7 @@ exports.index = function(req, res) {
 				}
 			},
 			{
-				symbol: function(callback) {
+				symbolD: function(callback) {
 					symbol.get(req.params.symbol_index, function(symbolD) {
 						callback(null, 1 / (Math.pow(10, symbolD.price_scale)));
 					});
@@ -49,7 +49,7 @@ exports.index = function(req, res) {
 				res.render('orderBook', {
 					title: 'Order Book',
 					symbol_list: results.symbol_list,
-					symbol: results.symbol,
+					symbol: results.symbolD,
 					bid_list: results.bid_list,
 					offer_list: results.offer_list
 				});
