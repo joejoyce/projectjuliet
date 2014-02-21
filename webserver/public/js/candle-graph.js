@@ -10,10 +10,10 @@ $(document).ready(function() {
  		console.log(cData[i].time*1000);
 		ohlc.push([			
 			Number(cData[i].time*1000), 
-			Number(cData[i].open), 
-			Number(cData[i].high), 
-			Number(cData[i].low), 
-			Number(cData[i].close)
+			Number(cData[i].open.toFixed(2)), 
+			Number(cData[i].high.toFixed(2)), 
+			Number(cData[i].low.toFixed(2)), 
+			Number(cData[i].close.toFixed(2))
 		]);
 		
 		volume.push([
