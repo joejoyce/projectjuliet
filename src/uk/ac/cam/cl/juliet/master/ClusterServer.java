@@ -30,6 +30,7 @@ public class ClusterServer {
 	public static void main(String args[]) throws IOException, SQLException {
 		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
         WebServerListener wsl = new WebServerListener(1337, con);
+        DatabaseCleaner c = new DatabaseCleaner(con);
 
 		Debug.registerOutputLocation(System.out);
         Debug.setPriority(10);

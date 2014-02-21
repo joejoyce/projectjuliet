@@ -14,7 +14,7 @@ exports.getOffers = function(symbolIndex, callback) {
   var symbolIndex = parseInt(symbolIndex);
   var client = net.connect(1337, 'localhost');
   client.setEncoding('utf8');
-  client.write('basic|SELECT * FROM order_book WHERE symbol_id = ' +symbolIndex+ ' AND is_ask=1 ORDER BY price LIMIT 25\n');
+  client.write('basic|SELECT * FROM order_book WHERE symbol_id = ' +symbolIndex+ ' AND is_ask=1 AND deleted=0 AND added=1 ORDER BY price LIMIT 25\n');
 
   var offers = '';
 
@@ -34,7 +34,7 @@ exports.getBids = function(symbolIndex, callback) {
   var symbolIndex = parseInt(symbolIndex);
   var client = net.connect(1337, 'localhost');
   client.setEncoding('utf8');
-  client.write('basic|SELECT * FROM order_book WHERE symbol_id = ' +symbolIndex+ ' AND is_ask=0 ORDER BY price DESC LIMIT 25\n');
+  client.write('basic|SELECT * FROM order_book WHERE symbol_id = ' +symbolIndex+ ' AND is_ask=0 AND deleted=0 AND added=1 ORDER BY price DESC LIMIT 25\n');
 
   var bids = '';
 
