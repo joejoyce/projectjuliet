@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,10 +39,10 @@ public class JsonBuilder {
 		comRq = true;
 	}
 	
-	public void pushSingle(Object key, Object vl) {
+	public void pushSingle(Object vl) {
 		if(comRq) sb.append(",");
 		sb.append("\"");
-		sb.append(key);
+		sb.append(vl);
 		sb.append("\"");
 		comRq = true;
 	}
@@ -50,7 +51,17 @@ public class JsonBuilder {
 		pushPair(key,vl);
 		finOb();
 	}
-	
+	public void mkMap(String key, Map<?,?> mp) {
+		stOb();
+		pushMap(key,mp);
+		finOb();
+	}
+	public void pushMap(String key, Map<?,?> mp) {
+		pushSingle(key);
+		sb.append(":");
+		comRq = false;
+		pushMap(mp);
+	}
 	public void pushMap(Map<?,?> mp) {
 		stArr();
 	    Iterator<?> it = mp.entrySet().iterator();
