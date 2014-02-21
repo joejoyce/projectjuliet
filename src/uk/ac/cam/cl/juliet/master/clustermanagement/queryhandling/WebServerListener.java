@@ -22,7 +22,7 @@ public class WebServerListener implements Runnable {
 	private Connection con;
 	
 	public WebServerListener(int querySocketPort, Connection con) throws IOException {
-		this.querySocket = new ServerSocket(querySocketPort, 10, InetAddress.getByName("127.0.0.1"));
+		this.querySocket = new ServerSocket(querySocketPort);
 		this.con = con;
 		Thread listener = new Thread(this);
 		listener.start();
