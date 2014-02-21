@@ -1,3 +1,5 @@
+var client = {};
+
 $(document).ready(function() {
 	$('#filter').fastLiveFilter('#symbols');
 	$('#filter-form').on('submit', function(e) {

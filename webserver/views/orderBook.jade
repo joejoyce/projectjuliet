@@ -4,7 +4,8 @@ block head
   script(src='/js/main.js')
   script(src='/js/time.js')
   script(src='/js/order-book.js')
-
+  script.
+    client.offerList = !{JSON.stringify(offer_list)}
 
 block content
   +symbol_summary(symbol)
