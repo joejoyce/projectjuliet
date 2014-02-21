@@ -121,7 +121,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 			return new XDPRequest(fileData, toUnsignedInt(deliveryFlag));*/
 			
 			// System is ahead of realtime stream - wait for a bit
-			Debug.println(100,"System is " + systemDifferenceMS + " milliseconds ahead of realtime stream");
+			Debug.println("System is " + systemDifferenceMS + " milliseconds ahead of realtime stream");
 			try {
 				long milliSeconds = 0L;
 				if(systemDifferenceNS > 999999) {
