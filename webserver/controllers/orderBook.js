@@ -22,7 +22,8 @@ exports.index = function(req, res) {
 			},
 			symbolD: function(callback) {
 				symbol.get(req.params.symbol_index, function(symbolD) {
-					callback(null, 1 / (Math.pow(10, symbolD.price_scale)));
+					symbolD.price_scale = 1 / (Math.pow(10, symbolD.price_scale));
+					callback(null, symbolD);
 				});
 			},
 			bid_list: function(callback) {
