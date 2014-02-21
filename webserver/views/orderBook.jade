@@ -3,6 +3,7 @@ extends layout
 block head
   script(src='/js/main.js')
   script(src='/js/time.js')
+  script(src='/js/order-book.js')
 
 
 block content
@@ -41,4 +42,3 @@ block content
           td=bid.volume
           td=(bid.price*symbol.price_scale*bid.volume).toFixed(2)
           td=moment(bid.placed_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
-  table.data
