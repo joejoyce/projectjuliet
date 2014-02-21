@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 //import org.dhcp4java.DHCPCoreServer;
 //import org.dhcp4java.DHCPServerInitException;
 //import org.dhcp4java.DHCPServlet;
+
 
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
@@ -158,7 +160,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 			workers = Executors.newScheduledThreadPool(1);
 		if(null != socket)
 			socket.close();
-		socket = new ServerSocket(port);
+		socket = new ServerSocket(port, 10, InetAddress.getByName("192.168.0.1"));
 		
 		Thread t = new Thread () {
 			@Override

@@ -1,6 +1,7 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.Connection;
@@ -21,7 +22,7 @@ public class WebServerListener implements Runnable {
 	private Connection con;
 	
 	public WebServerListener(int querySocketPort, Connection con) throws IOException {
-		this.querySocket = new ServerSocket(querySocketPort);
+		this.querySocket = new ServerSocket(querySocketPort, 10, InetAddress.getByName("127.0.0.1"));
 		this.con = con;
 		Thread listener = new Thread(this);
 		listener.start();
