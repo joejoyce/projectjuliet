@@ -343,4 +343,10 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public long getLastCommitNS() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

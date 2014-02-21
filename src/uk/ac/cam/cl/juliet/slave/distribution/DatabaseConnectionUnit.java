@@ -8,6 +8,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import uk.ac.cam.cl.juliet.common.Debug;
+
 public class DatabaseConnectionUnit implements DatabaseConnection {
 	private Connection connection;
 	private PreparedStatement addOrderBatch;
@@ -18,6 +20,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private int batchSize = 0;
 	private int delete = 0;
 
+	private long lastCommitNs = -1;
+	
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
 		this.addOrderBatch = connection.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -27,24 +31,26 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		this.deleteOrderBatch = connection.prepareStatement("CALL deleteOrder(?, ?, ?, ?)");
 		//this.modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.modifyOrderBatch = connection.prepareStatement("CALL modifyOrder(?, ?, ?, ?, ?, ?)");
+		
+		 // Negative as not yet done
 
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
 				try {
-					System.out.println("Total batch size: " + batchSize);
+					Debug.println("Total batch size: " + batchSize);
 					long start = System.nanoTime();
 
-					System.out.println("About to execute addOrder batch");
-					long then = System.nanoTime();
+					Debug.println("About to execute addOrder batch");
+					long then = start; //System.nanoTime(); Joe removed duplicate call
 					synchronized (addOrderBatch) {
 						addOrderBatch.executeBatch();
 						addOrderBatch.clearBatch();
 					}
 					double diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
-					System.out.println("Taken: " + diff);
+					Debug.println("Taken: " + diff);
 
-					System.out.println("About to execute addTrade batch");
+					Debug.println("About to execute addTrade batch");
 					then = System.nanoTime();
 					synchronized (addTradeBatch) {
 						addTradeBatch.executeBatch();
@@ -52,9 +58,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					}
 					diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
-					System.out.println("Taken: " + diff);
+					Debug.println("Taken: " + diff);
 
-					System.out.println("About to execute deleteOrder batch: " + delete);
+					Debug.println("About to execute deleteOrder batch: " + delete);
 					delete = 0;
 					then = System.nanoTime();
 					synchronized (deleteOrderBatch) {
@@ -63,9 +69,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					}
 					diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
-					System.out.println("Taken: " + diff);
+					Debug.println("Taken: " + diff);
 
-					System.out.println("About to execute modifyOrderBatch batch");
+					Debug.println("About to execute modifyOrderBatch batch");
 					then = System.nanoTime();
 					synchronized (modifyOrderBatch) {
 						modifyOrderBatch.executeBatch();
@@ -73,14 +79,15 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					}
 					diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
-					System.out.println("Taken: " + diff);
+					Debug.println("Taken: " + diff);
 
 					batchSize = 0;
 
 					long totalTaken = Math.abs(System.nanoTime() - start);
+					lastCommitNs = totalTaken;
 					totalTaken /= 1000000;
-					System.out.println("Total time taken: " + totalTaken);
-					System.out.println("-------------------------------------");
+					Debug.println("Total time taken: " + totalTaken);
+					Debug.println("-------------------------------------");
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -259,5 +266,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		}
 		result.next();
 		return result.getString(1);
+	}
+	
+	public long getLastCommitNS() {
+		return lastCommitNs;
 	}
 }

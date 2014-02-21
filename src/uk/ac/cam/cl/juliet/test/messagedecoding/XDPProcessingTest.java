@@ -298,6 +298,12 @@ class TestDatabase implements DatabaseConnection {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public long getLastCommitNS() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 	
 
 }

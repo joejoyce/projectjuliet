@@ -35,6 +35,7 @@ public class Listener {
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
 	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(200);
+	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(200);
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
 	private QueryProcessor query;
@@ -48,10 +49,10 @@ public class Listener {
 	 *            The port which packets are being sent from.
 	 * @throws IOException
 	 */
-	public void listen(String server, int port, DatabaseConnection db, XDPProcessor xdpProcessor, QueryProcessor queryProcessor) throws IOException, SQLException {
+	public void listen(String server, int thePort, DatabaseConnection db, XDPProcessor xdpProcessor, QueryProcessor queryProcessor) throws IOException, SQLException {
 		this.ip = server;
-		this.port = port;
-		this.socket = new Socket(server, port);
+		this.port = thePort;
+		this.socket = new Socket(server, thePort);
 		this.output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		output.flush();
 		this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -60,11 +61,48 @@ public class Listener {
 		this.xdp = xdpProcessor;
 		this.query = queryProcessor;
 
-		Thread receiveThread = new Thread() {
+		Thread readThread = new Thread() {
 			@Override
 			public void run() {
 				while (true)
 					readPacket();
+			}
+		};
+		readThread.start();
+		
+		//NEW BIT TO RE-THREAD CLIENT
+		Thread receiveThread = new Thread() {
+			public void run() {
+				while(true) {
+					Object o;
+					try {
+						o = input.readObject();
+						if(o instanceof Container) {
+							if(o instanceof LatencyMonitor) {
+								((LatencyMonitor)o).outboundArrive = System.nanoTime();
+							}
+							receiveQueue.put((Container)o);
+						} else
+							Debug.println(Debug.ERROR,"Unrecognised object type");
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						System.err.println("An error occurred communicating with the server.");
+						e.printStackTrace();
+						// Just attempt to reconnect
+						try {
+							socket = new Socket(ip, port);
+							input = new ObjectInputStream(socket.getInputStream());
+							output = new ObjectOutputStream(socket.getOutputStream());
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}
+					}
+				}
 			}
 		};
 		receiveThread.start();
@@ -100,7 +138,8 @@ public class Listener {
 
 	private void readPacket() {
 		try {
-			Container container = (Container) input.readObject();
+			//Container container = (Container) input.readObject();#
+			Container container = receiveQueue.take();
 			Debug.println("Got new object");
 			
 			if (container instanceof ConfigurationPacket) {
@@ -123,7 +162,7 @@ public class Listener {
 				diff /= 1000000;
 				Debug.println("Time taken for processing ms: " + diff);				
 			}
-		} catch (ClassNotFoundException | ClassCastException e) {
+		} /*catch (ClassNotFoundException | ClassCastException e) {
 			System.err.println("An unexpected object was recieved from the server.");
 			e.printStackTrace();
 			System.exit(0);
@@ -138,6 +177,10 @@ public class Listener {
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
+		} */ 
+		catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -180,11 +223,10 @@ public class Listener {
 		}		
 	}
 	private void handleLatencyMonitor(LatencyMonitor m) {
-		m.outboundArrive = System.nanoTime();
-		m.databaseDepart = m.outboundArrive;
-		//Need to do a SQL thing to check
-		//SEND TO DATABASE HERE
-		m.databaseArrive = System.nanoTime();
+		m.outboundDequeue = System.nanoTime();
+		if(null != databaseConnection)
+			m.databaseRoundTrip = databaseConnection.getLastCommitNS();
+		m.inboundQueue = System.nanoTime();
 		try {
 			responseQueue.put(m);
 		} catch (InterruptedException e) {
