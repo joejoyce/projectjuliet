@@ -37,20 +37,20 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
 				try {
-					Debug.println("Total batch size: " + batchSize);
+					Debug.println(Debug.INFO, "Total batch size: " + batchSize);
 					long start = System.nanoTime();
 
-					Debug.println("About to execute addOrder batch");
-					long then = start; //System.nanoTime(); Joe removed duplicate call
+					Debug.println(Debug.INFO, "About to execute addOrder batch");
+					long then = start;
 					synchronized (addOrderBatch) {
 						addOrderBatch.executeBatch();
 						addOrderBatch.clearBatch();
 					}
 					double diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
-					Debug.println("Taken: " + diff);
+					Debug.println(Debug.INFO, "Taken: " + diff);
 
-					Debug.println("About to execute addTrade batch");
+					Debug.println(Debug.INFO, "About to execute addTrade batch");
 					then = System.nanoTime();
 					synchronized (addTradeBatch) {
 						addTradeBatch.executeBatch();
@@ -58,9 +58,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					}
 					diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
-					Debug.println("Taken: " + diff);
+					Debug.println(Debug.INFO, "Taken: " + diff);
 
-					Debug.println("About to execute deleteOrder batch: " + delete);
+					Debug.println(Debug.INFO, "About to execute deleteOrder batch: " + delete);
 					delete = 0;
 					then = System.nanoTime();
 					synchronized (deleteOrderBatch) {
@@ -69,9 +69,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					}
 					diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
-					Debug.println("Taken: " + diff);
+					Debug.println(Debug.INFO, "Taken: " + diff);
 
-					Debug.println("About to execute modifyOrderBatch batch");
+					Debug.println(Debug.INFO, "About to execute modifyOrderBatch batch");
 					then = System.nanoTime();
 					synchronized (modifyOrderBatch) {
 						modifyOrderBatch.executeBatch();
@@ -79,15 +79,15 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					}
 					diff = Math.abs(System.nanoTime() - then);
 					diff /= 1000000;
-					Debug.println("Taken: " + diff);
+					Debug.println(Debug.INFO, "Taken: " + diff);
 
 					batchSize = 0;
 
 					long totalTaken = Math.abs(System.nanoTime() - start);
 					lastCommitNs = totalTaken;
 					totalTaken /= 1000000;
-					Debug.println("Total time taken: " + totalTaken);
-					Debug.println("-------------------------------------");
+					Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
+					Debug.println(Debug.INFO, "-------------------------------------");
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
