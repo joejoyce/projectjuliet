@@ -34,8 +34,8 @@ public class Listener {
 	private int port;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
-	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(200);
-	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(200);
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(2000);
+	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(2000);
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
 	private QueryProcessor query;

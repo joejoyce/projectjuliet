@@ -152,7 +152,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public void addTrade(long tradeID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, long packetTimestamp) throws SQLException {
-		synchronized (addOrderBatch) {
+		synchronized (addTradeBatch) {
 			addTradeBatch.setLong(1, tradeID);
 			addTradeBatch.setLong(2, symbolIndex);
 			addTradeBatch.setLong(3, price);
@@ -185,8 +185,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(3, price);
 		statement.setLong(4, volume);
 		statement.setLong(5, originalTradeID);
-		statement.execute();
-		statement.close();
+		//statement.execute();
+		//statement.close();
 	}
 
 	@Override
