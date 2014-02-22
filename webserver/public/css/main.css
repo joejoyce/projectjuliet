@@ -329,3 +329,11 @@ p {
   height: 500px;
   padding: 10px;
 }
+
+.neg {
+  color: #FF0000;
+}
+
+.pos {
+  color: #00FF00;
+}

@@ -11,6 +11,6 @@ block head
   meta(name="cData", content='#{JSON.stringify(cData)}')
 
 block content
-  +symbol_summary(symbol)
+  +symbol_summary(symbol, stats)
   div#stock-graph
   div#candle-graph

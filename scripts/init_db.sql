@@ -163,7 +163,9 @@ BEGIN
                  AND last_updated_seq_num < p_seq_num) THEN
         UPDATE order_book SET price = p_price, volume = p_volume,
                               updated_s = p_s,
-                              updated_seq_num = p_seq_num;
+                              updated_seq_num = p_seq_num
+                          WHERE (order_id = p_order_id) AND
+                                (symbol_id = p_symbol_id);
     END IF;
 END //
 DELIMITER ;

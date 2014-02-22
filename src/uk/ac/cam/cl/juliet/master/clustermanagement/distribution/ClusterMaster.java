@@ -97,7 +97,7 @@ public interface ClusterMaster {
 	public abstract Client[] listClients();
 	
 	/**
-	 * @return Current system time
+	 * @return Current system time in seconds and EPOCH format
 	 */
 	public abstract long getTime();
 	

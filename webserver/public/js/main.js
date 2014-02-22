@@ -1,3 +1,5 @@
+var client = {};
+
 $(document).ready(function() {
 	$('#filter').fastLiveFilter('#symbols');
 	$('#filter-form').on('submit', function(e) {
@@ -8,6 +10,6 @@ $(document).ready(function() {
 		e.preventDefault();
 	});
 	$('#brand').click(function(e) {
-		window.location = "http://www.downloadmoreram.com";
+		window.location = "https://www.youtube.com/watch?v=Y4MnpzG5Sqc";
 	});
 });

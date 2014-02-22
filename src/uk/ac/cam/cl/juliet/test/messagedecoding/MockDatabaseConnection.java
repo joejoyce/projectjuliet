@@ -339,14 +339,20 @@ public class MockDatabaseConnection implements DatabaseConnection {
 	}
 
 	@Override
-	public String getSymbol(long symbolIndex) throws SQLException {
-		// TODO Auto-generated method stub
+	public ResultSet getSymbolAndPriceScale(long symbolIndex) throws SQLException {
+		// not needed
 		return null;
 	}
 
 	@Override
 	public long getLastCommitNS() {
 		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public long getSpreadOfSymbol(long symbolIndex) throws SQLException {
+		// not needed
 		return 0;
 	}
 }

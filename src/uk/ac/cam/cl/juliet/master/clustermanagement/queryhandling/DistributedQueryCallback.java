@@ -4,7 +4,7 @@ import uk.ac.cam.cl.juliet.common.Container;
 
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 
-public abstract class DistributedQueryCallback implements Callback {
+public abstract class DistributedQueryCallback extends Callback {
 	protected long total;
 	protected long received = 0;
 

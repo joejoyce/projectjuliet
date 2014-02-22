@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 //import org.dhcp4java.DHCPCoreServer;
 //import org.dhcp4java.DHCPServerInitException;
 //import org.dhcp4java.DHCPServlet;
+
 
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
@@ -203,24 +205,27 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	@Override
 	public long sendPacket(Container msg, Callback cb) throws NoClusterException {
-		Client c = clientQueue.poll();
-		while (c == null) {
-			/*System.out.println("Was null: " + clientQueue.size());*/
-			try {
-				c = clientQueue.poll(1, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-			}
+		synchronized(clientQueue) {
+			Client c = null;
+			while (c == null) {
+				try {
+					c = clientQueue.poll(1, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}	
+			long l = c.send(msg,cb);
+			clientQueue.put(c);
+			currentSystemTime = msg.getTimeStampS();
+			return l;
 		}
-
-		long l = c.send(msg,cb);
-		clientQueue.put(c);
-		currentSystemTime = msg.getTimeStampS();
-		return l;
 	}
 	
 	@Override
 	public void removeClient(Client ob) {
-		clientQueue.remove(ob);
+		synchronized(clientQueue) {
+			clientQueue.remove(ob);
+		}
 		allClients.remove(ob);
 	}
 	
@@ -243,7 +248,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	@Override
 	public void setSetting ( String key, String value) {
 		cp.setSetting(key,value);
-		//Push out to all clients
+		// Push out to all clients
 		broadcast(cp);
 	}
 	

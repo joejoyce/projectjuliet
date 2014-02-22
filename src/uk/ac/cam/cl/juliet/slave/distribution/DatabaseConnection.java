@@ -253,7 +253,7 @@ public interface DatabaseConnection {
 	 * @return
 	 * @throws SQLException
 	 */
-	public String getSymbol(long symbolIndex) throws SQLException;
+	public ResultSet getSymbolAndPriceScale(long symbolIndex) throws SQLException;
 	/**
 	 * Set the connection to the database
 	 * 
@@ -261,6 +261,16 @@ public interface DatabaseConnection {
 	 *            The new connection to use.
 	 */
 	public void setConnection(Connection connection);
+	/**
+	 * returns the difference between the lowest offer and the highest bid of 
+	 * the stock specified by the symbol index.
+	 * If either of them don't exists, it returns 0.
+	 * The price scale of the stock has NOT YET been applied to the result
+	 * @param symbolIndex
+	 * @return
+	 * @throws SQLException
+	 */
+	public long getSpreadOfSymbol(long symbolIndex) throws SQLException;
 	
 	/**
 	 * Return the time in nanoseconds that the last commit took.

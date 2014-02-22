@@ -23,6 +23,22 @@ exports.get = function(symbolIndex, callback) {
 };
 
 /**
+ * Gets statistics for a symbol
+ */
+exports.getStats = function(symbolIndex, callback) {
+  var symbolIndex = parseInt(symbolIndex);
+  var client = net.connect(1337, 'localhost');
+  client.setEncoding('utf8');
+  client.write('statistics|' +symbolIndex+ '\n');
+
+  client.on('data', function(data) {
+    var json = JSON.parse(data);
+    client.end();
+    callback(json[0]);
+  }); 
+};
+
+/**
  * List all symbols
  */
 
