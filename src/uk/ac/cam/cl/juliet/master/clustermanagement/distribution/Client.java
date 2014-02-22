@@ -50,7 +50,7 @@ public class Client {
 	private static ScheduledExecutorService workers = null;
 	
 	private ScheduledFuture<?> cleaner = null;
-	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(50);
+	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(200);
 	
 	private static AtomicInteger numberClients = new AtomicInteger(0);
 	private AtomicInteger workCount = new AtomicInteger(0);
@@ -105,21 +105,25 @@ public class Client {
 	 * jobs waiting on returns.
 	 */
 	public void closeClient() {
+		// Must be here, don't move plox
+		sendQueue = null;
+		
 		parent.removeClient(this);
 		//Close the streams
 		if(0 == numberClients.decrementAndGet()) {
-			workers.shutdownNow();
-			workers = null;
-		}
-				
+			// Commented this out for now - scott
+			//workers.shutdownNow();
+			//workers = null;
+		}						
 		cleaner.cancel(false); //Try to stop the regular operation flushing my queue, waiting until finished
 		try {
-			Debug.println(Debug.DEBUG,"---------------Close Client has been called----------------");
+			Debug.println(100 ,"---------------Close Client has been called----------------");
 			out.close();
 			in.close(); //Should also have the effect of closing the threads that read and write on them
 			s.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -155,10 +159,9 @@ public class Client {
 					try {
 						recieve = in.readObject();
 						Debug.println("Received an object from client...");
-
 					} catch (ClassNotFoundException e) {
 						e.printStackTrace();
-					} catch (IOException e) {
+					} catch (Exception e) {
 						Debug.println(Debug.SHOWSTOP,e.getMessage());
 						e.printStackTrace();
 						closeClient();
@@ -209,15 +212,14 @@ public class Client {
 							packetsSentThisSecond = 0;
 						}
 						Debug.println("Written packet ID: " + container.getPacketId());
-					} catch (IOException e) {
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
 						Debug.println(Debug.SHOWSTOP, e.getMessage());
 						e.printStackTrace();
 						closeClient();
-						return;
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+						return;		
 					}
-					
 				}
 			}
 		};
@@ -240,19 +242,19 @@ public class Client {
 		return totalPackets;
 	}
 	
-	private long send(Container c, Callback cb, long uid,boolean bcast) {
+	private long send(Container c, Callback cb, long uid, boolean bcast) {
 		c.setPacketId(uid);
 		InFlightContainer ifc = new InFlightContainer(c,cb);
 		ifc.setBroadcast(bcast);
 		try {
-			Debug.println("About to add to send queue: " + sendQueue.size());
+			Debug.println(100, "About to add to send queue: " + sendQueue.size());
 			if(c instanceof LatencyMonitor) {
 				LatencyMonitor m = (LatencyMonitor)c;
 				m.outboundQueue = System.nanoTime();
 			}
-			sendQueue.put(ifc);
-			Debug.println("Added to send queue: " + sendQueue.size());
-		} catch (InterruptedException e) {
+			while(!sendQueue.offer(ifc)) {}
+			Debug.println(100, "Added to send queue: " + sendQueue.size());
+		} catch(Exception e) {
 			e.printStackTrace();
 			return -1;
 		}

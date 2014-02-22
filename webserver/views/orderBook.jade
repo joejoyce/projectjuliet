@@ -25,7 +25,7 @@ block content
           td=(offer.price*symbol.price_scale).toFixed(2)
           td=offer.volume
           td=(offer.price*symbol.price_scale*offer.volume).toFixed(2)
-          td=moment(offer.placed_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
+          td=moment(offer.updated_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
 
   #bid-table
     h1 Bids
@@ -42,4 +42,4 @@ block content
           td=(bid.price*symbol.price_scale).toFixed(2)
           td=bid.volume
           td=(bid.price*symbol.price_scale*bid.volume).toFixed(2)
-          td=moment(bid.placed_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
+          td=moment(bid.updated_s * 1000).format('DD/MM/YYYY - HH:mm:ss')

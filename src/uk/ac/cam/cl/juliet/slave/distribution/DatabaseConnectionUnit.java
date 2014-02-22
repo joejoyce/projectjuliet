@@ -19,20 +19,24 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 	private int batchSize = 0;
 	private int delete = 0;
+	private int add = 0;
 
 	private long lastCommitNs = -1;
-	
+
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
 		this.addOrderBatch = connection.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		this.addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?)");
-		// this.deleteOrderBatch = connection.prepareStatement("UPDATE order_book SET is_deleted=1 WHERE (order_id = ?) AND (symbol_id = ?)");
-		//this.deleteOrderBatch = connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
+		// this.deleteOrderBatch =
+		// connection.prepareStatement("UPDATE order_book SET is_deleted=1 WHERE (order_id = ?) AND (symbol_id = ?)");
+		// this.deleteOrderBatch =
+		// connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.deleteOrderBatch = connection.prepareStatement("CALL deleteOrder(?, ?, ?, ?)");
-		//this.modifyOrderBatch = connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
+		// this.modifyOrderBatch =
+		// connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.modifyOrderBatch = connection.prepareStatement("CALL modifyOrder(?, ?, ?, ?, ?, ?)");
-		
-		 // Negative as not yet done
+
+		// Negative as not yet done
 
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
@@ -40,7 +44,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					Debug.println(Debug.INFO, "Total batch size: " + batchSize);
 					long start = System.nanoTime();
 
-					Debug.println(Debug.INFO, "About to execute addOrder batch");
+					Debug.println(Debug.INFO, "About to execute addOrder batch: " + add);
+					add = 0;
 					long then = start;
 					synchronized (addOrderBatch) {
 						addOrderBatch.executeBatch();
@@ -111,6 +116,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			addOrderBatch.addBatch();
 		}
 		batchSize++;
+		add++;
 	}
 
 	@Override
@@ -185,8 +191,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(3, price);
 		statement.setLong(4, volume);
 		statement.setLong(5, originalTradeID);
-		//statement.execute();
-		//statement.close();
+		// statement.execute();
+		// statement.close();
 	}
 
 	@Override
@@ -255,8 +261,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public String getSymbol(long symbolIndex) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement(
-				"SELECT symbol FROM symbol WHERE symbol_id = ?");
+		PreparedStatement statement = this.connection.prepareStatement("SELECT symbol FROM symbol WHERE symbol_id = ?");
 		ResultSet result;
 		try {
 			statement.setLong(1, symbolIndex);
@@ -267,7 +272,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		result.next();
 		return result.getString(1);
 	}
-	
+
 	public long getLastCommitNS() {
 		return lastCommitNs;
 	}
