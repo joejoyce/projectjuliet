@@ -35,7 +35,12 @@ exports.index = function(req, res) {
 				order.getOffers(req.params.symbol_index, function(offer_list) {
 					callback(null, offer_list);
 				});
-			}
+			},
+			statistics: function(callback) {
+				symbol.getStats(req.params.symbol_index, function(stats) {
+					callback(null, stats);
+				});
+			} 
 		},
 		function(error, results) {
 			if (!error) {
@@ -44,7 +49,8 @@ exports.index = function(req, res) {
 					symbol_list: results.symbol_list,
 					symbol: results.symbolD,
 					bid_list: results.bid_list,
-					offer_list: results.offer_list
+					offer_list: results.offer_list,
+					stats: results.statistics
 				});
 			} else {
 				res.writeHead(500, {

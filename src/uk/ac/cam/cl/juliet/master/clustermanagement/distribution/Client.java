@@ -247,13 +247,13 @@ public class Client {
 		InFlightContainer ifc = new InFlightContainer(c,cb);
 		ifc.setBroadcast(bcast);
 		try {
-			Debug.println(100, "About to add to send queue: " + sendQueue.size());
+			Debug.println("About to add to send queue: " + sendQueue.size());
 			if(c instanceof LatencyMonitor) {
 				LatencyMonitor m = (LatencyMonitor)c;
 				m.outboundQueue = System.nanoTime();
 			}
 			while(!sendQueue.offer(ifc)) {}
-			Debug.println(100, "Added to send queue: " + sendQueue.size());
+			Debug.println("Added to send queue: " + sendQueue.size());
 		} catch(Exception e) {
 			e.printStackTrace();
 			return -1;

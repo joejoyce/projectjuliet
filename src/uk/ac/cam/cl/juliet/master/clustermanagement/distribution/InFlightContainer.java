@@ -51,8 +51,9 @@ public class InFlightContainer {
 	 * @param data The container that was returned in response to the query
 	 */
 	public void executeCallback(Container data) {
-		if(null != callback ) 
+		if (null != callback )  {
 			callback.callback(data);
+		}
 	}
 	
 	/**

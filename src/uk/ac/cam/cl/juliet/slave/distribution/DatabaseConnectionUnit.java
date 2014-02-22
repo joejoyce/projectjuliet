@@ -256,51 +256,45 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	@Override
 	public void addImbalanceMessage(long symbolIndex, long time_s, long time_ns, long symbolSeqNumber, long referencePrice) throws SQLException {
 		// not needed (only for testing purposes)
-
 	}
 
 	@Override
 	public ResultSet getSymbolAndPriceScale(long symbolIndex) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement(
-				"SELECT symbol,price_scale FROM symbol WHERE symbol_id = ?");
+		PreparedStatement statement = this.connection.prepareStatement("SELECT symbol,price_scale FROM symbol WHERE symbol_id = ?");
 		ResultSet result;
-		try {
-			statement.setLong(1, symbolIndex);
-			result = statement.executeQuery();
-		} finally {
-			statement.close();
-		}
-		if(!result.isBeforeFirst()) return null;
-		else return result;
+		statement.setLong(1, symbolIndex);
+		result = statement.executeQuery();
+		if (!result.isBeforeFirst())
+			return null;
+		else
+			return result;
 	}
-	
+
 	@Override
 	public long getSpreadOfSymbol(long symbolIndex) throws SQLException {
-		//get the lowest offer and highest bid for a stock:
-		PreparedStatement statement = this.connection.prepareStatement(
-				"(SELECT TOP 1 FROM order_book WHERE symbol_id = ? "
-				+ "AND is_ask = 'true' ORDER BY ASC)"
-				+ "UNION (SELECT TOP 1 FROM order_book WHERE symbol_id = ? "
-				+ "AND is_ask = 'false' ORDER BY DESC)");
+		// get the lowest offer and highest bid for a stock:
+		PreparedStatement statement = this.connection.prepareStatement("(SELECT price FROM order_book WHERE symbol_id = ? " + "AND is_ask = 1 AND deleted=0 ORDER BY price LIMIT 1)" + " UNION (SELECT price FROM order_book WHERE symbol_id = ? " + "AND is_ask = 0 AND deleted=0 ORDER BY price DESC LIMIT 1)");
+		
 		ResultSet result;
-		try {
-			statement.setLong(1, symbolIndex);
-			statement.setLong(2, symbolIndex);
-			result = statement.executeQuery();
-		} finally {
-			statement.close();
-		}
+		statement.setLong(1, symbolIndex);
+		statement.setLong(2, symbolIndex);
+		result = statement.executeQuery();
+		
 		long lowestOffer = 0;
 		long highestBid = 0;
-		if(result.next()) {
+		if (result.next()) {
 			lowestOffer = result.getLong(1);
 		}
-		if(result.next()) {
+		if (result.next()) {
 			highestBid = result.getLong(1);
 		}
-		if(highestBid == 0 || lowestOffer == 0)
+		
+		result.close();
+		
+		if (highestBid == 0 || lowestOffer == 0)
 			return 0;
-		else return lowestOffer - highestBid;	
+		else
+			return lowestOffer - highestBid;
 	}
 
 	public long getLastCommitNS() {

@@ -10,7 +10,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
  * @author lucas
  *
  */
-public class TestCallback implements Callback {
+public class TestCallback extends Callback {
 	private Trackkeeper tracker;
 	/**
 	 * Create a new TestCallback and give it an instance of a Trackkeeper

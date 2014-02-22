@@ -34,9 +34,6 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 import uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling.SpikeDetectionRunnable.Spike;
 
-
-
-
 /**
  * @description WebServerQueryHandler Extracts a query from a WebServer
  *              connection socket and decides what to do. This may involve
@@ -75,10 +72,10 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				runClusterQuery(splitQuery[1], pw);
 				break;
 			case "statistics":
-				runStatisticsQuery(splitQuery[1],pw);
+				runStatisticsQuery(splitQuery[1], pw);
 				break;
 			case "spikes":
-				runSpikeDetectionQuery(splitQuery[1],pw);
+				runSpikeDetectionQuery(splitQuery[1], pw);
 				break;
 			default:
 				Debug.println(Debug.ERROR, "Unsupported query type");
@@ -97,10 +94,10 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		Debug.println(Debug.INFO, "Running a spike detection query");
 		SpikeDetectionRunnable spikeDetector = ClusterServer.spikeDetector;
 		ConcurrentLinkedQueue<Spike> listOfSpikes = spikeDetector.getSpikeBuffer();
-		
+
 		JsonBuilder jb = new JsonBuilder();
 		jb.stArr();
-		for(Spike s : listOfSpikes) {
+		for (Spike s : listOfSpikes) {
 			jb.stOb();
 			jb.pushPair("symbol", s.getSymbol());
 			jb.pushPair("timeOfSpike", s.getTime());
@@ -110,19 +107,19 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		String jsonResponse = jb.toString();
 		Debug.println(Debug.DEBUG, "spike query result" + jsonResponse);
 		pw.print(jsonResponse);
-		
+
 	}
 
 	private void runStatisticsQuery(String symbolID, final PrintWriter pw) {
 		Debug.println(Debug.INFO, "Running a stock statistics query");
+		
 		Callback statisticsCallback = new Callback() {
-			
 			@Override
 			public void callback(Container data) {
 				StockStatisticsResponse response = (StockStatisticsResponse) data;
 				JsonBuilder jb = new JsonBuilder();
 				jb.stArr();
-				
+
 				jb.stOb();
 				jb.pushPair("lastTrade", response.lastTradePrice);
 				jb.pushPair("totalVolume", response.totalTradeVolume);
@@ -131,21 +128,22 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				jb.pushPair("spread", response.spread);
 				jb.pushPair("change", response.change);
 				jb.finOb();
-				
+
 				jb.finArr();
 				String jsonResponse = jb.toString();
 				Debug.println(Debug.DEBUG, "Statistics query result" + jsonResponse);
 				pw.print(jsonResponse);
+				this.finished = true;
 			}
 		};
-		Long symbol_id = Long.parseLong(symbolID);
+		long symbol_id = Long.parseLong(symbolID);
 		ClusterMaster cm = ClusterServer.cm;
 		try {
 			cm.sendPacket(new StockStatisticsRequest(symbol_id), statisticsCallback);
 		} catch (NoClusterException e) {
-			Debug.println(Debug.ERROR, "Cluster query exception while trying to execute"
-					+ "a stock statistics query.");
+			Debug.println(Debug.ERROR, "Cluster query exception while trying to execute" + "a stock statistics query.");
 		}
+		statisticsCallback.waitUntilDone();
 	}
 
 	public void runQuery(QueryPacket p, int id) {
@@ -186,58 +184,57 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 	}
 
-
 	public void runConfigQuery(String query, PrintWriter pw) {
-		//If it depends on rate needs to map to the distributor
-		if(query.matches("\\s*set\\s+\\S+\\s*=\\s*\\S+\\s*")) {
+		// If it depends on rate needs to map to the distributor
+		if (query.matches("\\s*set\\s+\\S+\\s*=\\s*\\S+\\s*")) {
 			Pattern p = Pattern.compile("\\s*set\\s+(\\S+)\\s*=\\s*(\\S+)\\s*");
 			Matcher m = p.matcher(query);
-			if(m.find()) {
+			if (m.find()) {
 				String key = m.group(1);
 				String value = m.group(2);
-				if(key.equals("data.rate")) {
-					//Need to pass it onto the data handler
-					Debug.println(Debug.INFO,"Adjusting the data rate");
-					//TODO make it change the data rate
+				if (key.equals("data.rate")) {
+					// Need to pass it onto the data handler
+					Debug.println(Debug.INFO, "Adjusting the data rate");
+					// TODO make it change the data rate
 				} else {
 					ClusterServer.cm.setSetting(key, value);
-				}//Set a value
+				}// Set a value
 			} else {
-				Debug.println(Debug.ERROR,"Invalid form for settings set string");
+				Debug.println(Debug.ERROR, "Invalid form for settings set string");
 				pw.write("{}");
 			}
 
-		} else if ( query.matches("\\s*get\\s+(\\S+)\\s*")) {
+		} else if (query.matches("\\s*get\\s+(\\S+)\\s*")) {
 			Pattern p = Pattern.compile("\\s*set\\s+(\\S+)\\s*");
 			Matcher m = p.matcher(query);
-			if(m.find()) {
+			if (m.find()) {
 				String key = m.group(1);
 				JsonBuilder jb = new JsonBuilder();
-				if(key.equals("data.rate")) {
-					Debug.println(Debug.INFO,"Getting the data rate");
-					//TODO make it retrieve the data rate
+				if (key.equals("data.rate")) {
+					Debug.println(Debug.INFO, "Getting the data rate");
+					// TODO make it retrieve the data rate
 				} else {
 					String vl = ClusterServer.cm.getSetting(key);
-					vl = (null == vl)?"":vl;
-					jb.mkPair(key,vl);
+					vl = (null == vl) ? "" : vl;
+					jb.mkPair(key, vl);
 					pw.write(jb.toString());
 				}
 			} else {
-				Debug.println(Debug.ERROR,"Invalid form for settings get string");
+				Debug.println(Debug.ERROR, "Invalid form for settings get string");
 				pw.write("{}");
 			}
-			
-		} else if ( query.trim().equals("list")) {
-			//List settings
-			//TODO get current rate
+
+		} else if (query.trim().equals("list")) {
+			// List settings
+			// TODO get current rate
 			JsonBuilder jb = new JsonBuilder();
-			//(sb, "data.rate", ClusterServer.dp.getRate());
+			// (sb, "data.rate", ClusterServer.dp.getRate());
 			jb.pushMap(ClusterServer.cm.getConfiguration().getSettings());
 			pw.write(jb.toString());
 		} else {
-			Debug.println(Debug.ERROR,"Invalid config string passed");
+			Debug.println(Debug.ERROR, "Invalid config string passed");
 		}
-		
+
 	}
 
 	public void runClusterQuery(String query, PrintWriter pw) {
@@ -296,7 +293,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				writer.write("\"high\":\"" + response.getHighValue() + "\", ");
 				writer.write("\"low\":\"" + response.getLowValue() + "\", ");
 				writer.write("\"volume\":\"" + response.getVolumeValue() + "\",");
-				writer.write("\"time\":\"" + response.getTimeStampS() + "\"");				
+				writer.write("\"time\":\"" + response.getTimeStampS() + "\"");
 				writer.write("}");
 				if (received != total)
 					writer.write(",");
@@ -394,7 +391,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			pw.print("SQL Query Exception");
 		}
 	}
-	
+
 	private String toJSON(ResultSet r) throws SQLException {
 		JsonBuilder jb = new JsonBuilder();
 		ResultSetMetaData rsmd = r.getMetaData();
@@ -404,11 +401,11 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		for (int i = 1; i <= columnCount; i++) {
 			columnNames[i - 1] = rsmd.getColumnName(i);
 		}
-		
+
 		jb.stArr();
-		while(r.next()) {
+		while (r.next()) {
 			jb.stOb();
-			for(int i = 0; i < columnNames.length; i++)
+			for (int i = 0; i < columnNames.length; i++)
 				jb.pushPair(columnNames[i], r.getString(i + 1));
 			jb.finOb();
 		}
@@ -424,34 +421,28 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 *            The ResultSet to convert
 	 * @return The JSON String
 	 */
-	/*private String toJSON(ResultSet r) throws SQLException {
-		ResultSetMetaData rsmd = r.getMetaData();
-		int columnCount = rsmd.getColumnCount();
-		String[] columnNames = new String[columnCount];
-
-		for (int i = 1; i <= columnCount; i++) {
-			columnNames[i - 1] = rsmd.getColumnName(i);
-		}
-
-		ArrayList<ArrayList<String>> results = new ArrayList<ArrayList<String>>();
-
-		while (r.next()) {
-			ArrayList<String> a = new ArrayList<String>();
-			for (int i = 1; i <= columnCount; i++) {
-				a.add(r.getString(i));
-			}
-			results.add(a);
-		}
-
-		String result = "";
-
-		for (int i = 0; i < results.size(); i++) {
-			String rowJSON = singleRowToJSON(results.get(i), columnNames);
-			result += rowJSON + ",";
-		}
-
-		return "[" + result.substring(0, result.length() - 1) + "]";
-	}*/
+	/*
+	 * private String toJSON(ResultSet r) throws SQLException {
+	 * ResultSetMetaData rsmd = r.getMetaData(); int columnCount =
+	 * rsmd.getColumnCount(); String[] columnNames = new String[columnCount];
+	 * 
+	 * for (int i = 1; i <= columnCount; i++) { columnNames[i - 1] =
+	 * rsmd.getColumnName(i); }
+	 * 
+	 * ArrayList<ArrayList<String>> results = new
+	 * ArrayList<ArrayList<String>>();
+	 * 
+	 * while (r.next()) { ArrayList<String> a = new ArrayList<String>(); for
+	 * (int i = 1; i <= columnCount; i++) { a.add(r.getString(i)); }
+	 * results.add(a); }
+	 * 
+	 * String result = "";
+	 * 
+	 * for (int i = 0; i < results.size(); i++) { String rowJSON =
+	 * singleRowToJSON(results.get(i), columnNames); result += rowJSON + ","; }
+	 * 
+	 * return "[" + result.substring(0, result.length() - 1) + "]"; }
+	 */
 
 	/**
 	 * Converts a single result row to JSON string Example: row=["scott", 20,
@@ -464,12 +455,12 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 *            Table column names
 	 * @return A JSON string for the row
 	 */
-	/*private String singleRowToJSON(ArrayList<String> row, String[] columnNames) {
-		String result = "";
-		for (int i = 0; i < row.size(); i++) {
-			result += "\"" + columnNames[i] + "\": " + "\"" + row.get(i) + "\"" + ",";
-		}
-
-		return "{" + result.substring(0, result.length() - 1) + "}";
-	}*/
+	/*
+	 * private String singleRowToJSON(ArrayList<String> row, String[]
+	 * columnNames) { String result = ""; for (int i = 0; i < row.size(); i++) {
+	 * result += "\"" + columnNames[i] + "\": " + "\"" + row.get(i) + "\"" +
+	 * ","; }
+	 * 
+	 * return "{" + result.substring(0, result.length() - 1) + "}"; }
+	 */
 }
