@@ -15,6 +15,11 @@ public class JsonBuilder {
 		sb.append("[");
 		comRq = false;
 	}
+	public void stArr(String name) {
+		pushSingle(name);
+		sb.append(": [");
+		comRq = false;
+	}
 	public void finArr() {
 		sb.append("]");
 		comRq = true;
@@ -23,6 +28,11 @@ public class JsonBuilder {
 	public void stOb() {
 		if(comRq)sb.append(",");
 		sb.append("{");
+		comRq = false;
+	}
+	public void stOb(String name) {
+		pushSingle(name);
+		sb.append(": {");
 		comRq = false;
 	}
 	public void finOb() {
