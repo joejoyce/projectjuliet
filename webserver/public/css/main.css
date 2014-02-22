@@ -343,7 +343,7 @@ p {
 }
 
 #status-header {
-  display: inline-block;
+ // display: inline-block;
 }
 
 #status-header h1 {

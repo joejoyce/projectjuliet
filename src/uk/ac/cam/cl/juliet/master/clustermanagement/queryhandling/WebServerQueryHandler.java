@@ -158,7 +158,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	}
 
 	public void runStatusQuery(String query, PrintWriter pw) {
-		Debug.println(Debug.INFO, "Running a status query");		
+		Debug.println("Running a status query");		
 		ClusterMaster cm = ClusterServer.cm;
 		
 		if(query.equals("time")) {

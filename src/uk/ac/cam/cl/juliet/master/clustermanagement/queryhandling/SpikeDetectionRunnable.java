@@ -132,6 +132,7 @@ public class SpikeDetectionRunnable implements Runnable {
 
 		@Override
 		public void callback(Container data) {
+			if(!(data instanceof SpikeDetectionResponse)) return;
 			SpikeDetectionResponse response = (SpikeDetectionResponse) data;
 			// iterate through all the recorded spikes
 			long[] times = response.getSpikyTimes();

@@ -142,6 +142,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 			}
 
 		} catch (SQLException e) {
+			e.printStackTrace();
 			return new QueryResponse(p.getPacketId(), false); // query failed
 		}
 

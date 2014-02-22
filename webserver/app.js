@@ -56,6 +56,8 @@ app.get('/api/v1/orders/bids/:symbol_index', orderController.bids);
 app.get('/api/v1/orders/offers/:symbol_index', orderController.offers);
 app.get('/api/v1/status/clients', statusController.clients);
 app.get('/api/v1/status/time', statusController.time);
+app.get('/api/v1/status/throughput', statusController.throughput);
+
 
 app.listen(app.get('port'), function() {
   console.log("Express server listening on port %d in %s mode", app.get('port'), app.settings.env);

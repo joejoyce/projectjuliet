@@ -3,6 +3,7 @@ extends layout
 block head
   script(src='/js/lib/segment-display.js')
   script(src='/js/time.js')
+  script(src='/js/status.js')
 
 block content
   div#status-header
@@ -11,3 +12,4 @@ block content
   
   +client_list(client_list)
   +system_status(throughput, loadAv, total_orders, total_trades, total_symbols)
+  div#throughput-chart

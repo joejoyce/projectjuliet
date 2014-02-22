@@ -51,3 +51,16 @@ exports.time = function(req, res) {
     });
   }); 
 };
+
+
+/**
+ * GET /api/v1/status/throughput
+ * Get the current simulation system time
+ */
+exports.throughput = function(req, res) {
+  status.getStatus(function(status) {
+    res.send({
+      data: status.throughput
+    });
+  });
+};
