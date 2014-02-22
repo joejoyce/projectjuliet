@@ -1,5 +1,7 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.SpikeDetectionRequest;
@@ -24,6 +26,8 @@ public class SpikeDetectionRunnable implements Runnable{
 	 * we know for sure that no spike had occurred before the checkpoint time:
 	 */
 	private long checkpointTime;
+	
+	private ConcurrentLinkedQueue<Spike> spikeBuffer;
 	/**
 	 * Creates a SpikeDetecionRunnable that shall be run as a separate thread.
 	 * It will, when started, repeatedly send a SpikeDetectionRequest via the 
@@ -34,20 +38,23 @@ public class SpikeDetectionRunnable implements Runnable{
 	 * In between requests it will wait some minimum time, and it will never send
 	 * a request before the previous one has returned.
 	 * @param cm	clusterMaster to connect to a cluster
-	 * @param sleepingTime	minimum time in milliseconds it will wait between requests 
+	 * @param sleepingTime	minimum time in seconds it will wait between requests 
 	 * @param secondsToLookInPast	time in seconds to look into the past for taking the average
 	 * 						(for example 1800 will consider the last half an hour)
 	 * @param limit		The limit by which a stock has to differ from the average
-	 * 					to be considered a spke
+	 * 					to be considered a spike
+	 * @precondition for a continuous spike detection the sleeping time may never be
+	 * 				 longer than the time to look into the past to get the average
 	 */
 	public SpikeDetectionRunnable(ClusterMaster cm, int sleepingTime,
-			int secondsToLookInPast, int limit) {
+			int secondsToLookInPast, float limit) {
 		this.sleepingTime = sleepingTime;
 		this.clusterMaster = cm;
 		this.secondsToLookInPast = secondsToLookInPast;
 		this.limit = limit;
 		this.isRunning = false;
 		this.checkpointTime = 0;
+		this.spikeBuffer = new ConcurrentLinkedQueue<Spike>();
 	}
 	
 	@Override
@@ -67,7 +74,11 @@ public class SpikeDetectionRunnable implements Runnable{
 			//send out a request to check for spikes to a Pi
 			long currentTime = clusterMaster.getTime();
 			long startingTime = currentTime -secondsToLookInPast;
-			if(checkpointTime < startingTime) checkpointTime = startingTime;
+			// For the first request, the checkpointTime is 0 and smaller than 
+			// the starting time, so make it the starting time.
+			// Given the precondition holds, this check will never again be true.
+			if(checkpointTime < startingTime) 
+				checkpointTime = startingTime;
 			SpikeDetectionRequest query = new SpikeDetectionRequest(
 					startingTime, checkpointTime, limit);
 			try {
@@ -82,7 +93,7 @@ public class SpikeDetectionRunnable implements Runnable{
 			
 			// sleep before you you start the next query
 			try {
-				Thread.sleep(this.sleepingTime);
+				Thread.sleep(this.sleepingTime * 1000);
 			} catch (InterruptedException e) {
 				Debug.println(Debug.ERROR, "SpikeDetectionRunnable: "
 						+ "InterruptedException while trying to sleep.");
@@ -103,7 +114,7 @@ public class SpikeDetectionRunnable implements Runnable{
 	 */
 	public void setRunning(boolean running) {
 		if(!this.isRunning && running)
-			this.run();
+			new Thread(this).start();
 		this.isRunning = running;
 		}
 	
@@ -116,7 +127,7 @@ public class SpikeDetectionRunnable implements Runnable{
 			long[] times = response.getSpikyTimes();
 			String[] symbol = response.getSpikySymbols();
 			for(int i = 0; i< response.getNumberOfSpikes(); i++) {
-				//TODO bring it into a form so that the web-server can use it
+				spikeBuffer.add(new Spike(symbol[i], times[i]));
 				
 				// symbol of a spike: symbol[i]
 				// time of this same spike: times[i]
@@ -132,4 +143,45 @@ public class SpikeDetectionRunnable implements Runnable{
 			requestOnItsWay = false;	
 		}
 	}
+	
+	/**
+	 * Returns the waiting time of the spike detection between two requests,
+	 * in seconds.
+	 * @return
+	 */
+	public int getSleepingTime() {return this.sleepingTime;}
+	/**
+	 * sets the waiting time between to spike detection requests.
+	 * If the new value is greater than 90% of the time to look in the past
+	 * for calculating the averages, then the new sleeping time is set to 
+	 * this value.
+	 * @param newSleepingTime
+	 */
+	public void setSleepingTime(int newSleepingTime) {
+		if(newSleepingTime >= this.secondsToLookInPast*0.9) {
+			newSleepingTime = (int) (this.secondsToLookInPast*0.9);
+		}
+		this.sleepingTime = newSleepingTime;
+	}
+	
+	/**
+	 * Returns a queue of buffered spikes.
+	 * @return
+	 */
+	public ConcurrentLinkedQueue<Spike> getSpikeBuffer() {return this.spikeBuffer;}
+	
+	class Spike {
+		private String symbol;
+		private long time_s;
+		
+		public Spike(String symbol, long time_s) {
+			this.symbol = symbol;
+			this.time_s = time_s;
+		}
+		
+		public String getSymbol() {return this.symbol;}
+		
+		public long getTime() {return this.time_s;}
+		
+	};
 }

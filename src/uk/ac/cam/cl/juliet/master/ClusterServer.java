@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 import uk.ac.cam.cl.juliet.master.dataprocessor.DataProcessor;
 import uk.ac.cam.cl.juliet.master.dataprocessor.SampleXDPDataStream;
+import uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling.SpikeDetectionRunnable;
 import uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling.WebServerListener;
 
 import java.sql.DriverManager;
@@ -25,6 +26,7 @@ public class ClusterServer {
 
 	public static ClusterMaster cm;
 	public static DataProcessor dp;
+	public static SpikeDetectionRunnable spikeDetector;
 	
 	@SuppressWarnings("unused")
 	public static void main(String args[]) throws IOException, SQLException {
@@ -52,6 +54,8 @@ public class ClusterServer {
         cm.start(5000);
         final DataProcessor dp = new DataProcessor(ds, cm);
         ClusterServer.dp = dp;
+        //create a new spike detection thread with default values
+        spikeDetector = new SpikeDetectionRunnable(cm, 10, 1800, 0.05f);
         Scanner s = new Scanner(System.in);
         System.out.println("GO?");
 		s.nextLine();
@@ -61,6 +65,7 @@ public class ClusterServer {
 			}
 		};
 		t.start();
+		spikeDetector.setRunning(true);
 
 		String input = "";
 		while(!input.equals("quit")) {

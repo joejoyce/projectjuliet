@@ -13,6 +13,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +32,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
+import uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling.SpikeDetectionRunnable.Spike;
 
 
 
@@ -74,6 +77,9 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			case "statistics":
 				runStatisticsQuery(splitQuery[1],pw);
 				break;
+			case "spikes":
+				runSpikeDetectionQuery(splitQuery[1],pw);
+				break;
 			default:
 				Debug.println(Debug.ERROR, "Unsupported query type");
 			}
@@ -85,6 +91,26 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			Debug.println(Debug.ERROR, "Error reading query from webserver");
 			e.printStackTrace();
 		}
+	}
+
+	private void runSpikeDetectionQuery(String string, PrintWriter pw) {
+		Debug.println(Debug.INFO, "Running a spike detection query");
+		SpikeDetectionRunnable spikeDetector = ClusterServer.spikeDetector;
+		ConcurrentLinkedQueue<Spike> listOfSpikes = spikeDetector.getSpikeBuffer();
+		
+		JsonBuilder jb = new JsonBuilder();
+		jb.stArr();
+		for(Spike s : listOfSpikes) {
+			jb.stOb();
+			jb.pushPair("symbol", s.getSymbol());
+			jb.pushPair("timeOfSpike", s.getTime());
+			jb.finOb();
+		}
+		jb.finArr();
+		String jsonResponse = jb.toString();
+		Debug.println(Debug.DEBUG, "spike query result" + jsonResponse);
+		pw.print(jsonResponse);
+		
 	}
 
 	private void runStatisticsQuery(String symbolID, final PrintWriter pw) {
