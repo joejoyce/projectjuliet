@@ -158,50 +158,50 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	}
 
 	public void runStatusQuery(String query, PrintWriter pw) {
-		// Returns a json array of objects of name, totalPackets and
-		// currentPackets
-		if (query.equals("listclients")) {
-			Debug.println(Debug.INFO, "Running a status query");
-			ClusterMaster cm = ClusterServer.cm;
-			Client carr[] = cm.listClients();
-			JsonBuilder jb = new JsonBuilder();
-			jb.stArr();
-			for (int i = 0; i < carr.length; i++) {
-				jb.stOb();
-				jb.pushPair("name", carr[i].getClientIP().toString());
-				jb.pushPair("totalPackets", carr[i].getTotalWork());
-				jb.pushPair("currentPackets", carr[i].getCurrentWork());
-				jb.finOb();
-			}
-			jb.finArr();
-			String rtn = jb.toString();
-			Debug.println(Debug.DEBUG, "Status query result" + rtn);
-			pw.print(rtn);
-		}
-
-		else if (query.equals("time")) {
-			ClusterMaster cm = ClusterServer.cm;
+		Debug.println(Debug.INFO, "Running a status query");		
+		ClusterMaster cm = ClusterServer.cm;
+		
+		if(query.equals("time")) {
 			long t = cm.getTime();
-			pw.write(t + "");
+			pw.write(t+"");
+			return;
 		}
+		
+		JsonBuilder j = new JsonBuilder();
+		
+		j.stOb();
+		Client carr[] = cm.listClients();
+		JsonBuilder jb = new JsonBuilder();
+		jb.stArr();
+		for (int i = 0; i < carr.length; i++) {
+			jb.stOb();
+			jb.pushPair("name", carr[i].getClientIP().toString());
+			jb.pushPair("totalPackets", carr[i].getTotalWork());
+			jb.pushPair("currentPackets", carr[i].getCurrentWork());
+			jb.finOb();
+		}
+		jb.finArr();
+		
+		j.pushPairNoQuotes("clients", jb.toString());
+		
+		long t = cm.getTime();
+		j.pushPair("time", t);
 
-		else if (query.equals("throughput")) {
-			ClusterMaster cm = ClusterServer.cm;
-			int total = cm.getPacketThroughput();
-			pw.write(total + "");
-		}
+		int total = cm.getPacketThroughput();
+		j.pushPair("throughput", total);
+	
+		//I think this might only work on linux?
+		double la = os.getSystemLoadAverage();
+		if(la >= 0)
+			j.pushPair("loadAv", la);
+		else
+			j.pushPair("loadAv", "Not supported");
+	
+		j.finOb();
 		
-		else if(query.trim().equals("ram-cpu")) {
-			//I think this might only work on linux?
-			double la = os.getSystemLoadAverage();
-			JsonBuilder jb = new JsonBuilder();
-			if(la >= 0)
-				jb.mkPair("loadAv", la);
-			else
-				jb.mkPair("loadAv", "Not supported");
-			pw.write(jb.toString());
-		}
+		String ret = j.toString();
 		
+		pw.write(ret);
 	}
 
 	public void runConfigQuery(String query, PrintWriter pw) {

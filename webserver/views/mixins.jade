@@ -55,3 +55,8 @@ mixin client_list(list)
           td=client.name
           td=client.totalPackets
           td=client.currentPackets
+
+mixin system_status(throughput, loadAv)
+  div#system-status
+    h2 Throughput (pac/sec): #{throughput}
+    h2 Load Average: #{loadAv}

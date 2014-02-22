@@ -341,3 +341,15 @@ p {
 .pos {
   color: #00FF00;
 }
+
+#status-header {
+  display: inline-block;
+}
+
+#status-header h1 {
+  float: left;
+}
+
+#status-header#display {
+  float: right;
+}

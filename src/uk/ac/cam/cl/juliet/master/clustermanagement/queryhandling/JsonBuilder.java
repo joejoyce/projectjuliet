@@ -48,6 +48,14 @@ public class JsonBuilder {
 		sb.append("\"");
 		comRq = true;
 	}
+	public void pushPairNoQuotes(Object key, Object vl) {
+		if(comRq) sb.append(",");
+		sb.append("\"");
+		sb.append(key);
+		sb.append("\" : ");
+		sb.append(vl);
+		comRq = true;
+	}
 	
 	public void pushSingle(Object vl) {
 		if(comRq) sb.append(",");

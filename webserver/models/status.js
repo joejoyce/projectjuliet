@@ -7,27 +7,24 @@ var net = require('net');
 /**
  * List all clients in the cluster
  */
-exports.listClients = function() {
-  /*
+exports.getStatus = function(callback) {  
   var client = net.connect(1337, 'localhost');
   client.setEncoding('utf8');
-  client.write('status|listclients\n');
+  client.write('status|GabeN\n');
+  console.log("written");
 
-  var clientList = '';
+  var status = '';
   client.on('data', function(data) {
-    clientList = JSON.parse(data);
-    client.end();
-  
+    console.log("got data: " + data);
+    status += data;
   });
-  return clientList;
-  */
-  return [
-    { name: '127.0.0.1', totalPackets: 100, currentPackets: 10 },
-    { name: '127.0.0.2', totalPackets: 101, currentPackets: 11 },
-    { name: '127.0.0.3', totalPackets: 102, currentPackets: 12 },
-    { name: '127.0.0.4', totalPackets: 103, currentPackets: 13 }
-  ];
-}
+
+  client.on('end', function() {
+    status = JSON.parse(status);
+    client.end();
+    callback(status);
+  });
+};
 
 /**
  * Get the current simulation system time
@@ -41,4 +38,4 @@ exports.getTime = function(callback) {
     client.end();
     callback(data);
   });
-}
+};

@@ -5,9 +5,9 @@ block head
   script(src='/js/time.js')
 
 block content
-  h1 System Status
-  
-  center
+  div#status-header
+    h1 System Status    
     canvas#display(width='200', height='60')
   
   +client_list(client_list)
+  +system_status(throughput, loadAv)
