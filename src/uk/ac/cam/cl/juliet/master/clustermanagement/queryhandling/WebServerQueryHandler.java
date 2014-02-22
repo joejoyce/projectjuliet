@@ -5,6 +5,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.net.Socket;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -43,6 +45,9 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterExcept
 public class WebServerQueryHandler implements QueryHandler, Runnable {
 	private Socket server;
 	private Connection con;
+	
+	private NotificationsList notifications = new NotificationsList();
+	private OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
 
 	public WebServerQueryHandler(Socket server, Connection con) {
 		this.server = server;
@@ -72,6 +77,9 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				break;
 			case "statistics":
 				runStatisticsQuery(splitQuery[1],pw);
+				break;
+			case "notifications":
+				runNotificationsQuery(splitQuery[1],pw);
 				break;
 			default:
 				Debug.println(Debug.ERROR, "Unsupported query type");
@@ -133,17 +141,29 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			pw.print(rtn);
 		}
 
-		if (query.equals("time")) {
+		else if (query.equals("time")) {
 			ClusterMaster cm = ClusterServer.cm;
 			long t = cm.getTime();
 			pw.write(t + "");
 		}
 
-		if (query.equals("throughput")) {
+		else if (query.equals("throughput")) {
 			ClusterMaster cm = ClusterServer.cm;
 			int total = cm.getPacketThroughput();
 			pw.write(total + "");
 		}
+		
+		else if(query.trim().equals("ram-cpu")) {
+			//I think this might only work on linux?
+			double la = os.getSystemLoadAverage();
+			JsonBuilder jb = new JsonBuilder();
+			if(la >= 0)
+				jb.mkPair("loadAv", la);
+			else
+				jb.mkPair("loadAv", "Not supported");
+			pw.write(jb.toString());
+		}
+		
 	}
 
 
@@ -352,6 +372,18 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			Debug.println(Debug.ERROR, "SQL query exception");
 			e.printStackTrace();
 			pw.print("SQL Query Exception");
+		}
+	}
+	
+	
+	private void runNotificationsQuery(String query, PrintWriter pw) {
+		query = query.trim();
+		if(query.equals("")) {
+			//Need to get all notifications in the queue.
+			pw.write(notifications.getNotificationsJson());
+		} else {
+			long lastCheck = Long.parseLong(query);
+			pw.write(notifications.getNotificationsJson(lastCheck));
 		}
 	}
 	
