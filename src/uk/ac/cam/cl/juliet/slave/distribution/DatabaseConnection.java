@@ -261,7 +261,15 @@ public interface DatabaseConnection {
 	 *            The new connection to use.
 	 */
 	public void setConnection(Connection connection);
-	
+	/**
+	 * returns the difference between the lowest offer and the highest bid of 
+	 * the stock specified by the symbol index.
+	 * If either of them don't exists, it returns 0.
+	 * The price scale of the stock has NOT YET been applied to the result
+	 * @param symbolIndex
+	 * @return
+	 * @throws SQLException
+	 */
 	public long getSpreadOfSymbol(long symbolIndex) throws SQLException;
 	
 	/**

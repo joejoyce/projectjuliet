@@ -24,6 +24,7 @@ import uk.ac.cam.cl.juliet.common.MovingAverageRequest;
 import uk.ac.cam.cl.juliet.common.MovingAverageResponse;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.StockStatisticsRequest;
+import uk.ac.cam.cl.juliet.common.StockStatisticsResponse;
 import uk.ac.cam.cl.juliet.master.ClusterServer;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
@@ -86,14 +87,29 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 	}
 
-	private void runStatisticsQuery(String symbolID, PrintWriter pw) {
+	private void runStatisticsQuery(String symbolID, final PrintWriter pw) {
 		Debug.println(Debug.INFO, "Running a stock statistics query");
 		Callback statisticsCallback = new Callback() {
 			
 			@Override
 			public void callback(Container data) {
-				// TODO Auto-generated method stub
+				StockStatisticsResponse response = (StockStatisticsResponse) data;
+				JsonBuilder jb = new JsonBuilder();
+				jb.stArr();
 				
+				jb.stOb();
+				jb.pushPair("lastTrade", response.lastTradePrice);
+				jb.pushPair("totalVolume", response.totalTradeVolume);
+				jb.pushPair("highestTrade", response.highestTradePrice);
+				jb.pushPair("lowestTrade", response.lowestTradePrice);
+				jb.pushPair("spread", response.spread);
+				jb.pushPair("change", response.change);
+				jb.finOb();
+				
+				jb.finArr();
+				String jsonResponse = jb.toString();
+				Debug.println(Debug.DEBUG, "Statistics query result" + jsonResponse);
+				pw.print(jsonResponse);
 			}
 		};
 		Long symbol_id = Long.parseLong(symbolID);
@@ -104,8 +120,6 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			Debug.println(Debug.ERROR, "Cluster query exception while trying to execute"
 					+ "a stock statistics query.");
 		}
-		// TODO method not yet finished
-		
 	}
 
 	public void runQuery(QueryPacket p, int id) {

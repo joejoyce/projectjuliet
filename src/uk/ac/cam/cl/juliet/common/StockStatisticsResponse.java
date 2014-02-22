@@ -1,12 +1,14 @@
 package uk.ac.cam.cl.juliet.common;
 
 public class StockStatisticsResponse extends QueryResponse {
-	float lastTradePrice;
-	long totalTradeVolume;
-	float highestTradePrice;
-	float lowestTradePrice;
-	float change;
-	float spread;
+
+	private static final long serialVersionUID = 1L;
+	public float lastTradePrice;
+	public long totalTradeVolume;
+	public float highestTradePrice;
+	public float lowestTradePrice;
+	public float change;
+	public float spread;
 
 	public StockStatisticsResponse(long id, boolean result, float pLastTradePrice,
 			long pTotalTradeVolume, float pHighestTradePrice, float pLowestTradePrice,
