@@ -67,6 +67,9 @@ public class QueryProcessorUnit implements QueryProcessor {
 			priceScale = getPriceScale(p.getSymbolID());
 			// 2. get all Trade related things
 			ResultSet results = connection.getTradesInTimeRangeForSymbol(p.getSymbolID(), 0, Long.MAX_VALUE);
+			if(!results.isBeforeFirst()) {
+				return new StockStatisticsResponse(p.getPacketId(), true, 0, 0, 0, 0, 0, 0);
+			}				
 
 			while (results.next()) {
 				Trade trade = new Trade(results.getLong("offered_s"), results.getLong("offered_seq_num"), results.getLong("price"), results.getLong("volume"));
@@ -220,6 +223,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 			return new MovingAverageResponse(p.getPacketId(), timesArray, averagesArray);
 
 		} catch (SQLException e) {
+			e.printStackTrace();
 			return new QueryResponse(p.getPacketId(), false); // Fail query
 		}
 	}

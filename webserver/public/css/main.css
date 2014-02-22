@@ -42,6 +42,7 @@ body {
 
 .symbol-panel .name {
   float: left;
+  text-align: center;
 }
 
 .symbol-panel .details {
@@ -52,14 +53,17 @@ body {
 .symbol-panel h1 {
   font-size: 50px;
   font-weight: bold;
+  margin-top: 5px;
 }
 
 .symbol-panel h2 {
   font-size: 18px;
+  margin-top: -10px;
 }
 
 .details-data {
   font-size: 16px;
+  margin-top: 10px;
 }
 
 .details-data td {
