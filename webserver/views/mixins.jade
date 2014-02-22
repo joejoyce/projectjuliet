@@ -56,7 +56,10 @@ mixin client_list(list)
           td=client.totalPackets
           td=client.currentPackets
 
-mixin system_status(throughput, loadAv)
+mixin system_status(throughput, loadAv, total_orders, total_trades, total_symbols)
   div#system-status
     h2 Throughput (pac/sec): #{throughput}
     h2 Load Average: #{loadAv}
+    h2 Total Orders: #{total_orders}
+    h2 Total Trades: #{total_trades}
+    h2 Total Symbols: #{total_symbols}

@@ -13,13 +13,15 @@ var symbol = models.Symbol;
 exports.index = function(req, res) {
   symbol.list(function(list) {
     status.getStatus(function(status) {
-      console.dir(status);
       res.render('status', {
         title: 'System Status',
         symbol_list: list,
         client_list: status.clients,
         throughput: status.throughput,
-        loadAv: status.loadAv
+        loadAv: status.loadAv,
+        total_orders: status.total_orders,
+        total_trades: status.total_trades,
+        total_symbols: status.total_symbols
       });  
     });    
   });

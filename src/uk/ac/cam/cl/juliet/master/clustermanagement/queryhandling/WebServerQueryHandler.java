@@ -197,7 +197,30 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		else
 			j.pushPair("loadAv", "Not supported");
 	
-		j.finOb();
+		
+		try {
+			Statement s = con.createStatement();
+			ResultSet resOrders = s.executeQuery("SELECT count(*) from order_book");
+			resOrders.next();
+			String orders = resOrders.getString(1);
+			j.pushPair("total_orders", orders);
+			
+			s = con.createStatement();
+			ResultSet resTrades = s.executeQuery("SELECT count(*) from trade");
+			resTrades.next();
+			String trades = resTrades.getString(1);
+			j.pushPair("total_trades", trades);
+			
+			s = con.createStatement();
+			ResultSet resSymbols = s.executeQuery("SELECT count(*) from symbol");		
+			resSymbols.next();
+			String symbols = resSymbols.getString(1);
+			j.pushPair("total_symbols", symbols);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		j.finOb();	
 		
 		String ret = j.toString();
 		

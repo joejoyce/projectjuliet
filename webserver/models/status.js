@@ -11,11 +11,9 @@ exports.getStatus = function(callback) {
   var client = net.connect(1337, 'localhost');
   client.setEncoding('utf8');
   client.write('status|GabeN\n');
-  console.log("written");
-
+  
   var status = '';
   client.on('data', function(data) {
-    console.log("got data: " + data);
     status += data;
   });
 
