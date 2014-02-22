@@ -48,18 +48,28 @@ public class QueryProcessorUnit implements QueryProcessor {
 		}
 	}
 
+	private int getPriceScale(long symbolIndex) throws SQLException {
+		ResultSet result = connection.getSymbolAndPriceScale(symbolIndex);
+		result.next();
+		return (int) result.getLong(2);
+	}
+	
 	private QueryResponse handleStatisticsRequest(StockStatisticsRequest p) {
-		// TODO Auto-generated method stub
-		StockStatisticsResponse response = null;
+		Trade lastTrade = null;
+		Trade secondLastTrade = null;
+		long totalTradeVolume = 0;
+		long highestPrice = 0;
+		long lowestPrice = Long.MAX_VALUE;
+		long change;
+		long spread;
+		int priceScale;
 		try {
-			//1. get all Trade related things
+			//1. get price scale of stock
+			priceScale = getPriceScale(p.getSymbolID());
+			//2. get all Trade related things
 			ResultSet results = connection.getTradesInTimeRangeForSymbol(
 					p.getSymbolID(), 0, Long.MAX_VALUE);
-			Trade lastTrade = null;
-			Trade secondLastTrade = null;
-			long totalTradeVolume = 0;
-			long highestPrice = 0;
-			long lowestPrice = Long.MAX_VALUE;
+			
 			
 			while (results.next()) {
 				Trade trade = new Trade(results.getLong("offered_s"), 
@@ -84,19 +94,26 @@ public class QueryProcessorUnit implements QueryProcessor {
 				totalTradeVolume += trade.volume;
 			}
 			long lastTradePrice = lastTrade.price;
-			long change = lastTradePrice - secondLastTrade.price;
+			change = lastTradePrice - secondLastTrade.price;
 			// in case the default lowest price was not updated because there were no
 			// trades, set the lowestPrice to 0
 			if(lowestPrice == Long.MAX_VALUE) lowestPrice = 0;
 			
-			//2. get the spread
-			//TODO
-			
-			
+			//3. get the spread
+			spread = this.connection.getSpreadOfSymbol(p.getSymbolID());		
 		} catch (SQLException e) {
 			return new QueryResponse(p.getPacketId(), false); // query failed
 		}
-		return response;
+		//4. scale results and create a new statistics response
+		float scaledLastTradePrice = (float) (((float) lastTrade.price) * Math.pow(0.1,priceScale));
+		float scaledHighestPrice = (float) (highestPrice * Math.pow(0.1, priceScale));
+		float scaledLowestPrice = (float) (lowestPrice * Math.pow(0.1,priceScale));
+		float scaledChange = (float) (change * Math.pow(0.1, priceScale));
+		float scaledSpread = (float) (spread * Math.pow(0.1, priceScale));
+		
+		return new StockStatisticsResponse(p.getPacketId(), true, scaledLastTradePrice,
+				totalTradeVolume, scaledHighestPrice, scaledLowestPrice, scaledChange,
+				scaledSpread);
 	}
 
 	private QueryResponse handleSpikeDetecionRequest(SpikeDetectionRequest p) {
@@ -156,7 +173,11 @@ public class QueryProcessorUnit implements QueryProcessor {
 			double lowBoundary = (double) averagePrice * (1.0 - limit);
 			if (price <= lowBoundary || price >= highBoundary) {
 				// we have a spike
-				String symbol = this.connection.getSymbol(symbolIndex);
+				ResultSet symbolNameAndPriceScale = 
+					connection.getSymbolAndPriceScale(symbolIndex);
+				symbolNameAndPriceScale.next();
+				String symbol = symbolNameAndPriceScale.getString(1);
+				
 				response.addSpike(symbol, consideredTrade.seconds);
 			}
 		}

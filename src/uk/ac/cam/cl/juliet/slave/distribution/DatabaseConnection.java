@@ -253,7 +253,7 @@ public interface DatabaseConnection {
 	 * @return
 	 * @throws SQLException
 	 */
-	public String getSymbol(long symbolIndex) throws SQLException;
+	public ResultSet getSymbolAndPriceScale(long symbolIndex) throws SQLException;
 	/**
 	 * Set the connection to the database
 	 * 
@@ -261,6 +261,8 @@ public interface DatabaseConnection {
 	 *            The new connection to use.
 	 */
 	public void setConnection(Connection connection);
+	
+	public long getSpreadOfSymbol(long symbolIndex) throws SQLException;
 	
 	/**
 	 * Return the time in nanoseconds that the last commit took.

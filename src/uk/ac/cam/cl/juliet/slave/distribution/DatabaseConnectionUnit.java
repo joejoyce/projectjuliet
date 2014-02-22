@@ -260,8 +260,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public String getSymbol(long symbolIndex) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("SELECT symbol FROM symbol WHERE symbol_id = ?");
+	public ResultSet getSymbolAndPriceScale(long symbolIndex) throws SQLException {
+		PreparedStatement statement = this.connection.prepareStatement(
+				"SELECT symbol,price_scale FROM symbol WHERE symbol_id = ?");
 		ResultSet result;
 		try {
 			statement.setLong(1, symbolIndex);
@@ -269,8 +270,37 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		} finally {
 			statement.close();
 		}
-		result.next();
-		return result.getString(1);
+		if(!result.isBeforeFirst()) return null;
+		else return result;
+	}
+	
+	@Override
+	public long getSpreadOfSymbol(long symbolIndex) throws SQLException {
+		//get the lowest offer and highest bid for a stock:
+		PreparedStatement statement = this.connection.prepareStatement(
+				"(SELECT TOP 1 FROM order_book WHERE symbol_id = ? "
+				+ "AND is_ask = 'true' ORDER BY ASC)"
+				+ "UNION (SELECT TOP 1 FROM order_book WHERE symbol_id = ? "
+				+ "AND is_ask = 'false' ORDER BY DESC)");
+		ResultSet result;
+		try {
+			statement.setLong(1, symbolIndex);
+			statement.setLong(2, symbolIndex);
+			result = statement.executeQuery();
+		} finally {
+			statement.close();
+		}
+		long lowestOffer = 0;
+		long highestBid = 0;
+		if(result.next()) {
+			lowestOffer = result.getLong(1);
+		}
+		if(result.next()) {
+			highestBid = result.getLong(1);
+		}
+		if(highestBid == 0 || lowestOffer == 0)
+			return 0;
+		else return lowestOffer - highestBid;	
 	}
 
 	public long getLastCommitNS() {
