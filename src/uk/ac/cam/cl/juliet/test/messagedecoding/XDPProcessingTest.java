@@ -310,6 +310,14 @@ class TestDatabase implements DatabaseConnection {
 		// not needed
 		return 0;
 	}
+
+	@Override
+	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns,
+			long symbolSeqNumber, long volumeReduction, long packetTimestamp)
+			throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
 	
 
 }
