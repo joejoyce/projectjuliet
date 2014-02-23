@@ -120,7 +120,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	private ServerSocket socket = null;
 	private AtomicLong nextId = new AtomicLong(0);
-	public long currentSystemTime;
+	public volatile long currentSystemTime;
 	
 	private static ClientLoadComparator clc = new ClientLoadComparator();
 	private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
