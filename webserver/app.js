@@ -57,6 +57,7 @@ app.get('/api/v1/orders/offers/:symbol_index', orderController.offers);
 app.get('/api/v1/status/clients', statusController.clients);
 app.get('/api/v1/status/time', statusController.time);
 app.get('/api/v1/status/throughput', statusController.throughput);
+app.get('/api/v1/status/latency', statusController.latency);
 
 
 app.listen(app.get('port'), function() {

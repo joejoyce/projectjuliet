@@ -189,7 +189,7 @@ public class XDPProcessorUnit implements XDPProcessor {
 			if (reasonCode == 7) {
 				//an order is partially filled
 				mDB.reduceOrderVolume(orderID, symbolIndex, sourcetime_ns,
-						symbolSequenceNumber, volume);
+						symbolSequenceNumber, volume, timestamp);
 			} else if (reasonCode == 3) {
 				//an order is fully executed
 				mDB.deleteOrder(orderID, symbolIndex, sourcetime_ns,

@@ -135,13 +135,14 @@ public class MockClusterMaster implements ClusterMaster {
 	}
 
 	@Override
-	public void broadcast(Container c) {
-		return;
+	public int broadcast(Container c) {
+		return 0;
 	}
 
 	@Override
-	public void broadcast(Container c, Callback cb) {
+	public int broadcast(Container c, Callback cb) {
 		// TODO Auto-generated method stub
+		return 0;
 		
 	}
 

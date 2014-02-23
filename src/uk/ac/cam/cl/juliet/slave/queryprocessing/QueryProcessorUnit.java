@@ -124,15 +124,15 @@ public class QueryProcessorUnit implements QueryProcessor {
 		try {
 			// get data from database
 			ResultSet queryResults = connection.getAllTradesInRecentHistory(p.getStartTimeAverage());
-			Boolean thereAreMoreQueryResults = queryResults.next();
+			boolean thereAreMoreQueryResults = queryResults.next();
 			while (thereAreMoreQueryResults) {
 				// get all trades for one stock
 				ArrayList<Trade> tradeList = new ArrayList<Trade>();
 				long currentSymbol = queryResults.getLong("symbol_id");
-				tradeList.add(new Trade(queryResults.getLong("offered_s"), queryResults.getLong("offered_ns"), queryResults.getLong("price")));
+				tradeList.add(new Trade(queryResults.getLong("offered_s"), queryResults.getLong("offered_seq_num"), queryResults.getLong("price")));
 				thereAreMoreQueryResults = queryResults.next();
 				while (thereAreMoreQueryResults && queryResults.getLong("symbol_id") == currentSymbol) {
-					tradeList.add(new Trade(queryResults.getLong("offered_s"), queryResults.getLong("offered_ns"), queryResults.getLong("price")));
+					tradeList.add(new Trade(queryResults.getLong("offered_s"), queryResults.getLong("offered_seq_num"), queryResults.getLong("price")));
 					thereAreMoreQueryResults = queryResults.next();
 				}
 				// detect spike for this stock and add to response packet
@@ -140,8 +140,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 					detectSpike(tradeList, response, p.getStartTimeSpikes(), p.getLimit(), currentSymbol);
 				}
 			}
-
-		} catch (SQLException e) {
+			} catch (SQLException e) {
 			e.printStackTrace();
 			return new QueryResponse(p.getPacketId(), false); // query failed
 		}
@@ -170,6 +169,10 @@ public class QueryProcessorUnit implements QueryProcessor {
 			counter++;
 		}
 		// look for a spike
+		
+		if(spikeDetectionPointer == -1)
+			return;
+		
 		while (spikeDetectionPointer < counter) {
 			Trade consideredTrade = tradeList.get(spikeDetectionPointer);
 			double price = consideredTrade.price * counter;
@@ -183,6 +186,8 @@ public class QueryProcessorUnit implements QueryProcessor {
 
 				response.addSpike(symbol, consideredTrade.seconds);
 			}
+			
+			spikeDetectionPointer ++;
 		}
 	}
 
@@ -193,7 +198,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 			ArrayList<Trade> resultList = new ArrayList<Trade>();
 
 			while (results.next())
-				resultList.add(new Trade(results.getLong("offered_s"), results.getLong("offered_ns"), results.getLong("price")));
+				resultList.add(new Trade(results.getLong("offered_s"), results.getLong("offered_seq_num"), results.getLong("price")));
 
 			Collections.sort(resultList);
 

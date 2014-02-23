@@ -7,9 +7,10 @@ block head
 
 block content
   div#status-header
-    h1 System Status    
+    h1 System Status
     canvas#display(width='200', height='60')
-  
+  div#clear
   +client_list(client_list)
   +system_status(throughput, loadAv, total_orders, total_trades, total_symbols)
   div#throughput-chart
+  div#latency-chart
