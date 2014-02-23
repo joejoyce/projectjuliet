@@ -37,3 +37,16 @@ exports.getTime = function(callback) {
     callback(data);
   });
 };
+
+exports.getLatency = function(callback) {
+  var client = net.connect(1337, 'localhost');
+  client.setEncoding('utf8');
+  client.write('status|latency\n');
+
+  client.on('data', function(data) {
+    data = JSON.parse(data);
+    console.dir(data);
+    client.end();
+    callback(data);
+  });
+};

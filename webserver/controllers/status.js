@@ -55,12 +55,25 @@ exports.time = function(req, res) {
 
 /**
  * GET /api/v1/status/throughput
- * Get the current simulation system time
+ * Get the current packet throughput
  */
 exports.throughput = function(req, res) {
   status.getStatus(function(status) {
     res.send({
       data: status.throughput
+    });
+  });
+};
+
+
+/**
+ * GET /api/v1/status/latency
+ * Get the current RTT latency
+ */
+exports.latency = function(req, res) {
+  status.getLatency(function(latency) {
+    res.send({
+      data: latency
     });
   });
 };
