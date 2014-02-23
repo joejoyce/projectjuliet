@@ -11,11 +11,11 @@ public class LatencyMonitorCallback extends Callback{
 	private long timeoutStamp;
 	public int numSentTo;
 	private int numBack = 0;
-	long AvMasterOBQTime;
-	long AvClientOBQTime;
-	long AvDatabaseRTTime;
-	long AvClientIBQTime;
-	long AvNetworkRTTime;
+	private long AvMasterOBQTime;
+	private long AvClientOBQTime;
+	private long AvDatabaseRTTime;
+	private long AvClientIBQTime;
+	private long AvNetworkRTTime;
 	private Lock lock = new ReentrantLock();
 	
 	public LatencyMonitorCallback(long seconds) {
@@ -38,7 +38,7 @@ public class LatencyMonitorCallback extends Callback{
 			AvClientOBQTime = average(AvClientOBQTime,m.outboundDequeue - m.outboundArrive);
 			AvDatabaseRTTime = average(AvDatabaseRTTime,m.databaseRoundTrip);
 			AvClientIBQTime = average(AvClientIBQTime,m.inboundDepart - m.inboundQueue);
-			AvNetworkRTTime = average(AvNetworkRTTime, m.inboundArrive - m.outboundDepart - m.inboundDepart - m.outboundArrive );
+			AvNetworkRTTime = average(AvNetworkRTTime, m.inboundArrive - m.outboundDepart - m.inboundDepart + m.outboundArrive );
 			numBack++;
 		} else {
 			Debug.println(Debug.ERROR,"LatencyMonitor callback invoked on wrong container type");
