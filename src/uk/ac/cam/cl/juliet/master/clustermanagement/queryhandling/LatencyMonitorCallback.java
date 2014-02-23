@@ -4,6 +4,8 @@ import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.LatencyMonitor;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class LatencyMonitorCallback extends Callback{
 	private long timeoutStamp;
@@ -14,6 +16,7 @@ public class LatencyMonitorCallback extends Callback{
 	long AvDatabaseRTTime;
 	long AvClientIBQTime;
 	long AvNetworkRTTime;
+	private Lock lock = new ReentrantLock();
 	
 	public LatencyMonitorCallback(long seconds) {
 		timeoutStamp = System.nanoTime() + (seconds * 1000000000L);
@@ -26,7 +29,8 @@ public class LatencyMonitorCallback extends Callback{
 		return (av * numBack + nVal) / (numBack + 1);
 	}
 	@Override
-	public synchronized void callback(Container data) {
+	public void callback(Container data) {
+		lock.lock();
 		if(data instanceof LatencyMonitor) {
 			LatencyMonitor m = (LatencyMonitor) data;
 			AvMasterOBQTime = average(AvMasterOBQTime,m.outboundDepart - m.outboundQueue);
@@ -38,10 +42,11 @@ public class LatencyMonitorCallback extends Callback{
 		} else {
 			Debug.println(Debug.ERROR,"LatencyMonitor callback invoked on wrong container type");
 		}
-		
+		lock.unlock();
 	}
 	
 	public String generateJson() {
+		lock.lock();
 		JsonBuilder jb = new JsonBuilder();
 		jb.stOb();
 		jb.pushPair("masterOBQTime", AvMasterOBQTime);
@@ -50,6 +55,7 @@ public class LatencyMonitorCallback extends Callback{
 		jb.pushPair("clientIBQTime", AvClientIBQTime);
 		jb.pushPair("networkRTTime", AvNetworkRTTime);
 		jb.finOb();
+		lock.unlock();
 		return jb.toString();
 	}
 
