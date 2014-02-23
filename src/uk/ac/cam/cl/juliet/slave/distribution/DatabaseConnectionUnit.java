@@ -26,7 +26,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
 		this.addOrderBatch = connection.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-		this.addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?)");
+		this.addTradeBatch = connection.prepareStatement("CALL addTrade(?, ?, ?, ?, ?, ?, ?, ?)");
+		//this.addTradeBatch = connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0)");
 		// this.deleteOrderBatch =
 		// connection.prepareStatement("UPDATE order_book SET is_deleted=1 WHERE (order_id = ?) AND (symbol_id = ?)");
 		// this.deleteOrderBatch =
@@ -165,6 +166,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			addTradeBatch.setLong(4, volume);
 			addTradeBatch.setLong(5, packetTimestamp);
 			addTradeBatch.setLong(6, symbolSeqNumber);
+			addTradeBatch.setLong(7, packetTimestamp);
+			addTradeBatch.setLong(8, symbolSeqNumber);
 			addTradeBatch.addBatch();
 		}
 		batchSize++;
@@ -203,8 +206,11 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public void cancelTrade(long tradeID, long symbolIndex, long time_s, long time_ns, long symbolSeqNumber) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("DELETE FROM trade WHERE (trade_id = ?)");
+		PreparedStatement statement = this.connection.prepareStatement("CALL deleteTrade(?, ?, ?, ?)");
 		statement.setLong(1, tradeID);
+		statement.setLong(2, symbolIndex);
+		statement.setLong(3, time_s);
+		statement.setLong(4, symbolSeqNumber);
 		statement.execute();
 	}
 
@@ -228,7 +234,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start, long end) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE symbol_id=? and offered_s>=? and offered_s<?");
+		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE symbol_id=? AND offered_s>=? AND offered_s<? AND added=1 AND deleted=0");
 		ResultSet result;
 		statement.setLong(1, symbolID);
 		statement.setLong(2, start);
@@ -238,7 +244,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	public ResultSet getAllTradesInRecentHistory(long start) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE offered_s >= ? ORDER BY symbol_id");
+		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE offered_s >= ? AND added=1 AND deleted=0 ORDER BY symbol_id");
 		ResultSet result;
 		statement.setLong(1, start);
 		result = statement.executeQuery();
@@ -269,7 +275,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	@Override
 	public long getSpreadOfSymbol(long symbolIndex) throws SQLException {
 		// get the lowest offer and highest bid for a stock:
-		PreparedStatement statement = this.connection.prepareStatement("(SELECT price FROM order_book WHERE symbol_id = ? " + "AND is_ask = 1 AND deleted=0 ORDER BY price LIMIT 1)" + " UNION (SELECT price FROM order_book WHERE symbol_id = ? " + "AND is_ask = 0 AND deleted=0 ORDER BY price DESC LIMIT 1)");
+		PreparedStatement statement = this.connection.prepareStatement("(SELECT price FROM order_book WHERE symbol_id = ? " + "AND is_ask = 1 AND added=1 AND deleted=0 ORDER BY price LIMIT 1)" + " UNION (SELECT price FROM order_book WHERE symbol_id = ? " + "AND is_ask = 0 AND AND added=1 deleted=0 ORDER BY price DESC LIMIT 1)");
 		
 		ResultSet result;
 		statement.setLong(1, symbolIndex);
