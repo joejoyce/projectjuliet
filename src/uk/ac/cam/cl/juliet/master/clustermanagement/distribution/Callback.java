@@ -6,10 +6,14 @@ public abstract class Callback {
 	public volatile boolean finished = false;
 	public abstract void callback (Container data);
 	
+	public boolean isDone() {
+		return finished;
+	}
+	
 	public synchronized void waitUntilDone() {
-		while(!finished) {
+		while(!this.isDone()) {
 			try {
-				Thread.currentThread().sleep(100);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

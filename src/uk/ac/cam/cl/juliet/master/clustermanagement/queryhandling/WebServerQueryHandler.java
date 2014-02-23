@@ -24,6 +24,7 @@ import uk.ac.cam.cl.juliet.common.CandlestickRequest;
 import uk.ac.cam.cl.juliet.common.CandlestickResponse;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
+import uk.ac.cam.cl.juliet.common.LatencyMonitor;
 import uk.ac.cam.cl.juliet.common.MovingAverageRequest;
 import uk.ac.cam.cl.juliet.common.MovingAverageResponse;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
@@ -164,6 +165,15 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		if(query.equals("time")) {
 			long t = cm.getTime();
 			pw.write(t+"");
+			return;
+		}
+		
+		if(query.equals("latency")) {
+			LatencyMonitor lm = new LatencyMonitor();
+			LatencyMonitorCallback cb = new LatencyMonitorCallback(3); //Allow 3 seconds by default
+			cm.broadcast(lm,cb);
+			cb.waitUntilDone();
+			pw.write(cb.generateJson());
 			return;
 		}
 		
