@@ -86,9 +86,10 @@ CREATE PROCEDURE addOrder(IN p_order_id int(10) unsigned,
 BEGIN
     DECLARE last_updated_s int(10) unsigned;
     DECLARE last_updated_seq_num int(10) unsigned;
-    SELECT updated_s, updated_seq_num FROM order_book
+    DECLARE order_added bit(1);
+    SELECT updated_s, updated_seq_num, added FROM order_book
                      WHERE order_id = p_order_id AND symbol_id = p_symbol_id
-                     INTO last_updated_s, last_updated_seq_num;
+                     INTO last_updated_s, last_updated_seq_num, order_added;
     
     IF last_updated_s IS NULL THEN
         INSERT INTO order_book VALUES (p_order_id, p_symbol_id, p_price,
@@ -105,7 +106,7 @@ BEGIN
                               added = 1, deleted = 0
                            WHERE (order_id = p_order_id) AND
                                  (symbol_id = p_symbol_id);
-    ELSE
+    ELSEIF order_added=0 THEN
         UPDATE order_book SET is_ask = p_is_ask, placed_s = p_placed_s,
                               placed_seq_num = p_placed_seq_num, added = 1
                           WHERE (order_id = p_order_id) AND
@@ -189,9 +190,10 @@ CREATE PROCEDURE addTrade(IN p_trade_id int(10) unsigned,
 BEGIN
     DECLARE last_updated_s int(10) unsigned;
     DECLARE last_updated_seq_num int(10) unsigned;
-    SELECT updated_s, updated_seq_num FROM trade
+    DECLARE trade_added bit(1);
+    SELECT updated_s, updated_seq_num, trade_added FROM trade
                      WHERE trade_id = p_trade_id AND symbol_id = p_symbol_id
-                     INTO last_updated_s, last_updated_seq_num;
+                     INTO last_updated_s, last_updated_seq_num, trade_added;
 
     IF last_updated_s IS NULL THEN
         INSERT INTO trade VALUES (p_trade_id, p_symbol_id, p_price, p_volume,
@@ -207,7 +209,7 @@ BEGIN
                          added = 1, deleted = 0
                          WHERE (trade_id = p_trade_id) AND
                                (symbol_id = p_symbol_id);
-    ELSE
+    ELSEIF trade_added=0 THEN
         UPDATE trade SET offered_s = p_offered_s,
                          offered_seq_num = p_offered_seq_num, added = 1
                      WHERE (trade_id = p_trade_id) AND
