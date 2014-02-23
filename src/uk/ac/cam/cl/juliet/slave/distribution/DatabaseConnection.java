@@ -75,10 +75,11 @@ public interface DatabaseConnection {
 	 * @param time_ns
 	 * @param symbolSeqNumber
 	 * @param volumeReduction
+	 * @param packetTimestamp
 	 * @throws SQLException
 	 */
 	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns,
-			long symbolSeqNumber, long volumeReduction) throws SQLException;
+			long symbolSeqNumber, long volumeReduction, long packetTimestamp) throws SQLException;
 
 	/**
 	 * Delete an order from the database order book

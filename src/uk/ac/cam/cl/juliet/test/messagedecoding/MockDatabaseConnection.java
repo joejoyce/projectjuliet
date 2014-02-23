@@ -162,7 +162,7 @@ public class MockDatabaseConnection implements DatabaseConnection {
 
 	@Override
 	public void reduceOrderVolume(long orderID, long symbolIndex,
-			long time_ns, long symbolSeqNumber, long volumeReduction) {
+			long time_ns, long symbolSeqNumber, long volumeReduction, long packetTimestamp) {
 		// part of the order execution message
 		
 	}
