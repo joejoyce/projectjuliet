@@ -38,7 +38,7 @@ public class LatencyMonitorCallback extends Callback{
 			AvClientOBQTime = average(AvClientOBQTime,m.outboundDequeue - m.outboundArrive);
 			AvDatabaseRTTime = average(AvDatabaseRTTime,m.databaseRoundTrip);
 			AvClientIBQTime = average(AvClientIBQTime,m.inboundDepart - m.inboundQueue);
-			AvNetworkRTTime = average(AvNetworkRTTime, m.outboundDepart - m.outboundArrive + m.inboundArrive - m.inboundDepart);
+			AvNetworkRTTime = average(AvNetworkRTTime, m.inboundArrive - m.outboundDepart - m.inboundDepart - m.outboundArrive );
 			numBack++;
 		} else {
 			Debug.println(Debug.ERROR,"LatencyMonitor callback invoked on wrong container type");
