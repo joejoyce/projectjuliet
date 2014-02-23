@@ -307,8 +307,8 @@ public class Client {
 	public void tryFlushQueue() {
 		long time = System.nanoTime();
 		InFlightContainer ifc;
-		if( null != (ifc = jobqueue.peek())) {
-			if( ifc.getDueTime() <= time ) {
+		if(null != (ifc = jobqueue.peek())) {
+			if(ifc.getDueTime() <= time) {
 				//Remove and flush the rest of the queue
 				Debug.println(Debug.ERROR,"Timeout waiting for response from client " + address);
 				closeClient();

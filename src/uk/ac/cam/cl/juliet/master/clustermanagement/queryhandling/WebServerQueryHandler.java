@@ -177,6 +177,12 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			return;
 		}
 		
+		if(query.equals("throughput")) {
+			int total = cm.getPacketThroughput();
+			pw.write("{\"data\": \" "+ total +" \"}");
+			return;
+		}
+		
 		JsonBuilder j = new JsonBuilder();
 		
 		j.stOb();
@@ -232,8 +238,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		
 		j.finOb();	
 		
-		String ret = j.toString();
-		
+		String ret = j.toString();		
 		pw.write(ret);
 	}
 

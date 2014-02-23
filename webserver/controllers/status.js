@@ -58,13 +58,12 @@ exports.time = function(req, res) {
  * Get the current packet throughput
  */
 exports.throughput = function(req, res) {
-  status.getStatus(function(status) {
+  status.getThroughput(function(throughput) {
     res.send({
-      data: status.throughput
+      data: throughput
     });
   });
 };
-
 
 /**
  * GET /api/v1/status/latency
