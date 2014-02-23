@@ -276,20 +276,24 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	}
 	
 	@Override
-	public void broadcast(Container c) {
+	public int broadcast(Container c) {
 		c.setPacketId(getNextId());
 		Iterator<Client> iter = clientQueue.iterator();
-		while(iter.hasNext())
+		int i = 0;
+		for(;iter.hasNext();i++)
 			iter.next().broadcast(c);
+		return i;
 	}
 	
 	
 	@Override
-	public void broadcast(Container c, Callback cb) {
+	public int broadcast(Container c, Callback cb) {
 		c.setPacketId(getNextId());
 		Iterator<Client> iter = clientQueue.iterator();
-		while(iter.hasNext())
-			iter.next().broadcast(c,cb);	
+		int i = 0;
+		for(;iter.hasNext();i++)
+			iter.next().broadcast(c,cb);
+		return i;
 	}
 
 	@Override

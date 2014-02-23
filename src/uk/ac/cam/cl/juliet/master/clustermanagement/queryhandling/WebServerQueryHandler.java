@@ -171,7 +171,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		if(query.equals("latency")) {
 			LatencyMonitor lm = new LatencyMonitor();
 			LatencyMonitorCallback cb = new LatencyMonitorCallback(3); //Allow 3 seconds by default
-			cm.broadcast(lm,cb);
+			cb.numSentTo = cm.broadcast(lm,cb);
 			cb.waitUntilDone();
 			pw.write(cb.generateJson());
 			return;

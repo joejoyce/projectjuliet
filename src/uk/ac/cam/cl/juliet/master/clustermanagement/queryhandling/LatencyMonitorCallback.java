@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class LatencyMonitorCallback extends Callback{
 	private long timeoutStamp;
-	
+	public int numSentTo;
 	private int numBack = 0;
 	long AvMasterOBQTime;
 	long AvClientOBQTime;
@@ -22,7 +22,8 @@ public class LatencyMonitorCallback extends Callback{
 		timeoutStamp = System.nanoTime() + (seconds * 1000000000L);
 	}
 	public boolean isDone() {
-		return(timeoutStamp <= System.nanoTime());
+		
+		return(numBack == numSentTo || timeoutStamp <= System.nanoTime());
 	}
 	
 	private long average(long av, long nVal) {
