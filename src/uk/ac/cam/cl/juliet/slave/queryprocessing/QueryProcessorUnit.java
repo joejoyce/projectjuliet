@@ -129,7 +129,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 				// get all trades for one stock
 				ArrayList<Trade> tradeList = new ArrayList<Trade>();
 				long currentSymbol = queryResults.getLong("symbol_id");
-				tradeList.add(new Trade(queryResults.getLong("offered_s"), queryResults.getLong("offered_ns"), queryResults.getLong("price")));
+				tradeList.add(new Trade(queryResults.getLong("offered_s"), queryResults.getLong("offered_seq_num"), queryResults.getLong("price")));
 				thereAreMoreQueryResults = queryResults.next();
 				while (thereAreMoreQueryResults && queryResults.getLong("symbol_id") == currentSymbol) {
 					tradeList.add(new Trade(queryResults.getLong("offered_s"), queryResults.getLong("offered_ns"), queryResults.getLong("price")));

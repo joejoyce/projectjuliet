@@ -170,7 +170,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		
 		if(query.equals("latency")) {
 			LatencyMonitor lm = new LatencyMonitor();
-			LatencyMonitorCallback cb = new LatencyMonitorCallback(3); //Allow 3 seconds by default
+			LatencyMonitorCallback cb = new LatencyMonitorCallback(10); //Allow 3 seconds by default
 			cb.numSentTo = cm.broadcast(lm,cb);
 			cb.waitUntilDone();
 			pw.write(cb.generateJson());
@@ -185,7 +185,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		jb.stArr();
 		for (int i = 0; i < carr.length; i++) {
 			jb.stOb();
-			jb.pushPair("name", carr[i].getClientIP().toString());
+			jb.pushPair("name", carr[i].getClientIP().toString().substring(1));
 			jb.pushPair("totalPackets", carr[i].getTotalWork());
 			jb.pushPair("currentPackets", carr[i].getCurrentWork());
 			jb.finOb();

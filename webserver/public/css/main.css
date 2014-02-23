@@ -353,3 +353,25 @@ p {
 #status-header#display {
   float: right;
 }
+
+#throughput-graph {
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+#latency-chart {
+  padding: 10px;
+}
+
+#clear {
+  display: inline-block;
+  height: 100px;
+}
+
+.posc {
+  background-color: #00FF00 !important;
+}
+
+.negc {
+  background-color: #FF0000 !important;
+}

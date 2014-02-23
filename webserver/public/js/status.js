@@ -70,7 +70,7 @@ $(document).ready(function() {
                     setInterval(function() {
                         $.getJSON('/api/v1/status/latency', function(response) {
                             var x = (new Date()).getTime();
-                            var y = Math.abs(Number(response.data.networkRTTime)/1000000);                            
+                            var y = Math.abs(Number(response.data.databaseRTTime)/1000000);                            
                             series.addPoint([x, y], true, false);
                         });    
                     }, 1000);
@@ -86,7 +86,7 @@ $(document).ready(function() {
         },
         yAxis: {
             title: {
-                text: 'RTT (Milliseconds)'
+                text: 'Database RTT (Milliseconds)'
             },            
             plotLines: [{
                 value: 0,
