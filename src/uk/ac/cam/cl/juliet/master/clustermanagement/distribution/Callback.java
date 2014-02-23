@@ -11,7 +11,7 @@ public abstract class Callback {
 	}
 	
 	public synchronized void waitUntilDone() {
-		while(!this.isDone()) {
+		while(!isDone()) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
