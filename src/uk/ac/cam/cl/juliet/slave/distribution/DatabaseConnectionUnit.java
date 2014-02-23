@@ -238,7 +238,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	public ResultSet getAllTradesInRecentHistory(long start) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE offered_s >= ? ORDER BY symbol_id ASC");
+		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE offered_s >= ? ORDER BY symbol_id");
 		ResultSet result;
 		statement.setLong(1, start);
 		result = statement.executeQuery();

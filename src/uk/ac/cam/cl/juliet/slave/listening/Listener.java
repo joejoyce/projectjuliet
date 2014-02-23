@@ -138,8 +138,9 @@ public class Listener {
 
 	private void readPacket() {
 		try {
-			//Container container = (Container) input.readObject();#
+			//Container container = (Container) input.readObject();
 			Container container = receiveQueue.take();
+			
 			Debug.println("Got new object");
 			
 			if (container instanceof ConfigurationPacket) {
@@ -178,7 +179,7 @@ public class Listener {
 				ex.printStackTrace();
 			}
 		} */ 
-		catch (InterruptedException e) {
+	    catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
