@@ -30,20 +30,22 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 		private boolean tryToApply() {
 			try {
-				PreparedStatement statement = connection.prepareStatement("SELECT updated_s, updated_seq_num FROM order_book WHERE order_id = ? AND symbol_id = ?");
+				PreparedStatement statement = connection
+						.prepareStatement("SELECT updated_s, updated_seq_num FROM order_book WHERE order_id = ? AND symbol_id = ?");
 				statement.setLong(1, orderID);
 				statement.setLong(2, symbolID);
 				ResultSet results = statement.executeQuery();
 				statement.close();
-				
+
 				if (!results.isBeforeFirst())
 					return false;
-				
+
 				results.next();
 				long updated_s = results.getLong("updated_s");
 				long updated_seq_num = results.getLong("updated_seq_num");
-				
-				if (updated_s<time || (updated_s == time && updated_seq_num < sequenceNumber)) {
+
+				if (updated_s < time
+						|| (updated_s == time && updated_seq_num < sequenceNumber)) {
 					statement = connection
 							.prepareStatement("UPDATE order_book SET volume = volume - ? WHERE (order_id = ?) AND (symbol_id = ?)");
 					statement.setLong(1, amount);
@@ -271,15 +273,19 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	public void correctTrade(long originalTradeID, long tradeID,
 			long symbolIndex, long time_s, long time_ns, long symbolSeqNumber,
 			long price, long volume) throws SQLException {
+		// PreparedStatement statement = this.connection
+		// .prepareStatement("UPDATE trade SET trade_id = ?, symbol_id = ?, price = ?, volume = ? WHERE (trade_id = ?)");
 		PreparedStatement statement = this.connection
-				.prepareStatement("UPDATE trade SET trade_id = ?, symbol_id = ?, price = ?, volume = ? WHERE (trade_id = ?)");
-		statement.setLong(1, tradeID);
-		statement.setLong(2, symbolIndex);
-		statement.setLong(3, price);
-		statement.setLong(4, volume);
-		statement.setLong(5, originalTradeID);
-		// statement.execute();
-		// statement.close();
+				.prepareStatement("CALL modifyTrade(?, ?, ?, ?, ?, ?, ?)");
+		statement.setLong(1, originalTradeID);
+		statement.setLong(2, tradeID);
+		statement.setLong(3, symbolIndex);
+		statement.setLong(4, price);
+		statement.setLong(5, volume);
+		statement.setLong(6, time_s);
+		statement.setLong(7, symbolSeqNumber);
+		statement.execute();
+		statement.close();
 	}
 
 	@Override

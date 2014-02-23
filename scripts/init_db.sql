@@ -243,3 +243,33 @@ BEGIN
     END IF;
 END //
 DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE modifyTrade(IN p_original_trade_id int(10) unsigned,
+                             IN p_trade_id int(10) unsigned,
+                             IN p_symbol_id int(10) unsigned,
+                             IN p_price int(10) unsigned,
+                             IN p_volume int(10) unsigned,
+                             IN p_s int(10) unsigned,
+                             IN p_seq_num int(10) unsigned)
+BEGIN
+    DECLARE last_updated_s int(10) unsigned;
+    DECLARE last_updated_seq_num int(10) unsigned;
+    SELECT updated_s, updated_seq_num FROM trade
+                     WHERE trade_id = p_original_trade_id
+                     INTO last_updated_s, last_updated_seq_num;
+
+    IF last_updated_s IS NULL THEN
+        INSERT INTO trade VALUES (p_trade_id, p_symbol_id, p_price,
+                                  p_volume, 0, 0, p_s, p_seq_num,
+                                  0, 0);
+    ELSEIF last_updated_s < p_s OR (last_updated_s = p_s
+                 AND last_updated_seq_num < p_seq_num) THEN
+        UPDATE trade SET trade_id = p_trade_id, price = p_price,
+                         volume = p_volume,
+                         updated_s = p_s, updated_seq_num = p_seq_num
+                     WHERE (trade_id = p_original_trade_id AND
+                            symbol_id = p_symbol_id);
+    END IF;
+END //
+DELIMITER ;
