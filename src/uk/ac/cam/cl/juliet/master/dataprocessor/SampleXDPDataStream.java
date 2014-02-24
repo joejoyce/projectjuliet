@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  * @author Scott Williams
  */
 public class SampleXDPDataStream implements XDPDataStream {
-	public long skipBoundary;
+	private long skipBoundary;
 
 	private RandomAccessFile summaryFileHandle;
 	private RandomAccessFile channelOneFileHandle;
@@ -59,6 +59,14 @@ public class SampleXDPDataStream implements XDPDataStream {
 		
 		this.firstPacketTime = getNextPacketDataStream();
 		this.initialCallTimeNS = System.nanoTime();
+	}
+
+	public void setSkipBoundary(float pSkipBoundary) {
+		this.skipBoundary = (long) (1000000000*pSkipBoundary);
+	}
+	
+	public float getSkipBoundary() {
+		return (float) this.skipBoundary * 0.000000001f;
 	}
 
 	/**

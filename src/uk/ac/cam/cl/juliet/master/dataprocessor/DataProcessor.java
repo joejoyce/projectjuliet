@@ -24,6 +24,10 @@ public class DataProcessor {
 		this.dataStream = dataStream;
 		this.clusterMaster = cm;
 	}
+	
+	public XDPDataStream getDataStream() {
+		return this.dataStream;
+	}
 
 	public void start() {
 		XDPRequest packet = null;

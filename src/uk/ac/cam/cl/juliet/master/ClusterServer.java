@@ -78,7 +78,7 @@ public class ClusterServer {
 			} else {
 				try {
 					float skip = Float.parseFloat(input);
-					ds.skipBoundary = (long) (1000000000*skip);
+					ds.setSkipBoundary(skip);
 				} catch(NumberFormatException e) {
 					e.printStackTrace();
 				}

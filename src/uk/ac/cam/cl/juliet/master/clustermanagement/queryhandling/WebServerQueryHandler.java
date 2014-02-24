@@ -257,6 +257,9 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 					// Need to pass it onto the data handler
 					Debug.println(Debug.INFO, "Adjusting the data rate");
 					// TODO make it change the data rate
+					// if you mean changing the skip boundary to make the XDPDataStream
+					// run faster: -lucas
+					ClusterServer.dp.getDataStream().setSkipBoundary(Float.parseFloat(value));
 				} else {
 					ClusterServer.cm.setSetting(key, value);
 				}// Set a value
@@ -266,7 +269,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			}
 
 		} else if (query.matches("\\s*get\\s+(\\S+)\\s*")) {
-			Pattern p = Pattern.compile("\\s*set\\s+(\\S+)\\s*");
+			Pattern p = Pattern.compile("\\s*set\\s+(\\S+)\\s*"); //TODO is this supposed to be s*get ??
 			Matcher m = p.matcher(query);
 			if (m.find()) {
 				String key = m.group(1);
@@ -274,6 +277,9 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				if (key.equals("data.rate")) {
 					Debug.println(Debug.INFO, "Getting the data rate");
 					// TODO make it retrieve the data rate
+					// if you mean the skip boundary that indicates whether the XDPDataStream
+					// runs faster than real time: here it is:
+					float skip = ClusterServer.dp.getDataStream().getSkipBoundary();
 				} else {
 					String vl = ClusterServer.cm.getSetting(key);
 					vl = (null == vl) ? "" : vl;
