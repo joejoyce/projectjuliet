@@ -355,4 +355,11 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		// not needed
 		return 0;
 	}
+
+	@Override
+	public ResultSet getBestOffersForStock(long symbolID, int limit)
+			throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -27,7 +27,6 @@ import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.LatencyMonitor;
 import uk.ac.cam.cl.juliet.common.MovingAverageRequest;
 import uk.ac.cam.cl.juliet.common.MovingAverageResponse;
-import uk.ac.cam.cl.juliet.common.PriceToClear;
 import uk.ac.cam.cl.juliet.common.PriceToClearQuery;
 import uk.ac.cam.cl.juliet.common.PriceToClearResponse;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
