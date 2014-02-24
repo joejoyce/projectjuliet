@@ -45,8 +45,19 @@ exports.getLatency = function(callback) {
 
   client.on('data', function(data) {
     data = JSON.parse(data);
-    console.dir(data);
     client.end();
     callback(data);
+  });
+};
+
+exports.getThroughput = function(callback) {
+  var client = net.connect(1337, 'localhost');
+  client.setEncoding('utf8');
+  client.write('status|throughput\n');
+
+  client.on('data', function(data) {
+    data = JSON.parse(data);
+    client.end();
+    callback(data.data);
   });
 };

@@ -23,7 +23,14 @@ public class DatabaseCleaner implements Runnable {
 	public void run() {
 		try {
 			PreparedStatement s = connection
-					.prepareStatement("DELETE FROM order_book where added = 1 AND deleted = 1");
+					.prepareStatement("DELETE FROM order_book WHERE added = 1 AND deleted = 1");
+			s.execute();
+		} catch (SQLException e) {
+		}
+		
+		try {
+			PreparedStatement s = connection
+					.prepareStatement("DELETE FROM trade WHERE added = 1 AND deleted = 1");
 			s.execute();
 		} catch (SQLException e) {
 		}

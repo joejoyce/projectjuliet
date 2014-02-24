@@ -112,18 +112,21 @@ public class QueryProcessorUnit implements QueryProcessor {
 			// 2. get all Trade related things
 			ResultSet results = connection.getTradesInTimeRangeForSymbol(p.getSymbolID(), 0, Long.MAX_VALUE);
 			if(!results.isBeforeFirst()) {
-				return new StockStatisticsResponse(p.getPacketId(), true, 0, 0, 0, 0, 0, 0);
+				return new StockStatisticsResponse(p.getPacketId(), true, 0, 0, 0, 0, 0, (float)(connection.getSpreadOfSymbol(p.getSymbolID())*Math.pow(0.1,priceScale)));
 			}				
 
 			while (results.next()) {
 				Trade trade = new Trade(results.getLong("offered_s"), results.getLong("offered_seq_num"), results.getLong("price"), results.getLong("volume"));
+				
 				if (lastTrade == null)
 					lastTrade = trade;
-				else if (secondLastTrade == null)
+				
+				if (secondLastTrade == null)
 					secondLastTrade = trade;
-				else if (trade.compareTo(secondLastTrade) > 0) {
+				
+				if (trade.compareTo(secondLastTrade) > 0) {
 					// if the trade is later than the second last trade
-					if (trade.compareTo(secondLastTrade) > 0) {
+					if (trade.compareTo(lastTrade) > 0) {
 						// if the trade is the last trade
 						secondLastTrade = lastTrade;
 						lastTrade = trade;
@@ -139,8 +142,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 					lowestPrice = trade.price;
 				totalTradeVolume += trade.volume;
 			}
-			long lastTradePrice = lastTrade.price;
-			change = lastTradePrice - secondLastTrade.price;
+			change = lastTrade.price - secondLastTrade.price;
 			// in case the default lowest price was not updated because there
 			// were no
 			// trades, set the lowestPrice to 0
@@ -148,7 +150,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 				lowestPrice = 0;
 
 			// 3. get the spread
-			spread = this.connection.getSpreadOfSymbol(p.getSymbolID());
+			spread = connection.getSpreadOfSymbol(p.getSymbolID());
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return new QueryResponse(p.getPacketId(), false); // query failed
