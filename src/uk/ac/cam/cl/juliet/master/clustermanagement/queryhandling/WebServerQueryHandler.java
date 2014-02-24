@@ -429,7 +429,6 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	private void getMovingAverageData(String options, final PrintWriter pw) throws SQLException, NoClusterException {
 		String[] split = options.split(" ");
 		long symbolID = Long.parseLong(split[0]);
-		int secondsPerAverage = Integer.parseInt(split[1]);
 
 		PreparedStatement rangeStatement = con.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
 		ResultSet rs;
@@ -439,6 +438,17 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		long minTime = rs.getLong("min");
 		long maxTime = rs.getLong("max");
 		rs.close();
+
+		pw.write("[");
+		getMovingAverageData(minTime, maxTime, 5*60, pw, symbolID);
+		pw.write(",");
+		getMovingAverageData(minTime, maxTime, 10*60, pw, symbolID);
+		pw.write(",");
+		getMovingAverageData(minTime, maxTime, 20*60, pw, symbolID);
+		pw.write("]");
+	}
+	
+	private void getMovingAverageData(long minTime, long maxTime, int secondsPerAverage, final PrintWriter pw, long symbolID) throws NoClusterException {
 		ClusterMaster cm = ClusterServer.cm;
 		final long numberOfQueries = Math.min((maxTime - minTime) - secondsPerAverage, cm.getClientCount() * 2);
 
@@ -447,18 +457,20 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 			protected void processContainer(Container data) {
 				MovingAverageResponse response = (MovingAverageResponse) data;
+				if (received>1)
+					writer.write(",");
 				for (int i = 0; i < response.getAverageCount(); i++) {
 					writer.write("{");
-					writer.write("\"time\":\"" + response.getTime(i) + "\"");
+					writer.write("\"time\":\"" + response.getTime(i) + "\", ");
 					writer.write("\"average\":\"" + response.getAverage(i) + "\"");
 					writer.write("}");
-					if (received != total && i < response.getAverageCount() - 1)
+					if (i < response.getAverageCount() - 1)
 						writer.write(",");
 				}
 			}
 		};
 
-		pw.write("[");
+		pw.write("{\"name\":\""+(secondsPerAverage/60)+" minutes\", \"data\":[");
 
 		long length = maxTime - minTime + 1;
 		long numberOfAverages = length - secondsPerAverage + 1;
@@ -474,9 +486,9 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		cm.sendPacket(request, c);
 
 		c.waitUntilDone();
-		pw.write("]");
+		pw.write("]}");
 	}
-
+	
 	/**
 	 * Runs a basic query. Executes the SQL query string received from the
 	 * webserver The result of the query is written to the webserver socket as a

@@ -5,12 +5,15 @@ block head
   script(src='/js/stock-graph.js')
   script(src='/js/time.js')
   script(src='/js/candle-graph.js')
+  script(src='/js/moving-average-graph.js')
   meta(name="stock-data", content="#{JSON.stringify(trade_list)}")
   meta(name="price-scale", content="#{symbol.price_scale}")
   meta(name="symbol", content="#{symbol.symbol}")
   meta(name="cData", content='#{JSON.stringify(cData)}')
+  meta(name="mData", content='#{JSON.stringify(mData)}')
 
 block content
   +symbol_summary(symbol, stats)
   div#stock-graph
   div#candle-graph
+  div#moving-average-graph

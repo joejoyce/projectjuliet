@@ -59,3 +59,32 @@ exports.getCandle = function(symbolIndex, priceScale, callback) {
     callback(candles);
   });
 };
+
+exports.getMovingAverage = function(symbolIndex, priceScale, callback) {
+  var symbolIndex = parseInt(symbolIndex);
+  var mData = '';
+  
+  var client = net.connect(1337, 'localhost');
+  client.setEncoding('utf8');
+  client.write('cluster|movingAverage '+symbolIndex+'\n');
+
+  client.on('data', function(data) {
+    mData += data;
+  });
+
+  client.on('end', function() {    
+    mData = JSON.parse(mData);
+    client.end();
+    var averageData = [];
+    mData.forEach(function(series) {
+                var averages = [];
+                series.data.forEach(function(average) {
+                    average.average *= priceScale;
+                    averages.push(average);
+                });
+            averageData.push({name:series.name, data:averages});
+            });
+
+    callback(averageData);
+  });
+};
