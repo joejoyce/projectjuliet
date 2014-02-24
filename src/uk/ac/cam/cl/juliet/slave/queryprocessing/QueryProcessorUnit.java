@@ -11,6 +11,8 @@ import uk.ac.cam.cl.juliet.common.MovingAverageRequest;
 import uk.ac.cam.cl.juliet.common.MovingAverageResponse;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.QueryResponse;
+import uk.ac.cam.cl.juliet.common.PriceToClearQuery;
+import uk.ac.cam.cl.juliet.common.PriceToClearResponse;
 import uk.ac.cam.cl.juliet.common.SpikeDetectionRequest;
 import uk.ac.cam.cl.juliet.common.SpikeDetectionResponse;
 import uk.ac.cam.cl.juliet.common.StockStatisticsRequest;
@@ -41,10 +43,52 @@ public class QueryProcessorUnit implements QueryProcessor {
 			return handleSpikeDetecionRequest((SpikeDetectionRequest) p);
 		else if (p instanceof StockStatisticsRequest)
 			return handleStatisticsRequest((StockStatisticsRequest) p);
+		else if (p instanceof PriceToClearQuery) 
+			return handlePriceToClear((PriceToClearQuery)p);
 		else {
 			// Unknown query
 			return new QueryResponse(p.getPacketId(), false);
 		}
+	}
+	
+	private QueryResponse handlePriceToClear(PriceToClearQuery q) {
+		double price = -1;
+		long stockId = q.stockId;
+		int volume = q.volume;
+		
+		int limit = 10;
+		int ngot = 0;
+		int volcount = 0;
+		int scale = 0;
+		try {
+			scale = getPriceScale(stockId);
+			while(volume > 0) {
+				volume = q.volume;
+				limit *= 2;
+				ResultSet result = connection.getBestOffersForStock(stockId, limit);
+				int nthistime = 0;
+				volcount = 0;
+				while(volume > 0 && result.next() ) {
+					price = result.getInt("price");
+					long vol = result.getInt("volume");
+					volume -= vol;
+					volcount += vol;
+					nthistime++;
+				}
+				if(nthistime == ngot) //failed to get any more
+					break;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		//At the moment this is not particularly elegant
+		PriceToClearResponse resp = new PriceToClearResponse(q.getPacketId(),true);
+		resp.volume = (volcount > q.volume)?q.volume:volcount;
+		resp.fullyMet = resp.volume == q.volume;
+		resp.stockId = q.stockId;
+		
+		resp.price = (1/Math.pow(10,scale)) * price;
+		return resp;
 	}
 
 	private int getPriceScale(long symbolIndex) throws SQLException {

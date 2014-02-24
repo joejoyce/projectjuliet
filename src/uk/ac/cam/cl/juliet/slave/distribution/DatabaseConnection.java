@@ -278,4 +278,13 @@ public interface DatabaseConnection {
 	 * @return
 	 */
 	public long getLastCommitNS();
+	
+	/**
+	 * Fetches the limit best offers for a given symbolId
+	 * @param symbolID
+	 * @param limit
+	 * @return
+	 * @throws SQLException
+	 */
+	public ResultSet getBestOffersForStock(long symbolID, int limit) throws SQLException;
 }

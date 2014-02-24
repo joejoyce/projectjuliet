@@ -27,6 +27,9 @@ import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.LatencyMonitor;
 import uk.ac.cam.cl.juliet.common.MovingAverageRequest;
 import uk.ac.cam.cl.juliet.common.MovingAverageResponse;
+import uk.ac.cam.cl.juliet.common.PriceToClear;
+import uk.ac.cam.cl.juliet.common.PriceToClearQuery;
+import uk.ac.cam.cl.juliet.common.PriceToClearResponse;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.StockStatisticsRequest;
 import uk.ac.cam.cl.juliet.common.StockStatisticsResponse;
@@ -303,12 +306,60 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			case "movingAverage":
 				getMovingAverageData(options, pw);
 				break;
+			case "priceToClear":
+				priceToClear(options,pw);
+				break;
 			}
 		} catch (SQLException e) {
 			Debug.println(Debug.ERROR, "Cluster query exception");
 			e.printStackTrace();
 		} catch (NoClusterException e) {
 			Debug.println(Debug.ERROR, "No cluster");
+		}
+	}
+	private void priceToClear(String options, PrintWriter pw) {
+		Pattern p = Pattern.compile("\\s*id\\s*=\\s*(\\d+)\\s*volume\\s*=\\s*(\\d+)\\s*");
+		Matcher m = p.matcher(options);
+		if (m.find()) {
+			String id = m.group(1);
+			String volume = m.group(2);
+			PriceToClearQuery ptc = new PriceToClearQuery();
+			ClusterMaster cm = ClusterServer.cm;
+			ptc.stockId = Integer.parseInt(id);
+			ptc.volume = Integer.parseInt(volume);
+			class PriceToClearCallback extends Callback {
+				public PriceToClearResponse ptc = null;
+				public void callback(Container data) {
+					// TODO Auto-generated method stub
+					if(data instanceof PriceToClearResponse) {
+						this.ptc = (PriceToClearResponse)data;
+						this.finished = true;
+					} else {
+						Debug.println(Debug.ERROR,"PriceToClear callback run with object of wrong type");
+						this.finished = true;
+					}
+				}
+			}
+			PriceToClearCallback cb = new PriceToClearCallback();
+			try {
+				cm.sendPacket(ptc, cb);
+			} catch (NoClusterException e) {
+				e.printStackTrace();
+			}
+			cb.waitUntilDone();
+			JsonBuilder jb = new JsonBuilder();
+			jb.stOb();
+			if(null != cb.ptc) {
+				jb.pushPair("stockId", cb.ptc.stockId);
+				jb.pushPair("volume", cb.ptc.volume);
+				jb.pushPair("price",cb.ptc.price);
+				jb.pushPair("fullyMet", cb.ptc.fullyMet?"true":"false");
+			}
+			jb.finOb();
+			pw.write(jb.toString());
+			
+		} else {
+			Debug.println(Debug.ERROR,"Invalid priceToClear options");
 		}
 	}
 

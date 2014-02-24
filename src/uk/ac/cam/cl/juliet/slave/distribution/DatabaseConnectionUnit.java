@@ -410,4 +410,15 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	public long getLastCommitNS() {
 		return lastCommitNs;
 	}
+	
+	
+	public ResultSet getBestOffersForStock(long symbolID, int limit) throws SQLException {
+		PreparedStatement statement = this.connection
+				.prepareStatement("SELECT * FROM order_book WHERE symbol_id=? AND added=1 AND deleted=0 AND is_ask=1 ORDER BY price DESC LIMIT = ?");
+		ResultSet result;
+		statement.setLong(1, symbolID);
+		statement.setLong(2, limit);
+		result = statement.executeQuery();
+		return result;
+	}
 }
