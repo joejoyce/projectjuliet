@@ -311,7 +311,7 @@ public class Client {
 		if(null != (ifc = jobqueue.peek())) {
 			if(ifc.getDueTime() <= time) {
 				//Remove and flush the rest of the queue
-				Debug.println(Debug.ERROR,"Timeout waiting for response from client " + address);
+				Debug.println(Debug.ERROR,"Timeout waiting for response from client " + address + ", packet: " + ifc.getContainer().getPacketId() + ",: " + ifc.getContainer().toString());
 				closeClient();
 				while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.getBroadcast()) {
@@ -320,7 +320,6 @@ public class Client {
 						try {
 							parent.sendPacket(ifc.getContainer(),ifc.getCallback());
 						} catch (NoClusterException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}

@@ -9,7 +9,7 @@ import uk.ac.cam.cl.juliet.common.Container;
  *
  */
 public class InFlightContainer {
-	private static long defaultTimeout = 60000000000L; //60 seconds
+	private static long defaultTimeout = 10000000000L; //10 seconds
 	private Container container;
 	private long dueTime;
 	private Callback callback = null;
