@@ -77,13 +77,13 @@ exports.getMovingAverage = function(symbolIndex, priceScale, callback) {
     client.end();
     var averageData = [];
     mData.forEach(function(series) {
-                var averages = [];
-                series.data.forEach(function(average) {
-                    average.average *= priceScale;
-                    averages.push(average);
-                });
-            averageData.push({name:series.name, data:averages});
-            });
+        var averages = [];
+        series.data.forEach(function(average) {
+            average.average *= priceScale;
+            averages.push(average);
+        });
+        averageData.push({name:series.name, data:averages});
+    });
 
     callback(averageData);
   });

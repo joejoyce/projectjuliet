@@ -45,7 +45,7 @@ mixin symbol_summary(symbol, stats)
 mixin client_list(list)
   div#client-list
     h2 Connected Nodes
-    table.table.table-hover.table-striped
+    table.table.table-hover.table-striped.clients
       thead
         tr
           th IP
@@ -53,7 +53,7 @@ mixin client_list(list)
           th Current Packets
       tbody
         each client in list
-          - if(client.currentPackets > 20) {
+          - if(client.currentPackets > 200) {
             tr
               td.negc=client.name
               td.negc=client.totalPackets
