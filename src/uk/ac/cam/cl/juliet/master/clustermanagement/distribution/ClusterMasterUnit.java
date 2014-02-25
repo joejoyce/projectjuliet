@@ -1,18 +1,14 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
@@ -22,17 +18,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-//import org.dhcp4java.DHCPCoreServer;
-//import org.dhcp4java.DHCPServerInitException;
-//import org.dhcp4java.DHCPServlet;
-
-
-
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
-import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
-import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Client;
 
 
 final class ClientLoadComparator implements Comparator<Client> {
