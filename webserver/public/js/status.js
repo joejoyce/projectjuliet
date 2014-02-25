@@ -1,31 +1,61 @@
 $(document).ready(function() {
     setInterval(function() {
         $.getJSON('/api/v1/status/clients', function(clients) {
-           clients.clients.forEach(function(client) {
-            $('.clients tr:gt(0)').each(function(i, data) {
-                if($(data.children[0]).text() == client.name) {
-                    $(data.children[1]).text(client.totalPackets);
-                    $(data.children[2]).text(client.currentPackets);
-                    if(client.currentPackets > 200) {
-                        $(data.children[0]).removeClass("posc");
-                        $(data.children[1]).removeClass("posc");
-                        $(data.children[2]).removeClass("posc");
-                        $(data.children[0]).addClass("negc");
-                        $(data.children[1]).addClass("negc");
-                        $(data.children[2]).addClass("negc");
+            clients.clients.forEach(function(client) {
+                var inTable = false;
+                $('.clients tr:gt(0)').each(function(i, data) {
+                    if($(data.children[0]).text() == client.name) {
+                        inTable = true;
+                        $(data.children[1]).text(client.totalPackets);
+                        $(data.children[2]).text(client.currentPackets);
+                        if(client.currentPackets > 200) {
+                            $(data.children[0]).removeClass("posc");
+                            $(data.children[1]).removeClass("posc");
+                            $(data.children[2]).removeClass("posc");
+                            $(data.children[0]).addClass("negc");
+                            $(data.children[1]).addClass("negc");
+                            $(data.children[2]).addClass("negc");
+                        }
+                        else {
+                            $(data.children[0]).removeClass("negc");
+                            $(data.children[1]).removeClass("negc");
+                            $(data.children[2]).removeClass("negc");
+                            $(data.children[0]).addClass("posc");
+                            $(data.children[1]).addClass("posc");
+                            $(data.children[2]).addClass("posc");
+                        }
                     }
-                    else {
-                        $(data.children[0]).removeClass("negc");
-                        $(data.children[1]).removeClass("negc");
-                        $(data.children[2]).removeClass("negc");
-                        $(data.children[0]).addClass("posc");
-                        $(data.children[1]).addClass("posc");
-                        $(data.children[2]).addClass("posc");
+                });
+                if(!inTable) {
+                    // A new client, cool!
+                    // Lets add it to the table
+                    if(client.currentPackets > 200) {
+                        $('.clients tr:last').after('<tr><td class="negc">'+client.name+'</td><td class="negc">'+client.totalPackets+'</td><td class="negc">'+client.currentPackets+'</td></tr>');
+                    } else {
+                        $('.clients tr:last').after('<tr><td class="posc">'+client.name+'</td><td class="posc">'+client.totalPackets+'</td><td class="posc">'+client.currentPackets+'</td></tr>');
                     }
                 }
             });
-           });  
-        });    
+            if($('.clients tr:gt(0)').length != clients.clients.length) {
+                // A client has disconnected!
+                // Lets remove him from the table
+                var names = [];
+                $('.clients tr:gt(0)').each(function(i, data) {
+                    names.push($(data.children[0]).text());
+                });
+
+                clients.clients.forEach(function(client) {
+                    var index = names.indexOf(client.name);
+                    names.splice(index, 1);
+                });
+                // Anything left in names now needs to go:
+                $('.clients tr:gt(0)').each(function(i, data) {
+                    if(names.indexOf($(data.children[0]).text()) != -1) {
+                        $(data).remove();
+                    }
+                });
+            }
+        });  
     }, 1000);
 
 
