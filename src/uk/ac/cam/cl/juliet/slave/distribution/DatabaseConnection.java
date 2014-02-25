@@ -287,4 +287,16 @@ public interface DatabaseConnection {
 	 * @throws SQLException
 	 */
 	public ResultSet getBestOffersForStock(long symbolID, int limit) throws SQLException;
+
+	/**
+	 * Adds a runnable which will be executed whenever a batch statement is about to be executed.
+	 * @param r The runnable to run. 
+	 */
+	public void addBatchQueryExecuteStartCallback(Runnable r);
+	
+	/**
+	 * Adds a runnable which will be executed whenever a batch statement has been executed.
+	 * @param r The runnable to run.
+	 */
+	public void addBatchQueryExecuteEndCallback(Runnable r);
 }

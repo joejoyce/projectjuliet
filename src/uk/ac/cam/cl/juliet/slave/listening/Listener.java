@@ -7,7 +7,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
@@ -34,12 +38,16 @@ public class Listener {
 	private int port;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
-	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(2000);
-	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(2000);
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(
+			2000);
+	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(
+			2000);
+	private LinkedList<XDPRequest> waitingForBatchQueries = new LinkedList<XDPRequest>();
+	private ReentrantLock waitingForBatchQueriesLock = new ReentrantLock();
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
 	private QueryProcessor query;
-	
+
 	/**
 	 * Connects to the server and begins to read and process packets.
 	 * 
@@ -49,17 +57,38 @@ public class Listener {
 	 *            The port which packets are being sent from.
 	 * @throws IOException
 	 */
-	public void listen(String server, int thePort, DatabaseConnection db, XDPProcessor xdpProcessor, QueryProcessor queryProcessor) throws IOException, SQLException {
+	public void listen(String server, int thePort, DatabaseConnection db,
+			XDPProcessor xdpProcessor, QueryProcessor queryProcessor)
+			throws IOException, SQLException {
 		this.ip = server;
 		this.port = thePort;
 		this.socket = new Socket(server, thePort);
-		this.output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+		this.output = new ObjectOutputStream(new BufferedOutputStream(
+				socket.getOutputStream()));
 		output.flush();
-		this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
-		
+		this.input = new ObjectInputStream(new BufferedInputStream(
+				socket.getInputStream()));
+
 		this.databaseConnection = db;
 		this.xdp = xdpProcessor;
 		this.query = queryProcessor;
+		this.databaseConnection
+				.addBatchQueryExecuteStartCallback(new Runnable() {
+					@Override
+					public void run() {
+						// Stop packets from being added to
+						// waitingForBatchQueries
+						waitingForBatchQueriesLock.lock();
+					}
+				});
+		this.databaseConnection.addBatchQueryExecuteEndCallback(new Runnable() {
+			@Override
+			public void run() {
+				flushWaitingForBatchQueries();
+				// Allow packets to be added to waitingForBatchQueries
+				waitingForBatchQueriesLock.unlock();
+			}
+		});
 
 		Thread readThread = new Thread() {
 			@Override
@@ -69,21 +98,23 @@ public class Listener {
 			}
 		};
 		readThread.start();
-		
-		//NEW BIT TO RE-THREAD CLIENT
+
+		// NEW BIT TO RE-THREAD CLIENT
 		Thread receiveThread = new Thread() {
 			public void run() {
-				while(true) {
+				while (true) {
 					Object o;
 					try {
 						o = input.readObject();
-						if(o instanceof Container) {
-							if(o instanceof LatencyMonitor) {
-								((LatencyMonitor)o).outboundArrive = System.nanoTime();
+						if (o instanceof Container) {
+							if (o instanceof LatencyMonitor) {
+								((LatencyMonitor) o).outboundArrive = System
+										.nanoTime();
 							}
-							receiveQueue.put((Container)o);
+							receiveQueue.put((Container) o);
 						} else
-							Debug.println(Debug.ERROR,"Unrecognised object type");
+							Debug.println(Debug.ERROR,
+									"Unrecognised object type");
 					} catch (ClassNotFoundException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -91,13 +122,16 @@ public class Listener {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (IOException e) {
-						System.err.println("An error occurred communicating with the server.");
+						System.err
+								.println("An error occurred communicating with the server.");
 						e.printStackTrace();
 						// Just attempt to reconnect
 						try {
 							socket = new Socket(ip, port);
-							input = new ObjectInputStream(socket.getInputStream());
-							output = new ObjectOutputStream(socket.getOutputStream());
+							input = new ObjectInputStream(
+									socket.getInputStream());
+							output = new ObjectOutputStream(
+									socket.getOutputStream());
 						} catch (Exception ex) {
 							ex.printStackTrace();
 						}
@@ -106,13 +140,13 @@ public class Listener {
 			}
 		};
 		receiveThread.start();
-		
+
 		// Sends any waiting responses back to the server.
 		while (true) {
 			try {
 				Container response = responseQueue.take();
-				if(response instanceof LatencyMonitor) {
-					LatencyMonitor m = (LatencyMonitor)response;
+				if (response instanceof LatencyMonitor) {
+					LatencyMonitor m = (LatencyMonitor) response;
 					m.inboundDepart = System.nanoTime();
 				}
 				output.writeObject(response);
@@ -123,9 +157,11 @@ public class Listener {
 				// Just attempt to reconnect
 				try {
 					socket = new Socket(ip, port);
-					output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+					output = new ObjectOutputStream(new BufferedOutputStream(
+							socket.getOutputStream()));
 					output.flush();
-					input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+					input = new ObjectInputStream(new BufferedInputStream(
+							socket.getInputStream()));
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -136,50 +172,61 @@ public class Listener {
 		}
 	}
 
+	private void flushWaitingForBatchQueries() {
+		while (waitingForBatchQueries.peek() != null) {
+			XDPRequest r = waitingForBatchQueries.pop();
+			XDPResponse response = new XDPResponse(r.getPacketId(), true);
+			while (true) {
+				try {
+					responseQueue.put(response);
+					return;
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+	}
+
 	private void readPacket() {
 		try {
-			//Container container = (Container) input.readObject();
+			// Container container = (Container) input.readObject();
 			Container container = receiveQueue.take();
-			
+
 			Debug.println("Got new object");
-			
+
 			if (container instanceof ConfigurationPacket) {
 				handleConfigurationPacket((ConfigurationPacket) container);
-			} else if(container instanceof LatencyMonitor) {
-				LatencyMonitor m = (LatencyMonitor)container;
+			} else if (container instanceof LatencyMonitor) {
+				LatencyMonitor m = (LatencyMonitor) container;
 				handleLatencyMonitor(m);
 			} else {
 				long then = System.nanoTime();
-				
+
 				if (container instanceof XDPRequest) {
 					processXDPRequest((XDPRequest) container);
 				} else if (container instanceof QueryPacket) {
 					processQueryPacket((QueryPacket) container);
 				} else if (container instanceof StringTestPacket) {
 					System.out.println(container);
-				} 
-				
+				}
+
 				long diff = Math.abs(System.nanoTime() - then);
 				diff /= 1000000;
-				Debug.println("Time taken for processing ms: " + diff);				
+				Debug.println("Time taken for processing ms: " + diff);
 			}
-		} /*catch (ClassNotFoundException | ClassCastException e) {
-			System.err.println("An unexpected object was recieved from the server.");
-			e.printStackTrace();
-			System.exit(0);
-		} catch (IOException e) {
-			System.err.println("An error occurred communicating with the server.");
-			e.printStackTrace();
-			// Just attempt to reconnect
-			try {
-				this.socket = new Socket(ip, port);
-				this.input = new ObjectInputStream(this.socket.getInputStream());
-				this.output = new ObjectOutputStream(this.socket.getOutputStream());
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		} */ 
-	    catch (InterruptedException e) {
+		} /*
+		 * catch (ClassNotFoundException | ClassCastException e) {
+		 * System.err.println
+		 * ("An unexpected object was recieved from the server.");
+		 * e.printStackTrace(); System.exit(0); } catch (IOException e) {
+		 * System.
+		 * err.println("An error occurred communicating with the server.");
+		 * e.printStackTrace(); // Just attempt to reconnect try { this.socket =
+		 * new Socket(ip, port); this.input = new
+		 * ObjectInputStream(this.socket.getInputStream()); this.output = new
+		 * ObjectOutputStream(this.socket.getOutputStream()); } catch (Exception
+		 * ex) { ex.printStackTrace(); } }
+		 */
+		catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -187,14 +234,21 @@ public class Listener {
 
 	private void processXDPRequest(XDPRequest container) {
 		boolean result = this.xdp.decode(container);
-		XDPResponse response = new XDPResponse(container.getPacketId(), result);
-		while (true) {
-			try {
-				responseQueue.put(response);
-				return;
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		if (result == false) {
+			XDPResponse response = new XDPResponse(container.getPacketId(),
+					false);
+			while (true) {
+				try {
+					responseQueue.put(response);
+					return;
+				} catch (InterruptedException e) {
+				}
 			}
+		} else {
+			waitingForBatchQueriesLock.lock();
+			waitingForBatchQueries.add(container);
+			waitingForBatchQueriesLock.unlock();
+			return;
 		}
 	}
 
@@ -221,17 +275,19 @@ public class Listener {
 			 * System.err.println("An error occurred connecting to the database"
 			 * ); e.printStackTrace(); System.exit(1); }
 			 */
-		}		
+		}
 	}
+
 	private void handleLatencyMonitor(LatencyMonitor m) {
 		m.outboundDequeue = System.nanoTime();
-		if(null != databaseConnection)
+		if (null != databaseConnection)
 			m.databaseRoundTrip = databaseConnection.getLastCommitNS();
 		m.inboundQueue = System.nanoTime();
 		try {
 			responseQueue.put(m);
 		} catch (InterruptedException e) {
-			Debug.println(Debug.ERROR,"Unable to queue up latencyMonitor return");
+			Debug.println(Debug.ERROR,
+					"Unable to queue up latencyMonitor return");
 			e.printStackTrace();
 		}
 	}

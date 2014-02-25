@@ -64,6 +64,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private PreparedStatement modifyOrderBatch;
 	private ArrayList<OrderVolumeReduction> volumeReductions = new ArrayList<OrderVolumeReduction>();
 	private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	private ArrayList<Runnable> batchQueryExecuteStartCallbacks = new ArrayList<Runnable>();
+	private ArrayList<Runnable> batchQueryExecuteEndCallbacks = new ArrayList<Runnable>();
 	private int batchSize = 0;
 	private int delete = 0;
 	private int add = 0;
@@ -90,6 +92,12 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
 				try {
+					synchronized(batchQueryExecuteStartCallbacks) {
+						for (Runnable r : batchQueryExecuteStartCallbacks){
+							r.run();
+						}
+					}
+					
 					Debug.println(Debug.INFO, "Total batch size: " + batchSize);
 					long start = System.nanoTime();
 
@@ -151,6 +159,12 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					totalTaken /= 1000000;
 					Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
 					Debug.println(Debug.INFO, "-------------------------------------");
+					
+					synchronized(batchQueryExecuteEndCallbacks) {
+						for (Runnable r : batchQueryExecuteEndCallbacks){
+							r.run();
+						}
+					}
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -370,5 +384,17 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(2, limit);
 		result = statement.executeQuery();
 		return result;
+	}
+	
+	public void addBatchQueryExecuteStartCallback(Runnable r) {
+		synchronized(batchQueryExecuteStartCallbacks) {
+			this.batchQueryExecuteStartCallbacks.add(r);
+		}
+	}
+	
+	public void addBatchQueryExecuteEndCallback(Runnable r) {
+		synchronized(batchQueryExecuteEndCallbacks) {
+			this.batchQueryExecuteEndCallbacks.add(r);
+		}
 	}
 }

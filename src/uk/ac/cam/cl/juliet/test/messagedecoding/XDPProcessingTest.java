@@ -325,6 +325,18 @@ class TestDatabase implements DatabaseConnection {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public void addBatchQueryExecuteStartCallback(Runnable r) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addBatchQueryExecuteEndCallback(Runnable r) {
+		// TODO Auto-generated method stub
+		
+	}
 	
 
 }
