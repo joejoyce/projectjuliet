@@ -5,6 +5,7 @@ public class Notification {
 	public String body;
 	public long timestamp;
 	public long timeout;
+	public long relatedStockId;
 	private static long defKeepLength = 10000000000L; //10 seconds
 	
 	public Notification(String title, String body){
@@ -18,6 +19,13 @@ public class Notification {
 		this.body = body;
 		this.timestamp = System.nanoTime();
 		this.timeout = timestamp + timeout;
+	}
+	public Notification(String title, String body, long timeout,long relatedStockId){
+		this.title = title;
+		this.body = body;
+		this.timestamp = System.nanoTime();
+		this.timeout = timestamp + timeout;
+		this.relatedStockId = relatedStockId;
 	}
 }
 
