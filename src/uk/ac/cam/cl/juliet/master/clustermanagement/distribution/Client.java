@@ -116,6 +116,7 @@ public class Client {
 			//workers = null;
 		}						
 		cleaner.cancel(false); //Try to stop the regular operation flushing my queue, waiting until finished
+		tryFlushQueue();
 		try {
 			Debug.println(100 ,"---------------Close Client has been called----------------");
 			out.close();
