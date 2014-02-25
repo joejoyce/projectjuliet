@@ -111,6 +111,10 @@ public class Debug {
 		if(priority <= Debug.ERROR)
 			send(e.getStackTrace().toString(),Debug.ERROR);
 	}
+	public static void printStackTrace(int pri,Exception e) {
+		if(priority <= pri)
+			send(e.getStackTrace().toString(),Debug.ERROR);
+	}
 	
 	public static void recieveDebug( DebugMsg msg ) {
 		if(priority >= msg.getPriority())
