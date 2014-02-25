@@ -93,4 +93,16 @@ public class MockXDPDataStream implements XDPDataStream {
 		array[3] = code[3];
 	}
 
+	@Override
+	public void setSkipBoundary(float pSkipBoundary) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public float getSkipBoundary() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }
