@@ -312,8 +312,8 @@ public class Client {
 			if(ifc.getDueTime() <= time) {
 				//Remove and flush the rest of the queue
 				Debug.println(Debug.ERROR,"Timeout waiting for response from client " + address + ", packet: " + ifc.getContainer().getPacketId() + ",: " + ifc.getContainer().toString());
-				closeClient();
-				while(null != (ifc = jobqueue.poll())) {
+				//closeClient();
+				/*while(null != (ifc = jobqueue.poll())) {
 					if(!ifc.getBroadcast()) {
 						//Reply hasn't been received and not broadcast so resend
 						Debug.println(Debug.INFO,"Resending packet: " + ifc.getPacketId());
@@ -323,7 +323,7 @@ public class Client {
 							e.printStackTrace();
 						}
 					}
-				}
+				}*/
 			}
 		}
 	}
