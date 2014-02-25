@@ -1,4 +1,34 @@
 $(document).ready(function() {
+    setInterval(function() {
+        $.getJSON('/api/v1/status/clients', function(clients) {
+           clients.clients.forEach(function(client) {
+            $('.clients tr:gt(0)').each(function(i, data) {
+                if($(data.children[0]).text() == client.name) {
+                    $(data.children[1]).text(client.totalPackets);
+                    $(data.children[2]).text(client.currentPackets);
+                    if(client.currentPackets > 200) {
+                        $(data.children[0]).removeClass("posc");
+                        $(data.children[1]).removeClass("posc");
+                        $(data.children[2]).removeClass("posc");
+                        $(data.children[0]).addClass("negc");
+                        $(data.children[1]).addClass("negc");
+                        $(data.children[2]).addClass("negc");
+                    }
+                    else {
+                        $(data.children[0]).removeClass("negc");
+                        $(data.children[1]).removeClass("negc");
+                        $(data.children[2]).removeClass("negc");
+                        $(data.children[0]).addClass("posc");
+                        $(data.children[1]).addClass("posc");
+                        $(data.children[2]).addClass("posc");
+                    }
+                }
+            });
+           });  
+        });    
+    }, 1000);
+
+
     Highcharts.setOptions({
         global: {
             useUTC: false

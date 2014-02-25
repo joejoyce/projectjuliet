@@ -33,10 +33,11 @@ exports.index = function(req, res) {
  * Get all cluster clients
  */
 exports.clients = function(req, res) {
-  res.send({
-    kind: 'list',
-    data: status.listClients()
-  });
+  status.getClients(function(clients) {
+   res.send({
+      clients: clients
+    });
+  }); 
 };
 
 /**

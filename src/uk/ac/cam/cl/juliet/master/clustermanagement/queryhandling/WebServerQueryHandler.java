@@ -200,6 +200,11 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 		jb.finArr();
 		
+		if(query.equals("clients")) {
+			pw.write(jb.toString());
+			return;
+		}
+		
 		j.pushPairNoQuotes("clients", jb.toString());
 		
 		long t = cm.getTime();

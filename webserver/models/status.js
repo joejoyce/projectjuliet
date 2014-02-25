@@ -61,3 +61,21 @@ exports.getThroughput = function(callback) {
     callback(data.data);
   });
 };
+
+exports.getClients = function(callback) {
+  var client = net.connect(1337, 'localhost');
+  client.setEncoding('utf8');
+  client.write('status|clients\n');
+
+  var clients = '';
+  
+  client.on('data', function(data) {
+    clients += data;
+  });
+
+  client.on('end', function() {
+    clients = JSON.parse(clients);
+    client.end();
+    callback(clients);
+  });
+};
