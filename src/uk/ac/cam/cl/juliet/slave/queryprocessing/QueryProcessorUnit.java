@@ -313,7 +313,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 				if (low == 0 || price < low)
 					low = price;
 
-				volume = results.getLong("volume");
+				volume += results.getLong("volume");
 			}
 
 			results.close();
