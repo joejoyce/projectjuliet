@@ -53,13 +53,13 @@ public class ClusterServer {
         cm = new ClusterMasterUnit("settings");
         cm.start(5000);
         final DataProcessor dp = new DataProcessor(ds, cm);
+        dp.setFiles(file1, file2, file3, file4, skipBoundary);
+        dp.pause = true;
         ClusterServer.dp = dp;
         //create a new spike detection thread with default values
         spikeDetector = new SpikeDetectionRunnable(cm, 10, 1800, 0.05f);
         Scanner s = new Scanner(System.in);
-        System.out.println("GO?");
-		s.nextLine();
-		Thread t = new Thread(){
+        Thread t = new Thread(){
 			public void run() {
 				dp.start();
 			}

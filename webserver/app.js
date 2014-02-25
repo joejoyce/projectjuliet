@@ -59,6 +59,12 @@ app.get('/api/v1/status/time', statusController.time);
 app.get('/api/v1/status/throughput', statusController.throughput);
 app.get('/api/v1/status/latency', statusController.latency);
 
+app.get('/api/v1/settings/pause', settingsController.pause);
+app.get('/api/v1/settings/restart', settingsController.restart);
+app.get('/api/v1/settings/setskip/:skip', settingsController.setskip);
+
+
+
 
 app.listen(app.get('port'), function() {
   console.log("Express server listening on port %d in %s mode", app.get('port'), app.settings.env);

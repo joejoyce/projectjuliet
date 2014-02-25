@@ -15,6 +15,7 @@ public interface XDPDataStream {
 	 * 			skip large periods of inactivity.
 	 */
 	public void setSkipBoundary(float pSkipBoundary);
+	
 	/**
 	 * Gets the skip Boundary.
 	 * If there is a time difference of more than 
@@ -22,6 +23,7 @@ public interface XDPDataStream {
 	 * 	then the time between them is skipped to get a throughput and to 
 	 * 	skip large periods of inactivity.
 	 * @return
+	 * 	    the skip boundry
 	 */
 	public float getSkipBoundary();
 }

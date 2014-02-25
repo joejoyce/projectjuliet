@@ -1,4 +1,20 @@
 extends layout
 
+block head
+  script(src='/js/lib/segment-display.js')
+  script(src='/js/time.js')
+  script(src='/js/settings.js')
+
 block content
-  h1 Settings
+  div#status-header
+    h1 System Settings
+    canvas#display(width='200', height='60')
+  div#clear
+  center
+    button.btn.btn-primary.form-control(id='pause') Pause
+    button.btn.btn-danger.form-control(id='restart') Restart
+    .clear
+    input.form-control(type='text', id='skip', value=skip)
+    button.btn.btn-primary.form-control(id='set') Set
+    
+   
