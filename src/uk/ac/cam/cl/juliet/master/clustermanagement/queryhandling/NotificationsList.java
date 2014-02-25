@@ -14,6 +14,10 @@ public class NotificationsList {
 		Notification n = new Notification(title,body);
 		ll.add(n);
 	}
+	public void addNotification(String title, String body, long stockId) {
+		Notification n = new Notification(title,body,stockId);
+		ll.add(n);
+	}
 	private void clean() {
 		Iterator<Notification> i = ll.iterator();
 		long time = System.nanoTime();
