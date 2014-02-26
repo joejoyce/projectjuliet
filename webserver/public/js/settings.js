@@ -3,7 +3,7 @@ $(document).ready(function() {
 		$.ajax({
 		    url: "/api/v1/settings/pause",
 		    type: 'GET',
-		    cache: false,
+		    cache: false
 		});
 	});
 
@@ -11,7 +11,7 @@ $(document).ready(function() {
 		$.ajax({
 		    url: '/api/v1/settings/restart',
 		    type: 'GET',
-		    cache: false,
+		    cache: false
 		});
 	});
 
@@ -19,7 +19,7 @@ $(document).ready(function() {
 		$.ajax({
 		    url: "/api/v1/settings/setskip/" + $('#skip').val(),
 		    type: 'GET',
-		    cache: false,
+		    cache: false
 		});
 	});
 });

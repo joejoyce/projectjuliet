@@ -1,0 +1,16 @@
+uk.ac.cam.cl.juliet.common
+uk.ac.cam.cl.juliet.master
+uk.ac.cam.cl.juliet.master.clustermanagement.distribution
+uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling
+uk.ac.cam.cl.juliet.master.dataprocessor
+uk.ac.cam.cl.juliet.slave.distribution
+uk.ac.cam.cl.juliet.slave.listening
+uk.ac.cam.cl.juliet.slave.queryprocessing
+uk.ac.cam.cl.juliet.slave.xdpprocessing
+uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets
+uk.ac.cam.cl.juliet.test.clustermanagement.distribution
+uk.ac.cam.cl.juliet.test.dataprocessor
+uk.ac.cam.cl.juliet.test.debug
+uk.ac.cam.cl.juliet.test.listening
+uk.ac.cam.cl.juliet.test.messagedecoding
+uk.ac.cam.cl.juliet.test.queryhandling

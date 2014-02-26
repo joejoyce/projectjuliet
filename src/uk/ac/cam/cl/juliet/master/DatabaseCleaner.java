@@ -8,11 +8,24 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * A class which periodically runs a method to remove data which is no longer
+ * needed from the database.
+ * 
+ * @author Dylan McDermott
+ * 
+ */
 public class DatabaseCleaner implements Runnable {
 	private Connection connection;
 	private ScheduledExecutorService executor;
 	private ScheduledFuture<?> future;
 
+	/**
+	 * Schedules the run method to run periodically.
+	 * 
+	 * @param con
+	 *            A connection to the database.
+	 */
 	public DatabaseCleaner(Connection con) {
 		this.connection = con;
 		this.executor = Executors.newScheduledThreadPool(1);
@@ -20,6 +33,9 @@ public class DatabaseCleaner implements Runnable {
 				TimeUnit.SECONDS);
 	}
 
+	/**
+	 * Removes data which is no longer needed once.
+	 */
 	public void run() {
 		try {
 			PreparedStatement s = connection
@@ -27,7 +43,7 @@ public class DatabaseCleaner implements Runnable {
 			s.execute();
 		} catch (SQLException e) {
 		}
-		
+
 		try {
 			PreparedStatement s = connection
 					.prepareStatement("DELETE FROM trade WHERE added = 1 AND deleted = 1");
@@ -35,7 +51,10 @@ public class DatabaseCleaner implements Runnable {
 		} catch (SQLException e) {
 		}
 	}
-	
+
+	/**
+	 * Stops the run method from being executed.
+	 */
 	public void stop() {
 		future.cancel(false);
 	}
