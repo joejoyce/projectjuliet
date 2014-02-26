@@ -26,7 +26,7 @@ exports.index = function(req, res) {
  */
 exports.bids = function(req, res) {
   if (req.params.symbol_index) {
-    order.getOrders(req.params.symbol_index, [{field: 'is_ask', value: 0}], function(orders) {
+    order.getBids(req.params.symbol_index, function(orders) {
       res.send({
         kind: 'list',
         data: orders 
@@ -43,7 +43,7 @@ exports.bids = function(req, res) {
  */
 exports.offers = function(req, res) {
   if (req.params.symbol_index) {
-    order.getOrders(req.params.symbol_index, [{field: 'is_ask', value: 1}], function(orders) {
+    order.getOffers(req.params.symbol_index, function(orders) {
       res.send({
         kind: 'list',
         data: orders
