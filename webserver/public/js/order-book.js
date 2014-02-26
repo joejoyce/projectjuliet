@@ -153,7 +153,7 @@ OrderBook.prototype.extractArrayOrderID = function(orderArray) {
 OrderBook.prototype.flashElement = function(element, callback) {
 	var self = this;
 	element.addClass('flash-old');
-	var interval = window.setTimoue(
+	var interval = window.setTimeout(
 		function() { callback(); },
 		self.flashTime
 	);
