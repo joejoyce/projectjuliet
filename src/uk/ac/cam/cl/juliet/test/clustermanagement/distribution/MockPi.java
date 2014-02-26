@@ -12,7 +12,13 @@ import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.common.XDPResponse;
-
+/**
+ * This class is a fake raspberry Pi that can connect to a ClustMaster in order
+ * to test the ClusterMaster.
+ * 
+ * @author Lucas Sonnabend
+ *@see ClusterMasterLoadTest
+ */
 public class MockPi {
 	private String name;
 	private final Socket socket;
@@ -118,7 +124,7 @@ public class MockPi {
 	/**
 	 * A thread that is easily killed.
 	 * 
-	 * @author lucas
+	 * @author Lucas Sonnabend
 	 *
 	 */
 	private class KillableThread extends Thread {

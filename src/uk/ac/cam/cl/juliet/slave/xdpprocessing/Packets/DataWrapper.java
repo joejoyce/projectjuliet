@@ -1,5 +1,12 @@
 package uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets;
-
+/**
+ * This is an abstract class that wraps around an array of unsigned bytes and provides
+ * functions to read from this byte array and converts the output into signed types
+ * of the right size, so that the represented value is preserved.
+ * 
+ * @author Lucas Sonnabend
+ * 
+ */
 public abstract class DataWrapper {
 	private byte[] mData;
 	protected int mDataPointer = 0;
@@ -7,10 +14,9 @@ public abstract class DataWrapper {
 	protected int mSize;
 	
 	/**
-	 * create a new DataWrapper object, and read the size of the "packet"
-	 * from the first two bytes.
-	 * The Datapointer will point to 2 afterwards
-	 * @param pData
+	 * Create a new DataWrapper object, that encapsulates a byte-array of
+	 * unsigned bytes.
+	 * @param pData		The encapsulated byte array
 	 */
 	public DataWrapper(byte[] pData) {
 		mData = pData;
@@ -105,7 +111,10 @@ public abstract class DataWrapper {
 			result[i] = mData[mDataPointer++];
 		return result;
 	}
-	
+	/**
+	 * Returns the size of the encapsulated byte-array.
+	 * @return
+	 */
 	public int getSize() { return this.mSize; }
 	
 }

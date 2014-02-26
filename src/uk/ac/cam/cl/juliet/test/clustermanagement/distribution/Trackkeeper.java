@@ -1,5 +1,11 @@
 package uk.ac.cam.cl.juliet.test.clustermanagement.distribution;
-
+/**
+ * This class can keep track of packets during a mock up of the system in order
+ * to test the ClusterMaster.
+ * 
+ * @author Lucas Sonnabend
+ * @see ClusterMasterLoadTest
+ */
 public class Trackkeeper {
 	private boolean[] isGenerated;
 	private boolean[] arrivedAtPi;

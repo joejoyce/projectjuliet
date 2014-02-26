@@ -12,7 +12,14 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import uk.ac.cam.cl.juliet.slave.distribution.DatabaseConnection;
-
+/**
+ * This is a mock database for testing purposes. Instead of actually writing
+ * messages to a database it counts the messages it gets and writes certain metrics
+ * to .csv-files.
+ * 
+ * @author Lucas Sonnabend
+ *
+ */
 public class MockDatabaseConnection implements DatabaseConnection {
 	private HashMap<Long, MessageStatisticsDatum> sMessageStatistics; 
 	private PrintWriter symbolMappingOut;
@@ -346,7 +353,7 @@ public class MockDatabaseConnection implements DatabaseConnection {
 
 	@Override
 	public long getLastCommitNS() {
-		// TODO Auto-generated method stub
+		// not needed
 		return 0;
 	}
 
@@ -359,19 +366,19 @@ public class MockDatabaseConnection implements DatabaseConnection {
 	@Override
 	public ResultSet getBestOffersForStock(long symbolID, int limit)
 			throws SQLException {
-		// TODO Auto-generated method stub
+		// not needed
 		return null;
 	}
 
 	@Override
 	public void addBatchQueryExecuteStartCallback(Runnable r) {
-		// TODO Auto-generated method stub
+		// not needed
 		
 	}
 
 	@Override
 	public void addBatchQueryExecuteEndCallback(Runnable r) {
-		// TODO Auto-generated method stub
+		// not needed
 		
 	}
 }

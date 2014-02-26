@@ -12,7 +12,7 @@ import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
 /**
  * A a class that runs a single load test on the ClusterMaster by creating
  * a mock DataStream and Mock Pis around it.
- * @author lucas
+ * @author Lucas Sonnabend
  *
  */
 public class ClusterMasterLoadTest {
