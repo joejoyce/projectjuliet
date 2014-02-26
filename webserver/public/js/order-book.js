@@ -88,7 +88,14 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 		var orderID = row.data('order-id');
 		if ($.inArray(orderID, removeList) >= 0) {
 			self.flashElement(row, function() {
-				row.remove();
+                            $(row)
+ 			        .find('td')
+ 			        .wrapInner('<div style="display: block;" />')
+ 				.parent()
+				.find('td > div')
+				.slideUp(700, function(){
+                                  $(this).parent().parent().remove();
+                                 });
 			});
 		}
 	});
@@ -176,6 +183,15 @@ OrderBook.prototype.insertRowBefore = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertBefore(row);
+        $(newRow)
+	 .find('td')
+	 .wrapInner('<div style="display: none;" />')
+	 .parent()
+	 .find('td > div')
+	 .slideDown(700, function(){
+           var $set = $(this);
+	   $set.replaceWith($set.contents());
+        });
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
 		self.flashTime
@@ -186,6 +202,15 @@ OrderBook.prototype.insertRowAfter = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertAfter(row);
+	$(newRow)
+	 .find('td')
+	 .wrapInner('<div style="display: none;" />')
+	 .parent()
+	 .find('td > div')
+	 .slideDown(700, function(){
+	    var $set = $(this);
+	    $set.replaceWith($set.contents());
+        });
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
 		self.flashTime
