@@ -7,7 +7,8 @@ package uk.ac.cam.cl.juliet.common;
  * This implementation is chosen to keep this object small in size because they are
  * send over the network. Furthermore a spike is considered rare and we don't expect
  * to see a large number of spikes at one check.
- * @author lucas
+ * @see SpikeDetectionRequest
+ * @author Lucas Sonnabend
  *
  */
 public class SpikeDetectionResponse extends QueryResponse {

@@ -5,13 +5,18 @@ package uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets;
  * The header for all messages is 4 bytes long and contains the Message Size in bytes 
  * and the Message Type
  * 
- * @author lucas
+ * @author Lucas Sonnabend
  *
  */
 public class Message extends DataWrapper{
 	
 	private int mMessageType;
 	
+	/**
+	 * Create a new Message and pass it a byte array and its size
+	 * @param pSize		Size of the byte array
+	 * @param pData		The byte array
+	 */
 	public Message(int pSize, byte[] pData) {
 		super(pData);
 		mSize = pSize;

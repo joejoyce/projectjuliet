@@ -1,12 +1,10 @@
 package uk.ac.cam.cl.juliet.master.dataprocessor;
 
 import java.io.IOException;
-import java.util.Scanner;
 
 import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
-import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 
 /**

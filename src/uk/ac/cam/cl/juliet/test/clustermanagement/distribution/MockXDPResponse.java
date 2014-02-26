@@ -5,7 +5,7 @@ import uk.ac.cam.cl.juliet.common.XDPResponse;
  * A Mock XDPResponse that is send by a MockPi and contains the sequence number
  * of the packet that arrived at the Pi.
  * 
- * @author lucas
+ * @author Lucas Sonnabend
  *
  */
 public class MockXDPResponse extends XDPResponse {
