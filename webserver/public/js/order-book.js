@@ -35,15 +35,6 @@ OrderBook.prototype.refresh = function() {
 		dataType : 'json',
 		success : function(result) {
 			if(result) {
-				
-				// <test>
-				// Remove selected new entries to have them removed from the current list
-				result.data.splice(0, 1);
-				result.data.splice(2, 1);
-				result.data.splice(3, 1);
-				result.data.splice(6, 1);
-				// </test>
-
 				// Update the order book view
 				self.update(result.data, self.clientData, self.targetRows, self.sorter);
 				// Update client-side data
@@ -205,16 +196,6 @@ OrderBook.prototype.insertRowBefore = function(row, order) {
  * Document ready function
  */
 $(document).ready(function() {
-	// <test>
-	// Remove some current entries so that the new data inserts entries
-	client.offerList.splice(1, 1);
-	$('#offer-rows tr:nth-child(2)').remove();
-	client.bidList.splice(1, 1);
-	$('#bid-rows tr:nth-child(2)').remove();
-	client.bidList.splice(11, 1);
-	$('#bid-rows tr:nth-child(12)').remove();
-	// </test>
-	
 	var offerTable = new OrderBook(
 		'/api/v1/orders/offers/',
 		client.symbol.symbol_id,
