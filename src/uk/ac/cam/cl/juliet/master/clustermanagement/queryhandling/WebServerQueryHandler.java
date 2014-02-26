@@ -98,7 +98,12 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			e.printStackTrace();
 		}
 	}
-
+	/**
+	 * Gets all newly detected Spikes from the spike detector, converts them into
+	 * json objects and outputs them into the PrintWriter pw
+	 * @param string
+	 * @param pw	output for the json objects
+	 */
 	private void runSpikeDetectionQuery(String string, PrintWriter pw) {
 		Debug.println(Debug.INFO, "Running a spike detection query");
 		SpikeDetectionRunnable spikeDetector = ClusterServer.spikeDetector;
@@ -106,7 +111,8 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		JsonBuilder jb = new JsonBuilder();
 		jb.stArr();
-		for (Spike s : listOfSpikes) {
+		while(!listOfSpikes.isEmpty()) {
+			Spike s = listOfSpikes.poll();
 			jb.stOb();
 			jb.pushPair("symbol", s.getSymbol());
 			jb.pushPair("timeOfSpike", s.getTime());

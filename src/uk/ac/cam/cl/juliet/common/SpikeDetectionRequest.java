@@ -1,8 +1,9 @@
 package uk.ac.cam.cl.juliet.common;
 /**
  * A request that is send to a Pi that shall run a spike detection, possibly 
- * on all stocks
- * @author lucas
+ * on all stocks.
+ * @author Lucas Sonnabend
+ * @see SpikeDetectionResponse
  *
  */
 public class SpikeDetectionRequest extends QueryPacket {
@@ -33,9 +34,20 @@ public class SpikeDetectionRequest extends QueryPacket {
 		this.startTimeSpikeDetection = pStartTimeSkpikeDetection;
 		this.limit = pLimit;
 	}
-	
+	/**
+	 * Return the starting time for calculating the average
+	 * @return
+	 */
 	public long getStartTimeAverage() {return this.startTimeAverage;}
+	/**
+	 * Return the starting time for detecting spikes
+	 * @return
+	 */
 	public long getStartTimeSpikes() {return this.startTimeSpikeDetection;}
+	/**
+	 * return the limit for a change to be considered a spike
+	 * @return
+	 */
 	public float getLimit() {return this.limit;}
 	
 }
