@@ -144,7 +144,7 @@ public class Listener {
 				}
 				output.writeObject(response);
 				output.flush();
-				Debug.println(100, "sent: size: " + responseQueue.size());
+				Debug.println("sent: size: " + responseQueue.size());
 			} catch (IOException e) {
 				e.printStackTrace();
 				// Just attempt to reconnect
@@ -171,9 +171,7 @@ public class Listener {
 			r = waitingForBatchQueries.pop();
 			response = new XDPResponse(r.getPacketId(), true);
 			try {
-				System.out.println("About to put on responseQueue: " + responseQueue.size());
 				responseQueue.put(response);
-				System.out.println("Put on responseQueue: " + responseQueue.size());				
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
