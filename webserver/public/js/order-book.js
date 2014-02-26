@@ -29,17 +29,21 @@ function OrderBook(url, parameter, symbol, clientData, targetRows, sorter, flash
  * (currently polls the server every second)
  */
 OrderBook.prototype.refresh = function() {
+	console.log("called");
 	var self = this;
 	$.ajax({
 		url : this.url + this.parameter,
+		cache: false,
 		dataType : 'json',
 		success : function(result) {
+			console.log("sucesss");
 			if(result) {
 				// Update the order book view
 				self.update(result.data, self.clientData, self.targetRows, self.sorter);
 				// Update client-side data
 				self.clientData = result.data;
 			}
+			console.log("setting");
 			window.setTimeout(self.refresh, 1000);
 		}
 	});
@@ -182,7 +186,7 @@ OrderBook.prototype.insertRowBefore = function(row, order) {
 	);
 }
 
-OrderBook.prototype.insertRowBefore = function(row, order) {
+OrderBook.prototype.insertRowAfter = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertAfter(row);
