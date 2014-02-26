@@ -160,7 +160,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
 					Debug.println(Debug.INFO, "-------------------------------------");
 
+					System.out.println("Waiting to enter batchQueryExecuteEndCallbacks");
 					synchronized (batchQueryExecuteEndCallbacks) {
+						System.out.println("Runining stuff");
 						for (Runnable r : batchQueryExecuteEndCallbacks) {
 							r.run();
 						}
