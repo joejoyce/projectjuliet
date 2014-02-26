@@ -32,7 +32,7 @@ OrderBook.prototype.refresh = function() {
 	console.log("called");
 	var self = this;
 	$.ajax({
-		url : this.url + this.parameter,
+		url : self.url + self.parameter,
 		cache: false,
 		dataType : 'json',
 		success : function(result) {
