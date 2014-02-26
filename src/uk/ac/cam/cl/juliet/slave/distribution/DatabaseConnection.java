@@ -5,10 +5,10 @@ import java.sql.SQLException;
 import java.sql.Connection;
 
 /**
- * This encapsulates the database accesses made by the XDPProcessor. It can be
- * mocked to do packet decoding testing.
+ * This encapsulates the database accesses made by the XDPProcessor and the QueryProcessor
+ * on the Raspberry Pis.
  * 
- * @author lucas
+ * @author Lucas Sonnabend
  * 
  */
 public interface DatabaseConnection {
@@ -22,8 +22,7 @@ public interface DatabaseConnection {
 	 * @param time_ns
 	 *            timestamp from the sender in nanoseconds
 	 * @param symbolSeqNumber
-	 *            symbol-sequence-number refers to an EPOCH time stamp in
-	 *            seconds for this stock
+	 *            symbol-sequence-number of the message for this symbol index
 	 * @param price
 	 *            price of the order
 	 * @param volume
@@ -52,8 +51,7 @@ public interface DatabaseConnection {
 	 * @param time_ns
 	 *            timestamp from the sender in nanoseconds
 	 * @param symbolSeqNumber
-	 *            symbol-sequence-number refers to an EPOCH time stamp in
-	 *            seconds for this stock
+	 *            symbol-sequence-number of the message for this symbol index
 	 * @param price
 	 *            potential new price of the order
 	 * @param volume
@@ -71,11 +69,17 @@ public interface DatabaseConnection {
 	 * Reduce the volume of an order's order book database entry
 	 * 
 	 * @param orderID
+	 * 		The order ID of the order that is to be reduced
 	 * @param symbolIndex
+	 * 		The symbol index of the stock for which the order was made
 	 * @param time_ns
+	 * 		Time stamp from the sender in nanoseconds
 	 * @param symbolSeqNumber
+	 * 		symbol-sequence-number of the message for this symbol index
 	 * @param volumeReduction
+	 * 		the amount by which the volume is reduced
 	 * @param packetTimestamp
+	 * 		The timestamp from the sender of the packet in seconds
 	 * @throws SQLException
 	 */
 	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns,
@@ -87,10 +91,15 @@ public interface DatabaseConnection {
 	 * Note this method will delete an order book entry specified by both orderID and symbolIndex.
 	 * 
 	 * @param orderID
+	 * 			Order ID of the order that is to be deleted
 	 * @param symbolIndex
+	 * 			symbol index of the stock for which the order was made
 	 * @param time_ns
+	 * 			time stamp of the sender in nanoseconds
 	 * @param symbolSeqNumber
+	 * 			sequence number of this message for this symbol index
 	 * @param packetTimestamp
+	 * 			timestamp of the sender for the packet in seconds
 	 * @throws SQLException
 	 */
 	public void deleteOrder(long orderID, long symbolIndex, long time_ns,
@@ -100,12 +109,19 @@ public interface DatabaseConnection {
 	 * Add a trade to the database trade book
 	 * 
 	 * @param tradeID
+	 * 			unique trade ID of the trade
 	 * @param symbolIndex
+	 * 			symbol index of the traded stock
 	 * @param time_ns
+	 * 			time of the sender in nanoseconds
 	 * @param symbolSeqNumber
+	 * 			sequence number of this message and the symbol index
 	 * @param price
+	 * 			price at which the stock is traded
 	 * @param volume
+	 * 			volume that is traded
 	 * @param packetTimestamp
+	 * 			timestamp of the packet from the sender in seconds
 	 * @throws SQLException
 	 */
 	public void addTrade(long tradeID, long symbolIndex, long time_ns,
@@ -113,16 +129,25 @@ public interface DatabaseConnection {
 			throws SQLException;
 
 	/**
-	 * Add a stock summary to database stock summary table
+	 * Add a stock summary to database stock summary table.
+	 * NOTE: there are no stock summary messages in the sample data stream
 	 * 
 	 * @param symbolIndex
+	 * 		symbol index of the stock.
 	 * @param time_s
+	 * 		time stamp of the sender for this message in seconds
 	 * @param time_ns
+	 * 		time stamp of the sender for this message in nanoseconds
 	 * @param highPrice
+	 * 		highest trading price seen so far
 	 * @param lowPrice
+	 * 		lowest trading price seen so far
 	 * @param openPrice
+	 * 		opening price of the stock
 	 * @param closePrice
+	 * 		closing price of the stock
 	 * @param totalVolume
+	 * 		total volume traded so far
 	 * @throws SQLException
 	 */
 	public void addStockSummary(long symbolIndex, long time_s, long time_ns,
@@ -135,13 +160,21 @@ public interface DatabaseConnection {
 	 * This method will alter an existing trade entry specified by originalTradeID.
 	 * 
 	 * @param originalTradeID
+	 * 			original trade ID of the trade that is to be corrected
 	 * @param tradeID
+	 * 			new trade ID
 	 * @param symbolIndex
+	 * 			symbol index of the stock that was traded
 	 * @param time_s
+	 * 			time stamp of the sender (on sending the message) in seconds
 	 * @param time_ns
+	 * 			time stamp of the sender (on sending the message), only the nanoseconds part
 	 * @param symbolSeqNumber
+	 * 			sequence number of this message for this symbol index
 	 * @param price
+	 * 			price at which the stock was traded
 	 * @param volume
+	 * 			volume that was traded
 	 * @throws SQLException
 	 */
 	public void correctTrade(long originalTradeID, long tradeID,
@@ -254,7 +287,7 @@ public interface DatabaseConnection {
 			long symbolSeqNumber, long referencePrice) throws SQLException;
 	
 	/**
-	 * gets all trades that happened in the time frame from start up to now 
+	 * Gets all trades that happened in the time frame from start up to now 
 	 * ordered by the symbol ID
 	 * @param start		lower limit of time frame
 	 * @return

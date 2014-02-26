@@ -4,7 +4,13 @@ import java.io.IOException;
 
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
-
+/**
+ * This creates a fake XDPDataStream that creates fake packets at an adjustable rate.
+ * Created Packet is empty except for a unique ID stored in its body.
+ * 
+ * @author Lucas Sonnabend
+ *
+ */
 public class MockXDPDataStream implements XDPDataStream {
 	private long timeDifference_ns;
 	private long timeOfNextPacket;
@@ -95,13 +101,13 @@ public class MockXDPDataStream implements XDPDataStream {
 
 	@Override
 	public void setSkipBoundary(float pSkipBoundary) {
-		// TODO Auto-generated method stub
+		// not needed for this test
 		
 	}
 
 	@Override
 	public float getSkipBoundary() {
-		// TODO Auto-generated method stub
+		// not needed for this test
 		return 0;
 	}
 

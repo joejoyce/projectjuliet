@@ -12,9 +12,9 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterExcept
 
 /**
  * Class for a background thread that will repeatedly ask a Pi to check for
- * spikes in the trades
+ * spikes in all Trades
  * 
- * @author lucas
+ * @author Lucas Sonnabend
  * 
  */
 public class SpikeDetectionRunnable implements Runnable {
@@ -109,16 +109,16 @@ public class SpikeDetectionRunnable implements Runnable {
 	}
 
 	/**
-	 * check whether the spike detection is running or not If it is
+	 * Check whether the spike detection is running or not.
 	 * 
-	 * @return
+	 * @return True if it is running, false otherwise
 	 */
 	public boolean isRunning() {
 		return this.isRunning;
 	}
 
 	/**
-	 * Turn the spike detection on or off
+	 * Turn the spike detection on or off.
 	 * 
 	 * @param running
 	 */

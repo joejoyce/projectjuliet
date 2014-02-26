@@ -1,5 +1,14 @@
 package uk.ac.cam.cl.juliet.slave.xdpprocessing.Packets;
-
+/**
+ * This class encapsulates an XDP packet that consists of a byte array of data.
+ * The first bytes form a header and this class provides getter-functions to return
+ * the header fields.
+ * The underlying method from the DataWrapper are used to read the body
+ * of the packet which contains at least one XDP message
+ * @author Lucas Sonnabend
+ * @see DataWrapper, Message
+ *
+ */
 public class Packet extends DataWrapper {
 
 	protected int deliveryFlag;

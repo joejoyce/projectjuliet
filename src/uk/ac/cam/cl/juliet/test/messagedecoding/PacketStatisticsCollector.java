@@ -7,7 +7,17 @@ import uk.ac.cam.cl.juliet.master.dataprocessor.SampleXDPDataStream;
 import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessor;
 import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
-
+/**
+ * This class is used to test both the implementation of the XDPDataStream and the 
+ * XDPProcessorUnit on the client to see whether the packets and messages are 
+ * correctly read in and decoded.
+ * It will produce .csv-files containing statistics about how many messages are send
+ * per symbol index, a full list of the symbol mapping messages, and a full history
+ * of all messages for one stock symbol.
+ * 
+ * @author Lucas Sonnabend
+ * @see MockDatabaseConection
+ */
 public class PacketStatisticsCollector {
 	private static XDPDataStream sXDPStream;
 	private static XDPProcessor sXDPProcessor;

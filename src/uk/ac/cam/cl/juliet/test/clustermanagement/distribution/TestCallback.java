@@ -7,7 +7,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
  * It notifies its trackkeeper when the packet arrived back at the 
  * ClusterMaster.
  * 
- * @author lucas
+ * @author Lucas Sonnabend
  *
  */
 public class TestCallback extends Callback {
