@@ -190,7 +190,11 @@ public class SpikeDetectionRunnable implements Runnable {
 	public ConcurrentLinkedQueue<Spike> getSpikeBuffer() {
 		return this.spikeBuffer;
 	}
-
+	/**
+	 * Class that encapsulates a detected spike, namely the stock symbol and the
+	 * time when the spike was observed
+	 * @author Lucas Sonnabend
+	 */
 	class Spike {
 		private String symbol;
 		private long time_s;
