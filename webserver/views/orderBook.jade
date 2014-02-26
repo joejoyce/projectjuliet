@@ -4,8 +4,11 @@ block head
   script(src='/js/main.js')
   script(src='/js/time.js')
   script(src='/js/order-book.js')
+  script(src='//cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js')
   script.
-    client.offerList = !{JSON.stringify(offer_list)}
+    client.symbol = !{JSON.stringify(symbol)};
+    client.offerList = !{JSON.stringify(offer_list)};
+    client.bidList = !{JSON.stringify(bid_list)};
 
 block content
   +symbol_summary(symbol, stats)
@@ -19,13 +22,13 @@ block content
           th Volume
           th Value
           th Time
-      tbody
-      each offer in offer_list
-        tr
-          td=(offer.price*symbol.price_scale).toFixed(2)
-          td=offer.volume
-          td=(offer.price*symbol.price_scale*offer.volume).toFixed(2)
-          td=moment(offer.updated_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
+      tbody#offer-rows
+        each offer in offer_list
+          tr(data-order-id="#{offer.order_id}", data-price="#{offer.price}")
+            td=(offer.price*symbol.price_scale).toFixed(2)
+            td=offer.volume
+            td=(offer.price*symbol.price_scale*offer.volume).toFixed(2)
+            td=moment(offer.updated_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
 
   #bid-table
     h1 Bids
@@ -36,10 +39,10 @@ block content
           th Volume
           th Value
           th Time
-      tbody
-      each bid in bid_list
-        tr
-          td=(bid.price*symbol.price_scale).toFixed(2)
-          td=bid.volume
-          td=(bid.price*symbol.price_scale*bid.volume).toFixed(2)
-          td=moment(bid.updated_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
+      tbody#bid-rows
+        each bid in bid_list
+          tr(data-order-id="#{bid.order_id}", data-price="#{bid.price}")
+            td=(bid.price*symbol.price_scale).toFixed(2)
+            td=bid.volume
+            td=(bid.price*symbol.price_scale*bid.volume).toFixed(2)
+            td=moment(bid.updated_s * 1000).format('DD/MM/YYYY - HH:mm:ss')
