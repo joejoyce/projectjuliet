@@ -205,8 +205,17 @@ body {
 }
 
 /* $flash */
-.flash-new td {background-color: #0f0 !important;}
-.flash-old td {background-color: #f00 !important;}
+.flash-new td,
+.posc,
+.pos {
+  background-color: #0f0 !important;
+}
+
+.flash-old td,
+.negc,
+.neg {
+  background-color: #f00 !important;
+}
 
 /* $lists */
 ul,
@@ -253,17 +262,18 @@ p {
   margin: 0;
 }
 
-#offer-table {
-  width: 49%;
-  border: 1px solid rgba(0,0,0,0.2);
-  padding: 5px;
-  float: left;
-}
-
+#offer-table,
 #bid-table {
   width: 49%;
   border: 1px solid rgba(0,0,0,0.2);
   padding: 5px;
+}
+
+#offer-table {
+  float: left;
+}
+
+#bid-table {
   float: right;
 }
 
@@ -283,18 +293,6 @@ p {
 #candle-graph {
   height: 500px;
   padding: 10px;
-}
-
-.neg {
-  color: #FF0000;
-}
-
-.pos {
-  color: #00FF00;
-}
-
-#status-header {
- // display: inline-block;
 }
 
 #status-header h1 {
@@ -317,14 +315,6 @@ p {
 #clear {
   display: inline-block;
   height: 100px;
-}
-
-.posc {
-  background-color: #00FF00 !important;
-}
-
-.negc {
-  background-color: #FF0000 !important;
 }
 
 #pause {
