@@ -170,10 +170,15 @@ public interface DatabaseConnection {
 	 * Add a symbol mapping entry to the database's symbol table
 	 * 
 	 * @param symbolIndex
+	 *            The ID of the symbol.
 	 * @param symbol
+	 *            The name of the symbol.
 	 * @param priceScaleCode
+	 *            The amount which the prices of orders and trades are scaled by.
 	 * @param prevClosingPrice
+	 *            The last closing price of the symbol.
 	 * @param prevClosingVolume
+	 *            The last closing volume of the symbol.
 	 * @throws SQLException
 	 */
 	public void addSymbolMappingEntry(long symbolIndex, String symbol,
@@ -208,10 +213,15 @@ public interface DatabaseConnection {
 	 * All open orders that are not valid for the new trading session have to be deleted.
 	 * 
 	 * @param symbolIndex
+	 *            The ID of the symbol for which the trading session is changing.
 	 * @param time_s
+	 *            The seconds part of the time at which the session changed.
 	 * @param time_ns
+	 *            The nanoseconds part of the time at which the session changed.
 	 * @param symbolSeqNumber
+	 *            The sequence number of the trading session change message.
 	 * @param tradingSession
+	 *            Flags which indicate the new session.
 	 * @throws SQLException
 	 */
 	public void changeTradeSession(long symbolIndex, long time_s, long time_ns,
@@ -220,8 +230,11 @@ public interface DatabaseConnection {
 	/**
 	 * Queries the database and returns the trades for a specific symbol in a specific time range.
 	 * @param symbolID
+	 *            The symbol to return trades for.
 	 * @param start
+	 *            The start time in seconds.
 	 * @param end
+	 *            The end time in seconds.
 	 * @return The trades for the specified symbol in the specified time range.
 	 */
 	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start, long end) throws SQLException;

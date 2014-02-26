@@ -7,10 +7,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
@@ -46,15 +44,16 @@ public class Listener {
 	private XDPProcessor xdp;
 	private QueryProcessor query;
 
-	/**
-	 * Connects to the server and begins to read and process packets.
-	 * 
-	 * @param server
-	 *            The server to connect to.
-	 * @param port
-	 *            The port which packets are being sent from.
-	 * @throws IOException
-	 */
+    /**
+     * Connects to the server and begins to read and process packets.
+     * @param server The IP address of the server to connect to.
+     * @param thePort The port to connect to on the server.
+     * @param db A connection to the database.
+     * @param xdpProcessor The object which is used to process XDP packets.
+     * @param queryProcessor The object which is used to process queries.
+     * @throws IOException
+     * @throws SQLException
+     */
 	public void listen(String server, int thePort, DatabaseConnection db, XDPProcessor xdpProcessor, QueryProcessor queryProcessor) throws IOException, SQLException {
 		this.ip = server;
 		this.port = thePort;
@@ -86,13 +85,13 @@ public class Listener {
 		Thread readThread = new Thread() {
 			@Override
 			public void run() {
-				while (true)
+				while (true) {
 					readPacket();
+				}
 			}
 		};
 		readThread.start();
 
-		// NEW BIT TO RE-THREAD CLIENT
 		Thread receiveThread = new Thread() {
 			public void run() {
 				while (true) {
@@ -107,13 +106,11 @@ public class Listener {
 						} else
 							Debug.println(Debug.ERROR, "Unrecognised object type");
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
+						Debug.println(Debug.ERROR, "Unrecognised object type");
 						e.printStackTrace();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					} catch (IOException e) {
-						System.err.println("An error occurred communicating with the server.");
+						Debug.println(Debug.ERROR, "An error occurred communicating with the server.");
 						e.printStackTrace();
 						// Just attempt to reconnect
 						try {
@@ -195,30 +192,17 @@ public class Listener {
 
 				long diff = Math.abs(System.nanoTime() - then);
 				diff /= 1000000;
-				Debug.println("Time taken for processing ms: " + diff);
+				Debug.println("Time taken for processing: " + diff +"ms");
 			}
-		} /*
-		 * catch (ClassNotFoundException | ClassCastException e) {
-		 * System.err.println
-		 * ("An unexpected object was recieved from the server.");
-		 * e.printStackTrace(); System.exit(0); } catch (IOException e) {
-		 * System.
-		 * err.println("An error occurred communicating with the server.");
-		 * e.printStackTrace(); // Just attempt to reconnect try { this.socket =
-		 * new Socket(ip, port); this.input = new
-		 * ObjectInputStream(this.socket.getInputStream()); this.output = new
-		 * ObjectOutputStream(this.socket.getOutputStream()); } catch (Exception
-		 * ex) { ex.printStackTrace(); } }
-		 */
+		}
 		catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
 	private void processXDPRequest(XDPRequest container) {
 		boolean result = this.xdp.decode(container);
 		if (result == false) {
+			// The decoding did not require the database - send the response straight back.
 			XDPResponse response = new XDPResponse(container.getPacketId(), false);
 			while (true) {
 				try {
@@ -228,6 +212,7 @@ public class Listener {
 				}
 			}
 		} else {
+			// The decoding required the database - wait until all changes have been committed.
 			waitingForBatchQueriesLock.lock();
 			waitingForBatchQueries.add(container);
 			waitingForBatchQueriesLock.unlock();

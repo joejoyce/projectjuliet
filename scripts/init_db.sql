@@ -12,20 +12,6 @@ CREATE TABLE IF NOT EXISTS symbol (
   PRIMARY KEY(symbol_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
-DROP TABLE IF EXISTS buffer;
-CREATE TABLE IF NOT EXISTS buffer (
-  id int(10) unsigned NOT NULL AUTO_INCREMENT,
-  symbol_id int(10) unsigned NOT NULL,
-  order_id int(10) unsigned NOT NULL,
-  operation_code varchar(255) NOT NULL,
-  price int(10) unsigned NOT NULL,
-  volume int(10) unsigned NOT NULL,
-  awaiting_order_id int(10) unsigned NOT NULL,
-  placed_s int(10) unsigned NOT NULL,
-  placed_seq_num int(10) unsigned NOT NULL,
-  PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
-
 DROP TABLE IF EXISTS stock_summary;
 CREATE TABLE IF NOT EXISTS stock_summary (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -92,12 +78,14 @@ BEGIN
                      INTO last_updated_s, last_updated_seq_num, order_added;
     
     IF last_updated_s IS NULL THEN
+        -- New order
         INSERT INTO order_book VALUES (p_order_id, p_symbol_id, p_price,
                                        p_volume, p_is_ask, p_placed_s,
                                        p_placed_seq_num, p_updated_s,
                                        p_updated_seq_num, 1, 0);
     ELSEIF last_updated_s < p_updated_s OR (last_updated_s = p_updated_s
                  AND last_updated_seq_num < p_updated_seq_num) THEN
+        -- The order ID was reused - replace old order
         UPDATE order_book SET price = p_price, volume = p_volume,
                               is_ask = p_is_ask, placed_s = p_placed_s,
                               placed_seq_num = p_placed_seq_num,
@@ -107,6 +95,7 @@ BEGIN
                            WHERE (order_id = p_order_id) AND
                                  (symbol_id = p_symbol_id);
     ELSEIF order_added=0 THEN
+        -- The modify or delete for this order was processed first
         UPDATE order_book SET is_ask = p_is_ask, placed_s = p_placed_s,
                               placed_seq_num = p_placed_seq_num, added = 1
                           WHERE (order_id = p_order_id) AND
@@ -131,10 +120,12 @@ BEGIN
                      INTO last_updated_s, last_updated_seq_num;
 
     IF last_updated_s IS NULL THEN
+        -- The delete for this order was processed first
         INSERT INTO order_book VALUES (p_order_id, p_symbol_id, 0, 0, 0,
                                        0, 0, p_s, p_seq_num, 0, 1);
     ELSEIF last_updated_s < p_s OR (last_updated_s = p_s
                  AND last_updated_seq_num < p_seq_num) THEN
+        -- The order exists in the database
         UPDATE order_book SET updated_s = p_s, updated_seq_num = p_seq_num,
                               deleted = 1
                           WHERE (order_id = p_order_id) AND
@@ -161,11 +152,13 @@ BEGIN
                      INTO last_updated_s, last_updated_seq_num;
     
     IF last_updated_s IS NULL THEN
+        -- This modify is the first message for the order to be processed
         INSERT INTO order_book VALUES (p_order_id, p_symbol_id, p_price,
                                        p_volume, 0, 0, 0, p_s, p_seq_num,
                                        0, 0);
     ELSEIF last_updated_s < p_s OR (last_updated_s = p_s
                  AND last_updated_seq_num < p_seq_num) THEN
+        -- The order is in the database
         UPDATE order_book SET price = p_price, volume = p_volume,
                               updated_s = p_s,
                               updated_seq_num = p_seq_num
@@ -196,11 +189,13 @@ BEGIN
                      INTO last_updated_s, last_updated_seq_num, trade_added;
 
     IF last_updated_s IS NULL THEN
+        -- New trade
         INSERT INTO trade VALUES (p_trade_id, p_symbol_id, p_price, p_volume,
                                   p_offered_s, p_offered_seq_num,
                                   p_updated_s, p_updated_seq_num, 1, 0);
     ELSEIF last_updated_s < p_updated_s OR (last_updated_s = p_updated_s
                  AND last_updated_seq_num < p_updated_seq_num) THEN
+        -- The trade ID was reused
         UPDATE trade SET price = p_price, volume = p_volume,
                          offered_s = p_offered_s,
                          offered_seq_num = p_offered_seq_num,
@@ -210,6 +205,7 @@ BEGIN
                          WHERE (trade_id = p_trade_id) AND
                                (symbol_id = p_symbol_id);
     ELSEIF trade_added=0 THEN
+        -- A modify or delete for this trade was processed first
         UPDATE trade SET offered_s = p_offered_s,
                          offered_seq_num = p_offered_seq_num, added = 1
                      WHERE (trade_id = p_trade_id) AND
@@ -234,10 +230,12 @@ BEGIN
                      INTO last_updated_s, last_updated_seq_num;
 
     IF last_updated_s IS NULL THEN
+        -- The delete trade message was processed first
         INSERT INTO trade VALUES (p_trade_id, p_symbol_id, 0, 0,
                                   0, 0, p_s, p_seq_num, 0, 1);
     ELSEIF last_updated_s < p_s OR (last_updated_s = p_s
                  AND last_updated_seq_num < p_seq_num) THEN
+        -- The trade is already in the database
         UPDATE trade SET updated_s = p_s, updated_seq_num = p_seq_num,
                          deleted = 1
                      WHERE (trade_id = p_trade_id) AND
@@ -262,11 +260,13 @@ BEGIN
                      INTO last_updated_s, last_updated_seq_num;
 
     IF last_updated_s IS NULL THEN
+        -- The modify trade message was processed first
         INSERT INTO trade VALUES (p_trade_id, p_symbol_id, p_price,
                                   p_volume, 0, 0, p_s, p_seq_num,
                                   0, 0);
     ELSEIF last_updated_s < p_s OR (last_updated_s = p_s
                  AND last_updated_seq_num < p_seq_num) THEN
+        -- The trade is already in the database
         UPDATE trade SET trade_id = p_trade_id, price = p_price,
                          volume = p_volume,
                          updated_s = p_s, updated_seq_num = p_seq_num
