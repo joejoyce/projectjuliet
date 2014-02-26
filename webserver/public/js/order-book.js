@@ -28,23 +28,20 @@ function OrderBook(url, parameter, symbol, clientData, targetRows, sorter, flash
  * Refresh the order book data via an AJAX poll
  * (currently polls the server every second)
  */
-OrderBook.prototype.refresh = function() {
-	console.log("called");
+OrderBook.prototype.refresh = function(orderBook) {
 	var self = this;
 	$.ajax({
-		url : self.url + self.parameter,
+		url : orderBook.url + orderBook.parameter,
 		cache: false,
 		dataType : 'json',
 		success : function(result) {
-			console.log("sucesss");
 			if(result) {
 				// Update the order book view
-				self.update(result.data, self.clientData, self.targetRows, self.sorter);
+				orderBook.update(result.data, orderBook.clientData, orderBook.targetRows, orderBook.sorter);
 				// Update client-side data
-				self.clientData = result.data;
+				orderBook.clientData = result.data;
 			}
-			console.log("setting");
-			window.setInterval(self.refresh, 1000);
+			window.setInterval(function() { orderBook.refresh(orderBook); }, 2000);
 		}
 	});
 }
@@ -200,7 +197,6 @@ OrderBook.prototype.insertRowAfter = function(row, order) {
  * Document ready function
  */
 $(document).ready(function() {
-
 	var offerTable = new OrderBook(
 		'/api/v1/orders/offers/',
 		client.symbol.symbol_id,
@@ -210,8 +206,7 @@ $(document).ready(function() {
 		function(orderA, orderB) { return (orderA >= orderB); },
 		800
 	);
-	offerTable.refresh();
-	//window.setInterval(offerTable.refresh, 1000);
+	offerTable.refresh(offerTable);
 	
 	var bidTable = new OrderBook(
 		'/api/v1/orders/bids/',
@@ -222,6 +217,5 @@ $(document).ready(function() {
 		function(orderA, orderB) { return (orderA <= orderB); },
 		800
 	);
-	bidTable.refresh();
-	//window.setInterval(bidTable.refresh, 1000);
+	bidTable.refresh(bidTable);
 });
