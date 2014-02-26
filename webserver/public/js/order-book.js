@@ -41,7 +41,6 @@ OrderBook.prototype.refresh = function(orderBook) {
 				// Update client-side data
 				orderBook.clientData = result.data;
 			}
-			window.setInterval(function() { orderBook.refresh(orderBook); }, 2000);
 		}
 	});
 }
@@ -206,7 +205,7 @@ $(document).ready(function() {
 		function(orderA, orderB) { return (orderA >= orderB); },
 		800
 	);
-	offerTable.refresh(offerTable);
+	window.setInterval(function() { offerTable.refresh(offerTable); }, 2000);
 	
 	var bidTable = new OrderBook(
 		'/api/v1/orders/bids/',
@@ -217,5 +216,5 @@ $(document).ready(function() {
 		function(orderA, orderB) { return (orderA <= orderB); },
 		800
 	);
-	bidTable.refresh(bidTable);
+	window.setInterval(function() { bidTable.refresh(bidTable); }, 2000);
 });
