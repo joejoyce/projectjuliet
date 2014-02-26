@@ -3,12 +3,12 @@ extends layout
 block head
   script(src='/js/main.js')
   script(src='/js/time.js')
-  script(src='/js/order-book.js')
-  script(src='//cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js')
   script.
     client.symbol = !{JSON.stringify(symbol)};
     client.offerList = !{JSON.stringify(offer_list)};
     client.bidList = !{JSON.stringify(bid_list)};
+  script(src='/js/order-book.js')
+  script(src='//cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js')
 
 block content
   +symbol_summary(symbol, stats)

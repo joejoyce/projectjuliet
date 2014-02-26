@@ -44,7 +44,7 @@ OrderBook.prototype.refresh = function() {
 				self.clientData = result.data;
 			}
 			console.log("setting");
-			window.setTimeout(self.refresh, 1000);
+			window.setInterval(self.refresh, 1000);
 		}
 	});
 }
@@ -153,8 +153,8 @@ OrderBook.prototype.extractArrayOrderID = function(orderArray) {
 OrderBook.prototype.flashElement = function(element, callback) {
 	var self = this;
 	element.addClass('flash-old');
-	var interval = window.setInterval(
-		function() { callback(); clearInterval(interval); },
+	var interval = window.setTimoue(
+		function() { callback(); },
 		self.flashTime
 	);
 }
@@ -180,8 +180,8 @@ OrderBook.prototype.insertRowBefore = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertBefore(row);
-	var interval = window.setInterval(
-		function() { newRow.removeClass('flash-new'); clearInterval(interval); },
+	var interval = window.setTimeout(
+		function() { newRow.removeClass('flash-new'); },
 		self.flashTime
 	);
 }
@@ -190,8 +190,8 @@ OrderBook.prototype.insertRowAfter = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertAfter(row);
-	var interval = window.setInterval(
-		function() { newRow.removeClass('flash-new'); clearInterval(interval); },
+	var interval = window.setTimeout(
+		function() { newRow.removeClass('flash-new'); },
 		self.flashTime
 	);
 }
@@ -200,6 +200,7 @@ OrderBook.prototype.insertRowAfter = function(row, order) {
  * Document ready function
  */
 $(document).ready(function() {
+
 	var offerTable = new OrderBook(
 		'/api/v1/orders/offers/',
 		client.symbol.symbol_id,
@@ -209,8 +210,8 @@ $(document).ready(function() {
 		function(orderA, orderB) { return (orderA >= orderB); },
 		800
 	);
-	
 	offerTable.refresh();
+	//window.setInterval(offerTable.refresh, 1000);
 	
 	var bidTable = new OrderBook(
 		'/api/v1/orders/bids/',
@@ -221,6 +222,6 @@ $(document).ready(function() {
 		function(orderA, orderB) { return (orderA <= orderB); },
 		800
 	);
-	
 	bidTable.refresh();
+	//window.setInterval(bidTable.refresh, 1000);
 });
