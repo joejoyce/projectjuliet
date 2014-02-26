@@ -326,3 +326,23 @@ p {
 .negc {
   background-color: #FF0000 !important;
 }
+
+#pause {
+  width: 200px;
+  margin: 5px;
+}
+
+#restart {
+  width: 200px;
+  margin: 5px;
+}
+
+#set {
+  width: 200px;
+  margin: 5px;
+}
+
+#skip {
+  width: 200px;
+  margin: 5px;
+}

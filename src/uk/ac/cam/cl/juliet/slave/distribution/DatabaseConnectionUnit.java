@@ -92,12 +92,12 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
 				try {
-					synchronized(batchQueryExecuteStartCallbacks) {
-						for (Runnable r : batchQueryExecuteStartCallbacks){
+					synchronized (batchQueryExecuteStartCallbacks) {
+						for (Runnable r : batchQueryExecuteStartCallbacks) {
 							r.run();
 						}
 					}
-					
+
 					Debug.println(Debug.INFO, "Total batch size: " + batchSize);
 					long start = System.nanoTime();
 
@@ -159,9 +159,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					totalTaken /= 1000000;
 					Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
 					Debug.println(Debug.INFO, "-------------------------------------");
-					
-					synchronized(batchQueryExecuteEndCallbacks) {
-						for (Runnable r : batchQueryExecuteEndCallbacks){
+
+					synchronized (batchQueryExecuteEndCallbacks) {
+						for (Runnable r : batchQueryExecuteEndCallbacks) {
 							r.run();
 						}
 					}
@@ -374,26 +374,24 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	public long getLastCommitNS() {
 		return lastCommitNs;
 	}
-	
-	
+
 	public ResultSet getBestOffersForStock(long symbolID, int limit) throws SQLException {
-		PreparedStatement statement = this.connection
-				.prepareStatement("SELECT * FROM order_book WHERE symbol_id=? AND added=1 AND deleted=0 AND is_ask=1 ORDER BY price DESC LIMIT = ?");
+		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM order_book WHERE symbol_id=? AND added=1 AND deleted=0 AND is_ask=1 ORDER BY price DESC LIMIT = ?");
 		ResultSet result;
 		statement.setLong(1, symbolID);
 		statement.setLong(2, limit);
 		result = statement.executeQuery();
 		return result;
 	}
-	
+
 	public void addBatchQueryExecuteStartCallback(Runnable r) {
-		synchronized(batchQueryExecuteStartCallbacks) {
+		synchronized (batchQueryExecuteStartCallbacks) {
 			this.batchQueryExecuteStartCallbacks.add(r);
 		}
 	}
-	
+
 	public void addBatchQueryExecuteEndCallback(Runnable r) {
-		synchronized(batchQueryExecuteEndCallbacks) {
+		synchronized (batchQueryExecuteEndCallbacks) {
 			this.batchQueryExecuteEndCallbacks.add(r);
 		}
 	}

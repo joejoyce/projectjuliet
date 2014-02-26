@@ -19,10 +19,20 @@ public class DataProcessor {
 	private XDPDataStream dataStream;
 	private ClusterMaster clusterMaster;
 	public volatile boolean pause = false;
+	private String f1, f2, f3, f4;
+	private float skip;
 	
 	public DataProcessor(XDPDataStream dataStream, ClusterMaster cm) {
 		this.dataStream = dataStream;
 		this.clusterMaster = cm;
+	}
+	
+	public void setFiles(String f1, String f2, String f3, String f4, float skip) {
+		this.f1 = f1;
+		this.f2 = f2;
+		this.f3 = f3;
+		this.f4 = f4;
+		this.skip = skip;
 	}
 	
 	public XDPDataStream getDataStream() {
@@ -33,7 +43,9 @@ public class DataProcessor {
 		XDPRequest packet = null;
 		do {
 			try {
-				while(pause){}
+				while(pause) {
+					Thread.currentThread().sleep(100);
+				}
 				packet = dataStream.getPacket();
 				if(packet.getDeliveryFlag() == 11) {
 					clusterMaster.sendPacket(packet);
@@ -46,35 +58,19 @@ public class DataProcessor {
 				System.err.println("Cluster error");
 				e.printStackTrace();
 				break;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		} while (packet != null);
 		Debug.println(100, "Finished entire stream");
 	}
-
-	public static void main(String[] args) throws IOException {
-		Debug.registerOutputLocation(System.out);
-		Debug.setPriority(10);
-		
-		String file1, file2, file3, file4;
-		float skipBoundary;
+	
+	public void restart() {
 		try {
-			file1 = args[0];
-			file2 = args[1];
-			file3 = args[2];
-			file4 = args[3];
-			skipBoundary = Float.parseFloat(args[4]);
-		} catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
-			System.err.println("Usage: <file1> <files2> <file3> <file4> <skipBoundary>");
-			return;
+			// Very harsh, but should work
+			this.dataStream = new SampleXDPDataStream(f1, f2, f3, f4, skip);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4, skipBoundary);
-		ClusterMaster m = new ClusterMasterUnit("");
-		m.start(5000);
-		DataProcessor dp = new DataProcessor(ds, m);
-		Scanner s = new Scanner(System.in);
-		Debug.println(100, "GO?");
-		s.nextLine();
-		dp.start();
-		s.close();
 	}
 }

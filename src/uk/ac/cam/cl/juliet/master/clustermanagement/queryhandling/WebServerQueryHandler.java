@@ -250,6 +250,28 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	}
 
 	public void runConfigQuery(String query, PrintWriter pw) {
+		if(query.equals("pause")) {
+			ClusterServer.dp.pause = !ClusterServer.dp.pause;
+			System.out.println("paused");
+			pw.write("");
+			return;
+		}
+		
+		if(query.equals("restart")) {
+			System.out.println("Got query");
+			ClusterServer.dp.restart();
+			System.out.println("restasted");
+			try {
+				Statement s = con.createStatement();
+				s.executeUpdate("delete from order_book");
+				s = con.createStatement();
+				s.executeUpdate("delete from trade");
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}			
+			return;
+		}
+		
 		// If it depends on rate needs to map to the distributor
 		if (query.matches("\\s*set\\s+\\S+\\s*=\\s*\\S+\\s*")) {
 			Pattern p = Pattern.compile("\\s*set\\s+(\\S+)\\s*=\\s*(\\S+)\\s*");
@@ -273,7 +295,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			}
 
 		} else if (query.matches("\\s*get\\s+(\\S+)\\s*")) {
-			Pattern p = Pattern.compile("\\s*set\\s+(\\S+)\\s*"); //TODO is this supposed to be s*get ??
+			Pattern p = Pattern.compile("\\s*get\\s+(\\S+)\\s*"); //TODO is this supposed to be s*get ??
 			Matcher m = p.matcher(query);
 			if (m.find()) {
 				String key = m.group(1);
@@ -284,6 +306,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 					// if you mean the skip boundary that indicates whether the XDPDataStream
 					// runs faster than real time: here it is:
 					float skip = ClusterServer.dp.getDataStream().getSkipBoundary();
+					pw.write("{\"skip\": \""+skip+"\"}");
 				} else {
 					String vl = ClusterServer.cm.getSetting(key);
 					vl = (null == vl) ? "" : vl;

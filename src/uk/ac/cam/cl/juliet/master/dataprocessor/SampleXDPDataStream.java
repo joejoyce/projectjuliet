@@ -68,7 +68,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 	public float getSkipBoundary() {
 		return (float) this.skipBoundary * 0.000000001f;
 	}
-
+	
 	/**
 	 * Returns the next packet chosen by timestamp out of the 4 sample
 	 * data files. This is a blocking IO call - a packet is returned 
