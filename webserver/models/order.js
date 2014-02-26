@@ -20,7 +20,6 @@ exports.getOffers = function(symbolIndex, callback) {
 
   client.on('data', function(data) {
     offers += data;
-    client.end();
   });
 
   client.on('end', function() {
@@ -40,7 +39,6 @@ exports.getBids = function(symbolIndex, callback) {
 
   client.on('data', function(data) {
     bids += data;
-    client.end();
   });
 
   client.on('end', function() {

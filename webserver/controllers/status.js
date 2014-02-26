@@ -42,7 +42,7 @@ exports.clients = function(req, res) {
 
 /**
  * GET /api/v1/status/time
- * Get the current simulation system time
+ * Get the current system time
  */
 exports.time = function(req, res) {
   status.getTime(function(time) {
@@ -68,7 +68,7 @@ exports.throughput = function(req, res) {
 
 /**
  * GET /api/v1/status/latency
- * Get the current RTT latency
+ * Get the current system latency
  */
 exports.latency = function(req, res) {
   status.getLatency(function(latency) {

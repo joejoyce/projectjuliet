@@ -58,6 +58,10 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		this.con = con;
 	}
 
+	/**
+	 *  Main switch case statement for WebServer queries 
+	 */
+	
 	public void run() {
 		try {
 			BufferedReader din = new BufferedReader(new InputStreamReader(new BufferedInputStream(server.getInputStream())));

@@ -16,26 +16,25 @@ public class DatabaseCleaner implements Runnable {
 	public DatabaseCleaner(Connection con) {
 		this.connection = con;
 		this.executor = Executors.newScheduledThreadPool(1);
-		this.future = executor.scheduleWithFixedDelay(this, 0, 10,
-				TimeUnit.SECONDS);
+		this.future = executor.scheduleWithFixedDelay(this, 0, 10, TimeUnit.SECONDS);
 	}
 
 	public void run() {
 		try {
-			PreparedStatement s = connection
-					.prepareStatement("DELETE FROM order_book WHERE added = 1 AND deleted = 1");
+			PreparedStatement s = connection.prepareStatement("DELETE FROM order_book WHERE added = 1 AND deleted = 1");
 			s.execute();
 		} catch (SQLException e) {
+			e.printStackTrace();
 		}
-		
+
 		try {
-			PreparedStatement s = connection
-					.prepareStatement("DELETE FROM trade WHERE added = 1 AND deleted = 1");
+			PreparedStatement s = connection.prepareStatement("DELETE FROM trade WHERE added = 1 AND deleted = 1");
 			s.execute();
 		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
-	
+
 	public void stop() {
 		future.cancel(false);
 	}
