@@ -93,6 +93,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 
 	private int getPriceScale(long symbolIndex) throws SQLException {
 		ResultSet result = connection.getSymbolAndPriceScale(symbolIndex);
+		if(!result.isBeforeFirst()) return 0;
 		result.next();
 		return (int) result.getLong(2);
 	}

@@ -22,6 +22,10 @@ exports.index = function(req, res) {
 			},
 			symbolD: function(callback) {
 				symbol.get(req.params.symbol_index, function(symbolD) {
+					if(!symbolD) {
+       			callback({error: "error"}, null);
+       			return;
+      		}   
 					symbolD.price_scale = 1 / (Math.pow(10, symbolD.price_scale));
 					callback(null, symbolD);
 				});
@@ -53,14 +57,10 @@ exports.index = function(req, res) {
 					stats: results.statistics
 				});
 			} else {
-				res.writeHead(500, {
-					Location: '/'
-				})
+				res.redirect('/');
 			}
 		});
 	} else {
-		res.writeHead(302, {
-			Location: '/'
-		});
+		res.redirect('/');
 	}
 };
