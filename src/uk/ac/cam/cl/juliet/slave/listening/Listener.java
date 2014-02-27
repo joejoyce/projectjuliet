@@ -101,6 +101,8 @@ public class Listener {
 
 		Thread receiveThread = new Thread() {
 			public void run() {
+				long delayMs = 500;
+				long cutOff = 10000;
 				while (true) {
 					Object o;
 					try {
@@ -122,6 +124,19 @@ public class Listener {
 						e.printStackTrace();
 						// Just attempt to reconnect
 						try {
+							try {
+								output.close();
+							} catch(IOException exc) {
+								Debug.printStackTrace(exc);
+							}
+							if(delayMs <= cutOff) {
+								Thread.sleep(delayMs);
+								delayMs *= 2;
+							}else {
+								Debug.println(Debug.SHOWSTOP,"System restarting due to inability to reconnect");
+								System.exit(0);
+							}
+							
 							socket = new Socket(ip, port);
 							input = new ObjectInputStream(socket.getInputStream());
 							output = new ObjectOutputStream(socket.getOutputStream());
