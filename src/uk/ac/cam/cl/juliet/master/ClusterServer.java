@@ -30,13 +30,13 @@ public class ClusterServer {
 	
 	@SuppressWarnings("unused")
 	public static void main(String args[]) throws IOException, SQLException {
+		Debug.registerOutputLocation(System.out);
+        Debug.setPriority(10);
+		
 		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
         WebServerListener wsl = new WebServerListener(1337, con);
         DatabaseCleaner c = new DatabaseCleaner(con);
-
-		Debug.registerOutputLocation(System.out);
-        Debug.setPriority(10);
-
+		
         String file1, file2, file3, file4;
         float skipBoundary;
         try {

@@ -203,9 +203,10 @@ public class Listener {
 
 				long diff = Math.abs(System.nanoTime() - then);
 				diff /= 1000000;
-				Debug.println("Time taken for processing: " + diff + "ms");
+				Debug.println(100, "Time taken for processing: " + diff + "ms");
 			}
 		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 

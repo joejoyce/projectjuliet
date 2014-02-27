@@ -24,12 +24,15 @@ exports.index = function(req, res) {
 
 exports.pause = function(req, res) {
 	settings.pause();
+	res.end();
 };
 
 exports.restart = function(req, res) {
   settings.restart();
+  res.end();
 };
 
 exports.setskip = function(req, res) {
 	settings.setSkip(req.params.skip);
+	res.end();
 };

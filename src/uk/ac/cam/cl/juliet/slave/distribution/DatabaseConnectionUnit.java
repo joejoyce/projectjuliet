@@ -157,16 +157,16 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					long totalTaken = Math.abs(System.nanoTime() - start);
 					lastCommitNs = totalTaken;
 					totalTaken /= 1000000;
-					Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
-					Debug.println(Debug.INFO, "-------------------------------------");
-
+					
 					System.out.println("Waiting to enter batchQueryExecuteEndCallbacks");
 					synchronized (batchQueryExecuteEndCallbacks) {
-						System.out.println("Runining stuff");
 						for (Runnable r : batchQueryExecuteEndCallbacks) {
 							r.run();
 						}
 					}
+
+					Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
+					Debug.println(Debug.INFO, "-------------------------------------");
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -258,8 +258,6 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public void correctTrade(long originalTradeID, long tradeID, long symbolIndex, long time_s, long time_ns, long symbolSeqNumber, long price, long volume) throws SQLException {
-		// PreparedStatement statement = this.connection
-		// .prepareStatement("UPDATE trade SET trade_id = ?, symbol_id = ?, price = ?, volume = ? WHERE (trade_id = ?)");
 		PreparedStatement statement = this.connection.prepareStatement("CALL modifyTrade(?, ?, ?, ?, ?, ?, ?)");
 		statement.setLong(1, originalTradeID);
 		statement.setLong(2, tradeID);
@@ -274,8 +272,6 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public void addSourceTimeReference(long symbolIndex, long symbolSeqNumber, long referenceTime) throws SQLException {
-		// TODO implement method. Not sure how to add a source time reference to
-		// the database
 	}
 
 	@Override

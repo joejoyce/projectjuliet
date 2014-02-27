@@ -48,8 +48,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	private Connection con;
 
 	private NotificationsList notifications = new NotificationsList();
-	private OperatingSystemMXBean os = ManagementFactory
-			.getOperatingSystemMXBean();
+	private OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
 
 	/**
 	 * Creates a new query handler.
@@ -71,8 +70,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 */
 	public void run() {
 		try {
-			BufferedReader din = new BufferedReader(new InputStreamReader(
-					new BufferedInputStream(server.getInputStream())));
+			BufferedReader din = new BufferedReader(new InputStreamReader(new BufferedInputStream(server.getInputStream())));
 			PrintWriter pw = new PrintWriter(server.getOutputStream(), true);
 
 			String query = din.readLine();
@@ -124,8 +122,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	private void runSpikeDetectionQuery(String string, PrintWriter pw) {
 		Debug.println(Debug.INFO, "Running a spike detection query");
 		SpikeDetectionRunnable spikeDetector = ClusterServer.spikeDetector;
-		ConcurrentLinkedQueue<Spike> listOfSpikes = spikeDetector
-				.getSpikeBuffer();
+		ConcurrentLinkedQueue<Spike> listOfSpikes = spikeDetector.getSpikeBuffer();
 
 		JsonBuilder jb = new JsonBuilder();
 		jb.stArr();
@@ -164,8 +161,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 				jb.finArr();
 				String jsonResponse = jb.toString();
-				Debug.println(Debug.DEBUG, "Statistics query result"
-						+ jsonResponse);
+				Debug.println(Debug.DEBUG, "Statistics query result" + jsonResponse);
 				pw.print(jsonResponse);
 				this.finished = true;
 			}
@@ -173,12 +169,9 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		long symbol_id = Long.parseLong(symbolID);
 		ClusterMaster cm = ClusterServer.cm;
 		try {
-			cm.sendPacket(new StockStatisticsRequest(symbol_id),
-					statisticsCallback);
+			cm.sendPacket(new StockStatisticsRequest(symbol_id), statisticsCallback);
 		} catch (NoClusterException e) {
-			Debug.println(Debug.ERROR,
-					"Cluster query exception while trying to execute"
-							+ "a stock statistics query.");
+			Debug.println(Debug.ERROR, "Cluster query exception while trying to execute" + "a stock statistics query.");
 		}
 		statisticsCallback.waitUntilDone();
 	}
@@ -204,11 +197,8 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		if (query.equals("latency")) {
 			LatencyMonitor lm = new LatencyMonitor();
-			LatencyMonitorCallback cb = new LatencyMonitorCallback(10); // Allow
-																		// 3
-																		// seconds
-																		// by
-																		// default
+			LatencyMonitorCallback cb = new LatencyMonitorCallback(10); 
+																		
 			cb.numSentTo = cm.broadcast(lm, cb);
 			cb.waitUntilDone();
 			pw.write(cb.generateJson());
@@ -258,8 +248,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		try {
 			Statement s = con.createStatement();
-			ResultSet resOrders = s
-					.executeQuery("SELECT count(*) from order_book");
+			ResultSet resOrders = s.executeQuery("SELECT count(*) from order_book");
 			resOrders.next();
 			String orders = resOrders.getString(1);
 			j.pushPair("total_orders", orders);
@@ -271,8 +260,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			j.pushPair("total_trades", trades);
 
 			s = con.createStatement();
-			ResultSet resSymbols = s
-					.executeQuery("SELECT count(*) from symbol");
+			ResultSet resSymbols = s.executeQuery("SELECT count(*) from symbol");
 			resSymbols.next();
 			String symbols = resSymbols.getString(1);
 			j.pushPair("total_symbols", symbols);
@@ -331,14 +319,12 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 					// if you mean changing the skip boundary to make the
 					// XDPDataStream
 					// run faster: -lucas
-					ClusterServer.dp.getDataStream().setSkipBoundary(
-							Float.parseFloat(value));
+					ClusterServer.dp.getDataStream().setSkipBoundary(Float.parseFloat(value));
 				} else {
 					ClusterServer.cm.setSetting(key, value);
 				}// Set a value
 			} else {
-				Debug.println(Debug.ERROR,
-						"Invalid form for settings set string");
+				Debug.println(Debug.ERROR, "Invalid form for settings set string");
 				pw.write("{}");
 			}
 
@@ -358,8 +344,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 					// if you mean the skip boundary that indicates whether the
 					// XDPDataStream
 					// runs faster than real time: here it is:
-					float skip = ClusterServer.dp.getDataStream()
-							.getSkipBoundary();
+					float skip = ClusterServer.dp.getDataStream().getSkipBoundary();
 					pw.write("{\"skip\": \"" + skip + "\"}");
 				} else {
 					String vl = ClusterServer.cm.getSetting(key);
@@ -368,8 +353,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 					pw.write(jb.toString());
 				}
 			} else {
-				Debug.println(Debug.ERROR,
-						"Invalid form for settings get string");
+				Debug.println(Debug.ERROR, "Invalid form for settings get string");
 				pw.write("{}");
 			}
 
@@ -395,10 +379,8 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 *            The writer to write the response to.
 	 */
 	public void runClusterQuery(String query, PrintWriter pw) {
-		String type = query.indexOf(' ') == -1 ? query : query.substring(0,
-				query.indexOf(' '));
-		String options = query.indexOf(' ') == -1 ? "" : query.substring(query
-				.indexOf(' ') + 1);
+		String type = query.indexOf(' ') == -1 ? query : query.substring(0, query.indexOf(' '));
+		String options = query.indexOf(' ') == -1 ? "" : query.substring(query.indexOf(' ') + 1);
 		Debug.println(Debug.INFO, "Running a cluster query. type=" + type);
 
 		try {
@@ -422,8 +404,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	}
 
 	private void priceToClear(String options, PrintWriter pw) {
-		Pattern p = Pattern
-				.compile("\\s*id\\s*=\\s*(\\d+)\\s*volume\\s*=\\s*(\\d+)\\s*");
+		Pattern p = Pattern.compile("\\s*id\\s*=\\s*(\\d+)\\s*volume\\s*=\\s*(\\d+)\\s*");
 		Matcher m = p.matcher(options);
 		if (m.find()) {
 			String id = m.group(1);
@@ -441,8 +422,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 						this.ptc = (PriceToClearResponse) data;
 						this.finished = true;
 					} else {
-						Debug.println(Debug.ERROR,
-								"PriceToClear callback run with object of wrong type");
+						Debug.println(Debug.ERROR, "PriceToClear callback run with object of wrong type");
 						this.finished = true;
 					}
 				}
@@ -470,14 +450,12 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		}
 	}
 
-	private void getCandlestickChartData(String options, final PrintWriter pw)
-			throws SQLException, NoClusterException {
+	private void getCandlestickChartData(String options, final PrintWriter pw) throws SQLException, NoClusterException {
 		String[] split = options.split(" ");
 		long symbolID = Long.parseLong(split[0]);
 		int secondsPerCandlestick = Integer.parseInt(split[1]);
 
-		PreparedStatement rangeStatement = con
-				.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
+		PreparedStatement rangeStatement = con.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
 		ResultSet rs;
 		rangeStatement.setLong(1, symbolID);
 		rs = rangeStatement.executeQuery();
@@ -505,8 +483,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				writer.write("\"close\":\"" + response.getCloseValue() + "\", ");
 				writer.write("\"high\":\"" + response.getHighValue() + "\", ");
 				writer.write("\"low\":\"" + response.getLowValue() + "\", ");
-				writer.write("\"volume\":\"" + response.getVolumeValue()
-						+ "\",");
+				writer.write("\"volume\":\"" + response.getVolumeValue() + "\",");
 				writer.write("\"time\":\"" + response.getTimeStampS() + "\"");
 				writer.write("}");
 				if (received != total)
@@ -516,8 +493,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		pw.write("[");
 		while (minTime < maxTime) {
-			CandlestickRequest request = new CandlestickRequest(symbolID,
-					minTime, secondsPerCandlestick, minTime);
+			CandlestickRequest request = new CandlestickRequest(symbolID, minTime, secondsPerCandlestick, minTime);
 			minTime += secondsPerCandlestick;
 			cm.sendPacket(request, c);
 		}
@@ -526,13 +502,11 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		pw.write("]");
 	}
 
-	private void getMovingAverageData(String options, final PrintWriter pw)
-			throws SQLException, NoClusterException {
+	private void getMovingAverageData(String options, final PrintWriter pw) throws SQLException, NoClusterException {
 		String[] split = options.split(" ");
 		long symbolID = Long.parseLong(split[0]);
 
-		PreparedStatement rangeStatement = con
-				.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
+		PreparedStatement rangeStatement = con.prepareStatement("SELECT MIN(offered_s) as min, MAX(offered_s) as max FROM trade WHERE symbol_id=?");
 		ResultSet rs;
 		rangeStatement.setLong(1, symbolID);
 		rs = rangeStatement.executeQuery();
@@ -550,15 +524,11 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		pw.write("]");
 	}
 
-	private void getMovingAverageData(long minTime, long maxTime,
-			int secondsPerAverage, final PrintWriter pw, long symbolID)
-			throws NoClusterException {
+	private void getMovingAverageData(long minTime, long maxTime, int secondsPerAverage, final PrintWriter pw, long symbolID) throws NoClusterException {
 		ClusterMaster cm = ClusterServer.cm;
-		final long numberOfQueries = Math.min((maxTime - minTime)
-				- secondsPerAverage, cm.getClientCount() * 2);
+		final long numberOfQueries = Math.min((maxTime - minTime) - secondsPerAverage, cm.getClientCount() * 2);
 
-		DistributedQueryCallback c = new DistributedQueryCallback(
-				numberOfQueries) {
+		DistributedQueryCallback c = new DistributedQueryCallback(numberOfQueries) {
 			PrintWriter writer = pw;
 
 			protected void processContainer(Container data) {
@@ -568,8 +538,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				for (int i = 0; i < response.getAverageCount(); i++) {
 					writer.write("{");
 					writer.write("\"time\":\"" + response.getTime(i) + "\", ");
-					writer.write("\"average\":\"" + response.getAverage(i)
-							+ "\"");
+					writer.write("\"average\":\"" + response.getAverage(i) + "\"");
 					writer.write("}");
 					if (i < response.getAverageCount() - 1)
 						writer.write(",");
@@ -577,8 +546,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			}
 		};
 
-		pw.write("{\"name\":\"" + (secondsPerAverage / 60)
-				+ " minutes\", \"data\":[");
+		pw.write("{\"name\":\"" + (secondsPerAverage / 60) + " minutes\", \"data\":[");
 
 		long length = maxTime - minTime + 1;
 		long numberOfAverages = length - secondsPerAverage + 1;
@@ -586,14 +554,11 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		long currentStart = minTime;
 		for (int i = 0; i < numberOfQueries - 1; i++) {
-			MovingAverageRequest request = new MovingAverageRequest(symbolID,
-					currentStart, secondsPerAverage + (averagesPerQuery - 1),
-					secondsPerAverage);
+			MovingAverageRequest request = new MovingAverageRequest(symbolID, currentStart, secondsPerAverage + (averagesPerQuery - 1), secondsPerAverage);
 			cm.sendPacket(request, c);
 			currentStart += averagesPerQuery;
 		}
-		MovingAverageRequest request = new MovingAverageRequest(symbolID,
-				currentStart, (maxTime - currentStart) + 1, secondsPerAverage);
+		MovingAverageRequest request = new MovingAverageRequest(symbolID, currentStart, (maxTime - currentStart) + 1, secondsPerAverage);
 		cm.sendPacket(request, c);
 
 		c.waitUntilDone();
@@ -612,7 +577,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	 */
 	public void runBasicQuery(String query, PrintWriter pw) {
 		try {
-			Debug.println(Debug.INFO, "Got query: " + query);
+			Debug.println(100,"Got query: " + query);
 			Statement s = con.createStatement();
 			ResultSet res = s.executeQuery(query);
 			if (!res.isBeforeFirst()) {

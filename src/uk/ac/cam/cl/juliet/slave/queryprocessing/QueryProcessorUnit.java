@@ -229,6 +229,10 @@ public class QueryProcessorUnit implements QueryProcessor {
 			if (price <= lowBoundary || price >= highBoundary) {
 				// we have a spike
 				ResultSet symbolNameAndPriceScale = connection.getSymbolAndPriceScale(symbolIndex);
+				
+				if(symbolNameAndPriceScale == null)
+					return;
+				
 				symbolNameAndPriceScale.next();
 				String symbol = symbolNameAndPriceScale.getString(1);
 
