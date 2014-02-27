@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -65,6 +66,8 @@ public class Client {
 
 	private long totalPackets = 0;
 	public int packetsSentThisSecond = 0;
+	
+	private Semaphore sem = new Semaphore(2000); //Allows 2000 at one time
 
 	/**
 	 * Get the IP address of the Client that this Client object is connected to.
@@ -82,6 +85,12 @@ public class Client {
 	 * @param container
 	 */
 	private void checkoutContainer(InFlightContainer container) {
+		try {
+			sem.acquire();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		workCount.incrementAndGet();
 		jobqueue.add(container);
 		hash.put(container.getPacketId(), container);
@@ -99,6 +108,7 @@ public class Client {
 		InFlightContainer cont = hash.get(l);
 		Debug.println("Received ack for packet ID: " + l);
 		if (null != cont) {
+			sem.release();
 			jobqueue.remove(cont);
 			hash.remove(l);
 			workCount.decrementAndGet();
