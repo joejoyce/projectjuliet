@@ -104,7 +104,7 @@ public class QueryProcessorUnit implements QueryProcessor {
 		long totalTradeVolume = 0;
 		long highestPrice = 0;
 		long lowestPrice = Long.MAX_VALUE;
-		long change;
+		long change = 0;
 		long spread;
 		int priceScale;
 		try {
@@ -122,10 +122,10 @@ public class QueryProcessorUnit implements QueryProcessor {
 				if (lastTrade == null)
 					lastTrade = trade;
 				
-				if (secondLastTrade == null)
+				else if (secondLastTrade == null)
 					secondLastTrade = trade;
 				
-				if (trade.compareTo(secondLastTrade) > 0) {
+				else if (trade.compareTo(secondLastTrade) > 0) {
 					// if the trade is later than the second last trade
 					if (trade.compareTo(lastTrade) > 0) {
 						// if the trade is the last trade
@@ -143,7 +143,8 @@ public class QueryProcessorUnit implements QueryProcessor {
 					lowestPrice = trade.price;
 				totalTradeVolume += trade.volume;
 			}
-			change = lastTrade.price - secondLastTrade.price;
+			if(secondLastTrade != null && lastTrade != null)
+				change = lastTrade.price - secondLastTrade.price;
 			// in case the default lowest price was not updated because there
 			// were no
 			// trades, set the lowestPrice to 0
