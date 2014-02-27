@@ -95,6 +95,7 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 				.find('td > div')
 				.slideUp(700, function(){
                                   $(this).parent().parent().remove();
+			          row.remove();
                                  });
 			});
 		}
