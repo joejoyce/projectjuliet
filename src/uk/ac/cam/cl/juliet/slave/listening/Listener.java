@@ -183,7 +183,7 @@ public class Listener {
 		try {
 			Container container = receiveQueue.take();
 
-			Debug.println("Got new object");
+			Debug.println(100, "Got new object: " + container.toString());
 
 			if (container instanceof ConfigurationPacket) {
 				handleConfigurationPacket((ConfigurationPacket) container);

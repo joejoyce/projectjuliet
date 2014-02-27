@@ -63,7 +63,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private PreparedStatement deleteOrderBatch;
 	private PreparedStatement modifyOrderBatch;
 	private ArrayList<OrderVolumeReduction> volumeReductions = new ArrayList<OrderVolumeReduction>();
-	private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	private final static ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 	private ArrayList<Runnable> batchQueryExecuteStartCallbacks = new ArrayList<Runnable>();
 	private ArrayList<Runnable> batchQueryExecuteEndCallbacks = new ArrayList<Runnable>();
 	private int batchSize = 0;
