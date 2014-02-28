@@ -39,9 +39,11 @@ public class SuperFancyConcurrentPriorityQueue <T>{
 	public T peek() {
 		write.lock();
 		T elem = q.poll();
-		try { q.put(elem);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		if(null != elem) {
+			try { q.put(elem);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 		write.unlock();
 		return elem;
