@@ -38,8 +38,8 @@ public class Listener {
 	private int port;
 	private ObjectInputStream input = null;
 	private ObjectOutputStream output = null;
-	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(2000);
-	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(2000);
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(2100);
+	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(2100);
 	private LinkedList<XDPRequest> waitingForBatchQueries = new LinkedList<XDPRequest>();
 	private ReentrantLock waitingForBatchQueriesLock = new ReentrantLock();
 	private DatabaseConnection databaseConnection;
@@ -173,12 +173,7 @@ public class Listener {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					} catch (IOException e) {
-						try {
-							socket.close();
-						} catch (IOException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
+						
 						Debug.println(Debug.ERROR, "An error occurred communicating with the server.");
 						e.printStackTrace();
 						while(!connect(ip,port)) continue;
@@ -204,13 +199,6 @@ public class Listener {
 			} catch (IOException e) {
 				e.printStackTrace();
 				// Just attempt to reconnect
-				try {
-					socket.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-					
-				}
 				while(!connect(ip,port)) continue;
 			} catch (InterruptedException e) {
 				e.printStackTrace();

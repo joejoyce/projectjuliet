@@ -2,18 +2,18 @@ package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.PriorityQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SuperFancyConcurrentPriorityQueue <T>{
-	private PriorityQueue<T> q;
+	private PriorityBlockingQueue<T> q;
 	//private Semaphore sem;
 	private Lock read,write;
 	
 	public SuperFancyConcurrentPriorityQueue (/*int limit,*/ Comparator<T> comp) {
-		q = new PriorityQueue<T>(20,comp);
+		q = new PriorityBlockingQueue<T>(20,comp);
 		//sem = new Semaphore(limit);
 		ReentrantReadWriteLock l = new ReentrantReadWriteLock();
 		read = l.readLock();
