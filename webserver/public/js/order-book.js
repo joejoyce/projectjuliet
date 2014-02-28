@@ -62,20 +62,6 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 	// Reduce the remove list to an array of order IDs
 	removeList = this.extractArrayOrderID(removeList);
 
-	var tableIDs = [];
-	$('#offer-rows tr').each(function(index, row) {
-		tableIDs.push($(row).data('order-id'));
-	});
-	console.log('============ Starting round ================');
-	console.log('tableIDs');
-	console.log(tableIDs);
-	console.log('removeList');
-	console.log(removeList);
-
-	var insertIDs = this.extractArrayOrderID(insertList);
-	console.log('insertIDs');
-	console.log(insertIDs);
-
 	var rowCount = 25;
 	// Perform required insertions
 	$.each(insertList, function(i, insertOrder) {
@@ -114,42 +100,6 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 			}
 		}
 	});
-	/*tableRows.each(function(index, row) {
-		row = $(row);
-		// Insert rows before the current row
-		$.each(insertList, function(i, insertOrder) {
-			if (insertOrder) {
-				if (sorter(row.data('price'), insertOrder.price)) {
-					self.insertRowBefore(row, insertOrder);
-					insertList[i] = null; // Null the order once it has been inserted
-				} else {
-					if (index < rowCount - 2) {
-						return false;
-					} else {
-						// If we reach the last item in the list, insert all of the remaining
-						// orders to be inserted after the last item
-						self.insertRowAfter(row, insertOrder);
-						insertList[i] = null;
-					}
-				}
-			}
-		});
-		// Remove row if required
-		var orderID = row.data('order-id');
-		if ($.inArray(orderID, removeList) >= 0) {
-			self.flashElement(row, function() {
-                            $(row)
- 			        .find('td')
- 			        .wrapInner('<div style="display: block;" />')
- 				.parent()
-				.find('td > div')
-				.slideUp(700, function(){
-                                  $(this).parent().parent().remove();
-			          row.remove();
-                                 });
-			});
-		}
-	});*/
 }
 
 /*
@@ -234,15 +184,15 @@ OrderBook.prototype.insertRowBefore = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertBefore(row);
-        $(newRow)
-	 .find('td')
-	 .wrapInner('<div style="display: none;" />')
-	 .parent()
-	 .find('td > div')
-	 .slideDown(700, function(){
-           var $set = $(this);
-	   $set.replaceWith($set.contents());
-        });
+	$(newRow)
+		.find('td')
+		.wrapInner('<div style="display: none;" />')
+		.parent()
+		.find('td > div')
+		.slideDown(700, function(){
+			var $set = $(this);
+			$set.replaceWith($set.contents());
+		});
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
 		self.flashTime
@@ -254,14 +204,14 @@ OrderBook.prototype.insertRowAfter = function(row, order) {
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertAfter(row);
 	$(newRow)
-	 .find('td')
-	 .wrapInner('<div style="display: none;" />')
-	 .parent()
-	 .find('td > div')
-	 .slideDown(700, function(){
-	    var $set = $(this);
-	    $set.replaceWith($set.contents());
-        });
+		.find('td')
+		.wrapInner('<div style="display: none;" />')
+		.parent()
+		.find('td > div')
+		.slideDown(700, function(){
+			var $set = $(this);
+			$set.replaceWith($set.contents());
+		});
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
 		self.flashTime
