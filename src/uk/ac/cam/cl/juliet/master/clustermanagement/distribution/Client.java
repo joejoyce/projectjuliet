@@ -129,18 +129,15 @@ public class Client {
 		if(amClosing)
 			return;
 		amClosing = true;
-		Debug.println(Debug.INFO,"closeClient was called on clinet" + address.toString());
-		sendQueue = null;
+		Debug.println(Debug.INFO,"closeClient was called on client" + address.toString());
 
 		parent.removeClient(this);
-		// Close the streams
+		cleaner.cancel(false);
 		if (0 == numberClients.decrementAndGet()) {
-			// Commented this out for now - scott
-			// workers.shutdownNow();
-			// workers = null;
+			workers.shutdown();
+			workers = null;
 		}
-		cleaner.cancel(false); // Try to stop the regular operation flushing my
-								// queue, waiting until finished
+
 		try {
 			Debug.println(100,"---------------Close Client has been called----------------");
 			out.close();
@@ -162,18 +159,15 @@ public class Client {
 			workers = Executors.newScheduledThreadPool(numberPooledThreads);
 		}
 		// Schedule queueflush for me
-		cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0,
-				queueFlushTime, TimeUnit.MILLISECONDS);
+		while(null == workers) continue; //Someone else is creating it.
+		
+		cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0,queueFlushTime, TimeUnit.MILLISECONDS);
 
 		address = s.getInetAddress();
 		try {
-			out = new ObjectOutputStream(new BufferedOutputStream(
-					s.getOutputStream()));
-			out.flush();
-			in = new ObjectInputStream(new BufferedInputStream(
-					s.getInputStream()));
+			out = new ObjectOutputStream(s.getOutputStream());
+			in = new ObjectInputStream(s.getInputStream());
 			out.writeObject(parent.getConfiguration());
-			out.flush();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -235,8 +229,7 @@ public class Client {
 						}
 						out.writeObject(c);
 						out.flush();
-						totalPackets++; // TODO this means it won't count
-										// objects in the queue
+						totalPackets++; 
 						packetsSentThisSecond++;
 						if (Math.abs(System.nanoTime() - then) > 1000000000) {
 							Debug.println(100, "Packets sent this second: "
@@ -244,8 +237,7 @@ public class Client {
 							then = System.nanoTime();
 							packetsSentThisSecond = 0;
 						}
-						Debug.println("Written packet ID: "
-								+ container.getPacketId());
+						Debug.println("Written packet ID: "+ container.getPacketId());
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					} catch (Exception e) {
@@ -283,15 +275,14 @@ public class Client {
 		InFlightContainer ifc = new InFlightContainer(c, cb);
 		ifc.setBroadcast(bcast);
 		try {
-			Debug.println("About to add to send queue: " + sendQueue.size());
+			Debug.println("About to add to send queue");
 			if (c instanceof LatencyMonitor) {
 				LatencyMonitor m = (LatencyMonitor) c;
 				m.outboundQueue = System.nanoTime();
 			}
-			while (!sendQueue.offer(ifc)) {
-			}
+			sendQueue.put(ifc);
 			workCount.incrementAndGet();
-			Debug.println("Added to send queue: " + sendQueue.size());
+			Debug.println("Added to send queue");
 		} catch (Exception e) {
 			e.printStackTrace();
 			return -1;
@@ -358,8 +349,7 @@ public class Client {
 	private void fullyFlushQueues() {
 		InFlightContainer ifc;
 		while(null != (ifc = jobqueue.poll())) {
-			if(!ifc.getBroadcast()) { //Reply hasn't been received and
-				//not broadcast so resend
+			if(!ifc.getBroadcast()) { //Reply hasn't been received and not broadcast so resend
 				Debug.println(Debug.INFO,"Resending packet: " + ifc.getPacketId()); 
 				try {
 						parent.sendPacket(ifc.getContainer(),ifc.getCallback()); 
@@ -369,8 +359,7 @@ public class Client {
 			}
 		}
 		while(null != (ifc = sendQueue.poll())) {
-			if(!ifc.getBroadcast()) { //Reply hasn't been received and
-				//not broadcast so resend
+			if(!ifc.getBroadcast()) { //Reply hasn't been received and not broadcast so resend
 				Debug.println(Debug.INFO,"Resending packet from waiting: " + ifc.getPacketId()); 
 				try {
 						parent.sendPacket(ifc.getContainer(),ifc.getCallback()); 

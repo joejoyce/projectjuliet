@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -32,11 +33,11 @@ import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessor;
  * 
  */
 public class Listener {
-	private Socket socket;
+	private Socket socket = null;
 	private String ip;
 	private int port;
-	private ObjectInputStream input;
-	private ObjectOutputStream output;
+	private ObjectInputStream input = null;
+	private ObjectOutputStream output = null;
 	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(2000);
 	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(2000);
 	private LinkedList<XDPRequest> waitingForBatchQueries = new LinkedList<XDPRequest>();
@@ -44,6 +45,58 @@ public class Listener {
 	private DatabaseConnection databaseConnection;
 	private XDPProcessor xdp;
 	private QueryProcessor query;
+	
+	private static long initialMs = 500;
+	private long delayMs = initialMs;
+	private static long cutOff = 10000;
+	public synchronized boolean connect(String ip, int port) {
+		if(socket.isConnected())
+			return true;
+		if(delayMs <= cutOff) {
+			try {
+				Thread.sleep(delayMs);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			delayMs *= 2;
+		} else {
+			Debug.println(Debug.SHOWSTOP,"System restarting due to inability to reconnect");
+			System.exit(0);
+		}
+		try {
+			if(null != output) {
+				output.close();
+				output = null;
+			}
+			if(null != input) {
+				input.close();
+				input = null;
+			}
+			if(null != socket) {
+				socket.close();
+				socket = null;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			socket = new Socket(ip,port);
+			this.output = new ObjectOutputStream(socket.getOutputStream());
+			this.input = new ObjectInputStream(socket.getInputStream());
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		delayMs = initialMs;
+		return true;
+	}
 
 	/**
 	 * Connects to the server and begins to read and process packets.
@@ -64,10 +117,11 @@ public class Listener {
 	public void listen(String server, int thePort, DatabaseConnection db, XDPProcessor xdpProcessor, QueryProcessor queryProcessor) throws IOException, SQLException {
 		this.ip = server;
 		this.port = thePort;
-		this.socket = new Socket(server, thePort);
+		/*this.socket = new Socket(server, thePort);
 		this.output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		output.flush();
-		this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+		this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));*/
+		connect(server,thePort);
 
 		this.databaseConnection = db;
 		this.xdp = xdpProcessor;
@@ -101,8 +155,7 @@ public class Listener {
 
 		Thread receiveThread = new Thread() {
 			public void run() {
-				long delayMs = 500;
-				long cutOff = 10000;
+
 				while (true) {
 					Object o;
 					try {
@@ -122,27 +175,9 @@ public class Listener {
 					} catch (IOException e) {
 						Debug.println(Debug.ERROR, "An error occurred communicating with the server.");
 						e.printStackTrace();
+						connect(ip,port);
 						// Just attempt to reconnect
-						try {
-							try {
-								output.close();
-							} catch(IOException exc) {
-								Debug.printStackTrace(exc);
-							}
-							if(delayMs <= cutOff) {
-								Thread.sleep(delayMs);
-								delayMs *= 2;
-							}else {
-								Debug.println(Debug.SHOWSTOP,"System restarting due to inability to reconnect");
-								System.exit(0);
-							}
-							
-							socket = new Socket(ip, port);
-							input = new ObjectInputStream(socket.getInputStream());
-							output = new ObjectOutputStream(socket.getOutputStream());
-						} catch (Exception ex) {
-							ex.printStackTrace();
-						}
+
 					}
 				}
 			}
@@ -163,14 +198,7 @@ public class Listener {
 			} catch (IOException e) {
 				e.printStackTrace();
 				// Just attempt to reconnect
-				try {
-					socket = new Socket(ip, port);
-					output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-					output.flush();
-					input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
+				connect(ip,port);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 				System.exit(0);

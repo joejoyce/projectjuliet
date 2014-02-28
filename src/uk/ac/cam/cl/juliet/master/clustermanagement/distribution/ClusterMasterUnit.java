@@ -111,9 +111,6 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public volatile long currentSystemTime;
 	
 	private static ClientLoadComparator clc = new ClientLoadComparator();
-	//private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
-	//private CopyOnWriteArrayList<Client> allClients = new CopyOnWriteArrayList<Client>();
-	
 	private SuperFancyConcurrentPriorityQueue<Client> clientQueue = new SuperFancyConcurrentPriorityQueue<Client>(clc);
 	private ScheduledExecutorService workers = null;
 	
