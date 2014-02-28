@@ -121,7 +121,7 @@ public class Listener {
 		this.output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		output.flush();
 		this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));*/
-		connect(server,thePort);
+		while(!connect(ip,port)) continue;
 
 		this.databaseConnection = db;
 		this.xdp = xdpProcessor;
@@ -175,7 +175,7 @@ public class Listener {
 					} catch (IOException e) {
 						Debug.println(Debug.ERROR, "An error occurred communicating with the server.");
 						e.printStackTrace();
-						connect(ip,port);
+						while(!connect(ip,port)) continue;
 						// Just attempt to reconnect
 
 					}
@@ -198,7 +198,7 @@ public class Listener {
 			} catch (IOException e) {
 				e.printStackTrace();
 				// Just attempt to reconnect
-				connect(ip,port);
+				while(!connect(ip,port)) continue;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 				System.exit(0);
