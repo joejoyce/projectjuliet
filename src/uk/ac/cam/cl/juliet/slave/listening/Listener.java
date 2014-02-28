@@ -50,7 +50,7 @@ public class Listener {
 	private long delayMs = initialMs;
 	private static long cutOff = 10000;
 	public synchronized boolean connect(String ip, int port) {
-		if(socket.isConnected())
+		if(socket != null && socket.isConnected())
 			return true;
 		if(delayMs <= cutOff) {
 			try {
