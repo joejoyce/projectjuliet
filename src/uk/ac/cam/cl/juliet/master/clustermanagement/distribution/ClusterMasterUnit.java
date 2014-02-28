@@ -197,8 +197,9 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		Client c = clientQueue.peek();
 		if(null == c)
 			throw new NoClusterException("The Pis have all gone :'(");
-		long l = c.send(msg,cb);
-		clientQueue.reorder();
+		long l = 0;
+		while(0 > (l = c.send(msg,cb)))
+				clientQueue.reorder();
 		currentSystemTime = msg.getTimeStampS();
 		return l;
 	}

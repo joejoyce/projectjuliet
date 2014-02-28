@@ -280,7 +280,8 @@ public class Client {
 				LatencyMonitor m = (LatencyMonitor) c;
 				m.outboundQueue = System.nanoTime();
 			}
-			sendQueue.put(ifc);
+			if(!sendQueue.offer(ifc))
+				return -1;
 			workCount.incrementAndGet();
 			Debug.println("Added to send queue");
 		} catch (Exception e) {
