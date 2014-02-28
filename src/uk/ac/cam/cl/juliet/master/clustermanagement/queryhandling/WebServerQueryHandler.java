@@ -533,7 +533,10 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 			protected void processContainer(Container data) {
 				MovingAverageResponse response = (MovingAverageResponse) data;
-				if (received > 1 && response.getAverageCount() > 0)
+                                if(response.getAverageCount() == 0) {
+				  writer.write("{}");
+                                }
+				if (received > 1)
 					writer.write(",");
 				for (int i = 0; i < response.getAverageCount(); i++) {
 					writer.write("{");

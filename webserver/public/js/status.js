@@ -79,9 +79,9 @@ $(document).ready(function() {
                             var y = Number(response.data);
 
  			    if(series.data.length > 30) {
-                                graph = series.graph,
-                                area = series.area,
-                                currentShift = (graph && graph.shift) || 0;
+                                var graph = series.graph;
+                                var area = series.area;
+                                var currentShift = (graph && graph.shift) || 0;
 
                                 Highcharts.each([graph, area, series.graphNeg, series.areaNeg], function (shape) {
                                     if (shape) {
@@ -146,20 +146,19 @@ $(document).ready(function() {
                             var x = (new Date()).getTime();
                             var y = Math.abs(Number(response.data.databaseRTTime)/1000000);                            
                              if(series.data.length > 30) {
-                                graph = series.graph,
-                                area = series.area,
-                                currentShift = (graph && graph.shift) || 0;
+                                var graph = series.graph;
+                                var area = series.area;
+                                var currentShift = (graph && graph.shift) || 0;
 
                                 Highcharts.each([graph, area, series.graphNeg, series.areaNeg], function (shape) {
                                     if (shape) {
                                         shape.shift = currentShift + 1;
                                     }
                                 });
-                              series.data[0].remove(false, false);
+                                series.data[0].remove(false, false);
                             }
 
                             series.addPoint([x, y], true, false);
-
                         });    
                     }, 1000);
                 }
