@@ -69,6 +69,7 @@ public class Client {
 	
 	private Semaphore sem = new Semaphore(2000); //Allows 2000 at one time
 
+	private boolean amClosing = false; //NASTY HACK
 	/**
 	 * Get the IP address of the Client that this Client object is connected to.
 	 * 
@@ -125,6 +126,9 @@ public class Client {
 	 * salvage the jobs waiting on returns.
 	 */
 	public void closeClient() {
+		if(amClosing)
+			return;
+		amClosing = true;
 		// Must be here, don't move plox
 		sendQueue = null;
 
@@ -137,7 +141,7 @@ public class Client {
 		}
 		cleaner.cancel(false); // Try to stop the regular operation flushing my
 								// queue, waiting until finished
-		tryFlushQueue();
+		
 		try {
 			Debug.println(100,
 					"---------------Close Client has been called----------------");
@@ -150,6 +154,7 @@ public class Client {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		fullyFlushQueues();
 	}
 
 	public Client(Socket s, ClusterMaster parent) {
@@ -350,6 +355,32 @@ public class Client {
 		return send(c, cb, c.getPacketId(), true);
 	}
 
+	
+	private void fullyFlushQueues() {
+		InFlightContainer ifc;
+		while(null != (ifc = jobqueue.poll())) {
+			if(!ifc.getBroadcast()) { //Reply hasn't been received and
+				//not broadcast so resend
+				Debug.println(Debug.INFO,"Resending packet: " + ifc.getPacketId()); 
+				try {
+						parent.sendPacket(ifc.getContainer(),ifc.getCallback()); 
+				} catch (NoClusterException e) { 
+					e.printStackTrace();
+				} 
+			}
+		}
+		while(null != (ifc = sendQueue.poll())) {
+			if(!ifc.getBroadcast()) { //Reply hasn't been received and
+				//not broadcast so resend
+				Debug.println(Debug.INFO,"Resending packet from waiting: " + ifc.getPacketId()); 
+				try {
+						parent.sendPacket(ifc.getContainer(),ifc.getCallback()); 
+				} catch (NoClusterException e) { 
+					e.printStackTrace();
+				} 
+			}
+		}
+	}
 	/**
 	 * This method checks the front of the priority queue ( the timeout that'll
 	 * expire soonest, if it finds the timeout has passed then the client is
@@ -373,19 +404,6 @@ public class Client {
 								+ ifc.getContainer().getPacketId() + ",: "
 								+ ifc.getContainer().toString());
 				 closeClient();
-				
-				while(null != (ifc = jobqueue.poll())) {
-					if(!ifc.getBroadcast()) { //Reply hasn't been received and
-						//not broadcast so resend
-						Debug.println(Debug.INFO,"Resending packet: " + ifc.getPacketId()); 
-						try {
-								parent.sendPacket(ifc.getContainer(),ifc.getCallback()); 
-						} catch (NoClusterException e) { 
-							e.printStackTrace();
-						} 
-					} 
-				}
-				 
 			}
 		}
 	}
