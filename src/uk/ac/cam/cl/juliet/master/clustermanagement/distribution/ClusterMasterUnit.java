@@ -160,8 +160,11 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		if(null == c)
 			throw new NoClusterException("The Pis have all gone :'(");
 		long l = 0;
-		while(0 > (l = c.send(msg,cb)))
-				clientQueue.reorder();
+		while(0 > (l = c.send(msg,cb))) {
+			c = clientQueue.peek();
+			if(null == c)
+				throw new NoClusterException("The Pis have all gone :'(");
+		}
 		currentSystemTime = msg.getTimeStampS();
 		return l;
 	}
