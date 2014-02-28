@@ -130,7 +130,7 @@ public class Client {
 			return;
 		amClosing = true;
 		Debug.println(Debug.INFO,"closeClient was called on clinet" + address.toString());
-		//sendQueue = null;
+		sendQueue = null;
 
 		parent.removeClient(this);
 		// Close the streams

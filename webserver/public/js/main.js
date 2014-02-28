@@ -9,7 +9,4 @@ $(document).ready(function() {
 		}
 		e.preventDefault();
 	});
-	$('#brand').click(function(e) {
-		window.location = "https://www.youtube.com/watch?v=Y4MnpzG5Sqc";
-	});
 });

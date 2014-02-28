@@ -62,9 +62,66 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 	// Reduce the remove list to an array of order IDs
 	removeList = this.extractArrayOrderID(removeList);
 
+	var tableIDs = [];
+	$('#offer-rows tr').each(function(index, row) {
+		tableIDs.push($(row).data('order-id'));
+	});
+	console.log('============ Starting round ================');
+	console.log('tableIDs');
+	console.log(tableIDs);
+	console.log('removeList');
+	console.log(removeList);
+
+	var insertIDs = this.extractArrayOrderID(insertList);
+	console.log('insertIDs');
+	console.log(insertIDs);
+
 	var rowCount = 25;
 	// Loop over all rows in the HTML target table
-	tableRows.each(function(index, row) {
+	// Perform required insertions
+	$.each(insertList, function(i, insertOrder) {
+		if (insertOrder) {
+			$('#offer-rows tr').each(function(index, row) {
+				row = $(row);
+				if (sorter(parseInt(row.data('price')), insertOrder.price)) {
+					console.log(parseInt(row.data('price')) + ' >= ' + insertOrder.price);
+					self.insertRowBefore(row, insertOrder);
+					return false;
+				} else {
+					if (index >= rowCount - 2) {
+						self.insertRowAfter(row, insertOrder);
+					}
+				}
+			});
+		}
+	});
+	// Remove rows
+	var duplicates = [];
+	console.log('Duplicates');
+	console.log(duplicates);
+	$('#offer-rows tr').each(function(index, row) {
+		row = $(row);
+		console.log('Considering ' + row.data('order-id'));
+		if ($.inArray(row.data('order-id'), duplicates) >= 0) {
+			console.log('Found duplicate: ' + row.data('order-id'));
+			row.remove();
+		} else {
+			duplicates.push(row.data('order-id'));
+			if ($.inArray(row.data('order-id'), removeList) >= 0) {
+				console.log('Removing ' + row.data('order-id'));
+				self.flashElement(row, function() {
+						row.find('td').wrapInner('<div style="display:block;" />')
+					.parent()
+					.find('td > div')
+					.slideUp(700, function() {
+						$(this).parent().parent().remove();
+						row.remove();
+					});
+				});
+			}
+		}
+	});
+	/*tableRows.each(function(index, row) {
 		row = $(row);
 		// Insert rows before the current row
 		$.each(insertList, function(i, insertOrder) {
@@ -99,7 +156,7 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
                                  });
 			});
 		}
-	});
+	});*/
 }
 
 /*
@@ -181,6 +238,7 @@ OrderBook.prototype.generateRow = function(order) {
  * order  the order object for the new row
  */
 OrderBook.prototype.insertRowBefore = function(row, order) {
+	console.log('Inserting ' + order.price + ' before ' + $(row).data('price'));
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertBefore(row);
@@ -233,7 +291,7 @@ $(document).ready(function() {
 	);
 	window.setInterval(function() { offerTable.refresh(offerTable); }, 2000);
 	
-	var bidTable = new OrderBook(
+	/*var bidTable = new OrderBook(
 		'/api/v1/orders/bids/',
 		client.symbol.symbol_id,
 		client.symbol,
@@ -242,5 +300,5 @@ $(document).ready(function() {
 		function(orderA, orderB) { return (orderA <= orderB); },
 		800
 	);
-	window.setInterval(function() { bidTable.refresh(bidTable); }, 2000);
+	window.setInterval(function() { bidTable.refresh(bidTable); }, 2000);*/
 });
