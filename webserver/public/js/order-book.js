@@ -62,6 +62,20 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 	// Reduce the remove list to an array of order IDs
 	removeList = this.extractArrayOrderID(removeList);
 
+	var tableIDs = [];
+	$('#offer-rows tr').each(function(index, row) {
+		tableIDs.push($(row).data('order-id'));
+	});
+	console.log('============ Starting round ================');
+	console.log('tableIDs');
+	console.log(tableIDs);
+	console.log('removeList');
+	console.log(removeList);
+
+	var insertIDs = this.extractArrayOrderID(insertList);
+	console.log('insertIDs');
+	console.log(insertIDs);
+
 	var rowCount = 25;
 	// Perform required insertions
 	$.each(insertList, function(i, insertOrder) {

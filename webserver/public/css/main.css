@@ -206,15 +206,21 @@ body {
 
 /* $flash */
 .flash-new td,
-.posc,
-.pos {
+.posc {
   background-color: #0f0 !important;
 }
 
+.pos {
+  color: #0f0;
+}
+
 .flash-old td,
-.negc,
-.neg {
+.negc {
   background-color: #f00 !important;
+}
+
+.neg {
+  color: #f00;
 }
 
 /* $lists */

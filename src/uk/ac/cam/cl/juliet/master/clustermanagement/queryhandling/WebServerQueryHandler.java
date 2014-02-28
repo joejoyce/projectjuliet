@@ -530,13 +530,11 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		DistributedQueryCallback c = new DistributedQueryCallback(numberOfQueries) {
 			PrintWriter writer = pw;
+                        boolean before = false;
 
 			protected void processContainer(Container data) {
 				MovingAverageResponse response = (MovingAverageResponse) data;
-                                if(response.getAverageCount() == 0) {
-				  writer.write("{}");
-                                }
-				if (received > 1)
+				if (before == false && received > 1 && response.getAverageCount() > 0)
 					writer.write(",");
 				for (int i = 0; i < response.getAverageCount(); i++) {
 					writer.write("{");
@@ -546,6 +544,10 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 					if (i < response.getAverageCount() - 1)
 						writer.write(",");
 				}
+                                if(response.getAverageCount() != 0) {
+				  before = true;
+                                }
+
 			}
 		};
 
