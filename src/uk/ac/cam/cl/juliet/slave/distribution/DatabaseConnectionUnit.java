@@ -72,6 +72,11 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	private long lastCommitNs = -1;
 
+	/**
+	 * Creates a new DatabaseConnectionUnit and schedules execution of batch queries.
+	 * @param c A connection to the database.
+	 * @throws SQLException
+	 */
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
 		this.addOrderBatch = connection.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -303,6 +308,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		// session.
 	}
 
+	@Override
 	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start, long end) throws SQLException {
 		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE symbol_id=? AND offered_s>=? AND offered_s<? AND added=1 AND deleted=0");
 		ResultSet result;
@@ -313,6 +319,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		return result;
 	}
 
+	@Override
 	public ResultSet getAllTradesInRecentHistory(long start) throws SQLException {
 		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE offered_s >= ? AND added=1 AND deleted=0 ORDER BY symbol_id");
 		ResultSet result;
@@ -321,6 +328,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		return result;
 	}
 
+	@Override
 	public void setConnection(Connection connection) {
 		this.connection = connection;
 	}
@@ -369,10 +377,12 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			return lowestOffer - highestBid;
 	}
 
+	@Override
 	public long getLastCommitNS() {
 		return lastCommitNs;
 	}
 
+	@Override
 	public ResultSet getBestOffersForStock(long symbolID, int limit) throws SQLException {
 		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM order_book WHERE symbol_id=? AND added=1 AND deleted=0 AND is_ask=1 ORDER BY price DESC LIMIT = ?");
 		ResultSet result;
@@ -382,12 +392,14 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		return result;
 	}
 
+	@Override
 	public void addBatchQueryExecuteStartCallback(Runnable r) {
 		synchronized (batchQueryExecuteStartCallbacks) {
 			this.batchQueryExecuteStartCallbacks.add(r);
 		}
 	}
 
+	@Override
 	public void addBatchQueryExecuteEndCallback(Runnable r) {
 		synchronized (batchQueryExecuteEndCallbacks) {
 			this.batchQueryExecuteEndCallbacks.add(r);

@@ -12,6 +12,10 @@ public class XDPProcessorUnit implements XDPProcessor {
 
 	private DatabaseConnection mDB;
 
+	/**
+	 * Creates a new XDP processor.
+	 * @param pDBConnection A connection to the database.
+	 */
 	public XDPProcessorUnit(DatabaseConnection pDBConnection) {
 		mDB = pDBConnection;
 	}
