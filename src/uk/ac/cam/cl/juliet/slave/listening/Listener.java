@@ -50,7 +50,7 @@ public class Listener {
 	private long delayMs = initialMs;
 	private static long cutOff = 10000;
 	public synchronized boolean connect(String ip, int port) {
-		if(socket != null && socket.isConnected())
+		if(socket != null && !socket.isClosed())
 			return true;
 		if(delayMs <= cutOff) {
 			try {
@@ -209,6 +209,7 @@ public class Listener {
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
+					
 				}
 				while(!connect(ip,port)) continue;
 			} catch (InterruptedException e) {
