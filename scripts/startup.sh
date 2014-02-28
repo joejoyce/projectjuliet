@@ -18,8 +18,8 @@ else
 fi
 
 if cp /juliet/cluster.jar /juliet/mysql-connector-java-5.1.29-bin.jar / ; then
-    unmount /juliet;
-    java -cp /cluster.jar:/mysql-connector-java-5.1.29-bin.jar -jar /cluster.jar $dhcpServer &
+    umount /juliet;
+    java -cp /mysql-connector-java-5.1.29-bin.jar -jar /cluster.jar $dhcpServer &
 else
     echo 'Failed to copy JARs'
     sleep 10
