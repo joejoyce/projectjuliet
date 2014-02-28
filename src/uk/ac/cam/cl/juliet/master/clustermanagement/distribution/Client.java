@@ -92,7 +92,7 @@ public class Client {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		workCount.incrementAndGet();
+		//workCount.incrementAndGet(); moved this to before being put on the queue 
 		jobqueue.add(container);
 		hash.put(container.getPacketId(), container);
 	}
@@ -290,6 +290,7 @@ public class Client {
 			}
 			while (!sendQueue.offer(ifc)) {
 			}
+			workCount.incrementAndGet();
 			Debug.println("Added to send queue: " + sendQueue.size());
 		} catch (Exception e) {
 			e.printStackTrace();
