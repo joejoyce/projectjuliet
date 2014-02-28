@@ -28,7 +28,7 @@ exports.getSkip = function(callback) {
   client.write('config|get data.rate\n');
   client.on('data', function(data) {
   	data = JSON.parse(data);
-    client.end();
+        client.end();
   	callback(data.skip);
   });
 };

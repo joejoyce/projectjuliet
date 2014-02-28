@@ -64,7 +64,39 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 
 	var rowCount = 25;
 	// Loop over all rows in the HTML target table
+	// Perform required insertions
+	$.each(insertList, function(i, insertOrder) {
+		if (insertOrder) {
+			$('#offer-rows tr').each(function(index, row) {
+				row = $(row);
+				if (sorter(parseInt(row.data('price')), insertOrder.price)) {
+					console.log(parseInt(row.data('price')) + ' >= ' + insertOrder.price);
+					self.insertRowBefore(row, insertOrder);
+					return false;
+				} else {
+					if (index >= rowCount - 2) {
+						self.insertRowAfter(row, insertOrder);
+					}
+				}
+			});
+		}
+	});
+	// Remove rows
 	tableRows.each(function(index, row) {
+		row = $(row);
+		if ($.inArray($(row).data('order-id'), removeList) >= 0) {
+			self.flashElement(row, function() {
+				row.find('td').wrapInner('<div style="display:block;" />')
+				.parent()
+				.find('td > div')
+				.slideUp(700, function() {
+					$(this).parent().parent().remove();
+					row.remove();
+				});
+			});
+		}
+	});
+	/*tableRows.each(function(index, row) {
 		row = $(row);
 		// Insert rows before the current row
 		$.each(insertList, function(i, insertOrder) {
@@ -99,7 +131,7 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
                                  });
 			});
 		}
-	});
+	});*/
 }
 
 /*
@@ -181,6 +213,7 @@ OrderBook.prototype.generateRow = function(order) {
  * order  the order object for the new row
  */
 OrderBook.prototype.insertRowBefore = function(row, order) {
+	console.log('Inserting ' + order.price + ' before ' + $(row).data('price'));
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertBefore(row);
@@ -233,7 +266,7 @@ $(document).ready(function() {
 	);
 	window.setInterval(function() { offerTable.refresh(offerTable); }, 2000);
 	
-	var bidTable = new OrderBook(
+	/*var bidTable = new OrderBook(
 		'/api/v1/orders/bids/',
 		client.symbol.symbol_id,
 		client.symbol,
@@ -242,5 +275,5 @@ $(document).ready(function() {
 		function(orderA, orderB) { return (orderA <= orderB); },
 		800
 	);
-	window.setInterval(function() { bidTable.refresh(bidTable); }, 2000);
+	window.setInterval(function() { bidTable.refresh(bidTable); }, 2000);*/
 });

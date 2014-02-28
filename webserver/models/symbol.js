@@ -51,7 +51,6 @@ exports.list = function(callback) {
   }
 
   var client = net.connect(1337, 'localhost');
-  console.log("wtf is going on?");
   client.setEncoding('utf8');
   client.write('basic|SELECT * FROM symbol ORDER BY symbol_id LIMIT 2000\n');
 
