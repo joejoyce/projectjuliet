@@ -29,6 +29,10 @@ public class QueryProcessorUnit implements QueryProcessor {
 
 	private DatabaseConnection connection;
 
+	/**
+	 * Creates a new query processor.
+	 * @param connection A connection to the database.
+	 */
 	public QueryProcessorUnit(DatabaseConnection connection) {
 		this.connection = connection;
 	}
@@ -332,19 +336,19 @@ public class QueryProcessorUnit implements QueryProcessor {
 
 	private class Trade implements Comparable<Trade> {
 		public long seconds;
-		public long nanoseconds;
+		public long sequenceNumber;
 		public long price;
 		public long volume;
 
-		public Trade(long seconds, long nanoseconds, long price) {
+		public Trade(long seconds, long sequenceNumber, long price) {
 			this.seconds = seconds;
-			this.nanoseconds = nanoseconds;
+			this.sequenceNumber = sequenceNumber;
 			this.price = price;
 		}
 
-		public Trade(long seconds, long nanoseconds, long price, long volume) {
+		public Trade(long seconds, long sequenceNumber, long price, long volume) {
 			this.seconds = seconds;
-			this.nanoseconds = nanoseconds;
+			this.sequenceNumber = sequenceNumber;
 			this.price = price;
 			this.volume = volume;
 		}
@@ -355,13 +359,12 @@ public class QueryProcessorUnit implements QueryProcessor {
 				return -1;
 			else if (this.seconds > o.seconds)
 				return 1;
-			else if (this.nanoseconds < o.nanoseconds)
+			else if (this.sequenceNumber < o.sequenceNumber)
 				return -1;
-			else if (this.nanoseconds > o.nanoseconds)
+			else if (this.sequenceNumber > o.sequenceNumber)
 				return 1;
 			else
 				return 0;
 		}
 	}
-
 }
