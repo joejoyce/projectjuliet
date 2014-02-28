@@ -129,8 +129,8 @@ public class Client {
 		if(amClosing)
 			return;
 		amClosing = true;
-		// Must be here, don't move plox
-		sendQueue = null;
+		Debug.println(Debug.INFO,"closeClient was called on clinet" + address.toString());
+		//sendQueue = null;
 
 		parent.removeClient(this);
 		// Close the streams
@@ -141,13 +141,10 @@ public class Client {
 		}
 		cleaner.cancel(false); // Try to stop the regular operation flushing my
 								// queue, waiting until finished
-		
 		try {
-			Debug.println(100,
-					"---------------Close Client has been called----------------");
+			Debug.println(100,"---------------Close Client has been called----------------");
 			out.close();
-			in.close(); // Should also have the effect of closing the threads
-						// that read and write on them
+			in.close(); // Should also have the effect of closing the threads that read and write on them
 			s.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -155,6 +152,7 @@ public class Client {
 			e.printStackTrace();
 		}
 		fullyFlushQueues();
+		amClosing = false;
 	}
 
 	public Client(Socket s, ClusterMaster parent) {
