@@ -111,9 +111,10 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public volatile long currentSystemTime;
 	
 	private static ClientLoadComparator clc = new ClientLoadComparator();
-	private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
-	private CopyOnWriteArrayList<Client> allClients = new CopyOnWriteArrayList<Client>();
+	//private PriorityBlockingQueue<Client> clientQueue = new PriorityBlockingQueue<Client>(16,clc);
+	//private CopyOnWriteArrayList<Client> allClients = new CopyOnWriteArrayList<Client>();
 	
+	private SuperFancyConcurrentPriorityQueue<Client> clientQueue = new SuperFancyConcurrentPriorityQueue<Client>(clc);
 	private ScheduledExecutorService workers = null;
 	
 	public ClusterMasterUnit(String filename) {
@@ -138,8 +139,11 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	@Override
 	public void addClient(Socket skt) {
 		Client c = new Client(skt,this);
-		clientQueue.add(c);
-		allClients.add(c);
+		try {
+			clientQueue.push(c);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -158,7 +162,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 						Socket connection = socket.accept();
 						Debug.println("About to add a new client!");						
 						addClient(connection);
-						Debug.println(100, "Added a new client!\nTotal Clients: " + allClients.size());					
+						Debug.println(100, "Added a new client!\nTotal Clients: " + clientQueue.size());					
 					} catch (IOException e) {
 						System.out.println("There was an error establishing a connection and spawning a client");
 						e.printStackTrace();
@@ -193,28 +197,18 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	@Override
 	public long sendPacket(Container msg, Callback cb) throws NoClusterException {
-		synchronized(clientQueue) {
-			Client c = null;
-			while (c == null) {
-				try {
-					c = clientQueue.poll(1, TimeUnit.SECONDS);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}	
-			long l = c.send(msg,cb);
-			clientQueue.put(c);
-			currentSystemTime = msg.getTimeStampS();
-			return l;
-		}
+		Client c = clientQueue.peek();
+		if(null == c)
+			throw new NoClusterException("The Pis have all gone :'(");
+		long l = c.send(msg,cb);
+		clientQueue.reorder();
+		currentSystemTime = msg.getTimeStampS();
+		return l;
 	}
 	
 	@Override
 	public void removeClient(Client ob) {
-		synchronized(clientQueue) {
-			clientQueue.remove(ob);
-		}
-		allClients.remove(ob);
+		clientQueue.remove(ob);
 	}
 	
 	@Override
@@ -247,8 +241,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	@Override
 	public Client[] listClients() {
-		Client[] arr = allClients.toArray(new Client[0]);
-		return arr;
+		return clientQueue.toArray(new Client[0]);
 	}
 	
 	public long getTime() {
@@ -257,19 +250,21 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	public int getPacketThroughput() {
 		int total = 0;
-		for(Client c : allClients) {
-			total += c.packetsSentThisSecond;
-		}		
+		Iterator<Client> i = clientQueue.getIterator();
+		while(i.hasNext())
+			total += i.next().packetsSentThisSecond;
+		clientQueue.releaseIterator();
 		return total;
 	}
 	
 	@Override
 	public int broadcast(Container c) {
 		c.setPacketId(getNextId());
-		Iterator<Client> iter = allClients.iterator();
+		Iterator<Client> iter = clientQueue.getIterator();
 		int i = 0;
 		for(;iter.hasNext();i++)
 			iter.next().broadcast(c);
+		clientQueue.releaseIterator();
 		return i;
 	}
 	
@@ -277,16 +272,17 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	@Override
 	public int broadcast(Container c, Callback cb) {
 		c.setPacketId(getNextId());
-		Iterator<Client> iter = allClients.iterator();
+		Iterator<Client> iter = clientQueue.getIterator();
 		int i = 0;
 		for(;iter.hasNext();i++)
 			iter.next().broadcast(c,cb);
+		clientQueue.releaseIterator();
 		return i;
 	}
 
 	@Override
 	public int getClientCount() {
-		return allClients.size();
+		return clientQueue.size();
 	}
 	
 	/**
