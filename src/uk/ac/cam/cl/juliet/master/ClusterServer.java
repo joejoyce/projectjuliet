@@ -1,11 +1,15 @@
 package uk.ac.cam.cl.juliet.master;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
 import uk.ac.cam.cl.juliet.common.Debug;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import uk.ac.cam.cl.juliet.master.dataprocessor.DataProcessor;
@@ -27,6 +31,8 @@ public class ClusterServer {
 	public static ClusterMaster cm;
 	public static DataProcessor dp;
 	public static SpikeDetectionRunnable spikeDetector;
+	public static ShutdownSettingsSaver settingsSaver;
+	public static final String SETTINGS_FILE = "settings";
 	
 	@SuppressWarnings("unused")
 	public static void main(String args[]) throws IOException, SQLException {
@@ -50,7 +56,30 @@ public class ClusterServer {
                 return;
         }
         SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4, skipBoundary);
-        cm = new ClusterMasterUnit("settings");
+        //read in settings
+        Map<String, String> clusterMasterSettings = new HashMap<String,String>();
+        StringReader r = new StringReader(SETTINGS_FILE);
+		BufferedReader bf = new BufferedReader(r);
+		try {
+			bf.readLine();
+			String line = null;
+			while(null != (line = bf.readLine())) {
+				String arr[] = line.split(" ");
+				if(arr.length > 2) {
+					if(arr[0].equals("client")) {
+						clusterMasterSettings.put(arr[1], arr[2]);
+					}
+				}
+			}
+			bf.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//create new thread to save settings when exiting JVM
+		settingsSaver = new ShutdownSettingsSaver(SETTINGS_FILE);
+		
+        cm = new ClusterMasterUnit(clusterMasterSettings, settingsSaver);
+
         cm.start(5000);
         final DataProcessor dp = new DataProcessor(ds, cm);
         dp.setFiles(file1, file2, file3, file4, skipBoundary);

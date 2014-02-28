@@ -8,7 +8,9 @@ import java.io.StringReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
@@ -21,6 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
+import uk.ac.cam.cl.juliet.master.ShutdownSettingsSaver;
 
 
 final class ClientLoadComparator implements Comparator<Client> {
@@ -62,35 +65,6 @@ class RepeatedSend implements Runnable{
 	}
 }
 
-class ShutdownSettingsSaver extends Thread {
-	private String filename;
-	private ConfigurationPacket cp = null;
-	public ShutdownSettingsSaver (String filename, ConfigurationPacket cp) {
-		this.filename = filename;
-		this.cp = cp;
-	}
-	public void run (){
-        try {
-        	Debug.println(Debug.INFO,"Saving settings on exit");
-			File f = new File(filename);
-	        FileWriter fw = new FileWriter(f);
-	        StringBuilder sb = new StringBuilder();
-	        for (Entry<String, String> entry : cp.getSettings().entrySet()) {
-	            String key = entry.getKey();
-	            String value = entry.getValue();
-				fw.write(key);
-	            fw.write(" ");
-	            fw.write(value);
-	            fw.write("\n");
-	        }
-	        fw.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			Debug.println(Debug.SHOWSTOP,"Error saving settings on exit");
-			e.printStackTrace();
-		}
-	}
-}
 /**
  * This class handles all data being sent to the cluster - when it recieves a packet it allocates
  * it to the Client with least work currently.
@@ -114,23 +88,11 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	private SuperFancyConcurrentPriorityQueue<Client> clientQueue = new SuperFancyConcurrentPriorityQueue<Client>(clc);
 	private ScheduledExecutorService workers = null;
 	
-	public ClusterMasterUnit(String filename) {
-		StringReader r = new StringReader(filename);
-		BufferedReader bf = new BufferedReader(r);
-		try {
-			bf.readLine();
-			String line = null;
-			while(null != (line = bf.readLine())) {
-				String arr[] = line.split(" ");
-				if(arr.length > 1)
-					cp.setSetting(arr[0],arr[1]);
-			}
-			bf.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+	public ClusterMasterUnit(Map<String, String> settings, ShutdownSettingsSaver saver) {
+		for(Entry<String, String> entry : settings.entrySet()) {
+			cp.setSetting(entry.getKey(), entry.getValue());
 		}
-		//Register to save settings on shutdown
-		Runtime.getRuntime().addShutdownHook(new ShutdownSettingsSaver(filename,cp));
+		saver.setConfigurationPacket(cp);
 	}
 	
 	@Override

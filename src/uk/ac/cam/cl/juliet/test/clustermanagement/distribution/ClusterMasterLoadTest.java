@@ -2,8 +2,11 @@ package uk.ac.cam.cl.juliet.test.clustermanagement.distribution;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 
 import uk.ac.cam.cl.juliet.common.XDPRequest;
+import uk.ac.cam.cl.juliet.master.ShutdownSettingsSaver;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUnit;
@@ -53,7 +56,10 @@ public class ClusterMasterLoadTest {
 		Trackkeeper myTracker = new Trackkeeper(pNoOfPackets);
 		XDPDataStream ds = new MockXDPDataStream(pPacketsPerSecond, pNoOfPackets, 
 				myTracker, pPacketSize);
-		ClusterMaster cm = new ClusterMasterUnit(""); // pass in the path of the configuration file
+		Map<String, String> settings = new HashMap<String, String>();
+		settings.put("key", "value");
+		ShutdownSettingsSaver saver = new ShutdownSettingsSaver("test_settings_file_may_be_removed");
+		ClusterMaster cm = new ClusterMasterUnit(settings, saver); // pass in the path of the configuration file
 									// for now let an error be thrown and continue 
 		//set up the clusterMaster to listen to new Pis
 		try {
