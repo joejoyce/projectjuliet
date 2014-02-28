@@ -20,7 +20,7 @@ fi
 if cp /juliet/cluster.jar /juliet/mysql-connector-java-5.1.29-bin.jar / ; then
     sleep 20;
     umount /juliet;
-    java -cp mysql-connector-java-5.1.29-bin.jar:. uk.ac.cam.cl.juliet.slave.listening.Client $dhcpServer;
+    java -cp /mysql-connector-java-5.1.29-bin.jar:/cluster.jar:/ uk.ac.cam.cl.juliet.slave.listening.Client $dhcpServer;
 else
     echo 'Failed to copy JARs'
     sleep 20;
