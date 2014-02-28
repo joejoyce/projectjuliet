@@ -372,16 +372,20 @@ public class Client {
 								+ ", packet: "
 								+ ifc.getContainer().getPacketId() + ",: "
 								+ ifc.getContainer().toString());
-				// closeClient();
-				/*
-				 * while(null != (ifc = jobqueue.poll())) {
-				 * if(!ifc.getBroadcast()) { //Reply hasn't been received and
-				 * not broadcast so resend
-				 * Debug.println(Debug.INFO,"Resending packet: " +
-				 * ifc.getPacketId()); try {
-				 * parent.sendPacket(ifc.getContainer(),ifc.getCallback()); }
-				 * catch (NoClusterException e) { e.printStackTrace(); } } }
-				 */
+				 closeClient();
+				
+				while(null != (ifc = jobqueue.poll())) {
+					if(!ifc.getBroadcast()) { //Reply hasn't been received and
+						//not broadcast so resend
+						Debug.println(Debug.INFO,"Resending packet: " + ifc.getPacketId()); 
+						try {
+								parent.sendPacket(ifc.getContainer(),ifc.getCallback()); 
+						} catch (NoClusterException e) { 
+							e.printStackTrace();
+						} 
+					} 
+				}
+				 
 			}
 		}
 	}
