@@ -62,6 +62,20 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 	// Reduce the remove list to an array of order IDs
 	removeList = this.extractArrayOrderID(removeList);
 
+	var tableIDs = [];
+	$('#offer-rows tr').each(function(index, row) {
+		tableIDs.push($(row).data('order-id'));
+	});
+	console.log('============ Starting round ================');
+	console.log('tableIDs');
+	console.log(tableIDs);
+	console.log('removeList');
+	console.log(removeList);
+
+	var insertIDs = this.extractArrayOrderID(insertList);
+	console.log('insertIDs');
+	console.log(insertIDs);
+
 	var rowCount = 25;
 	// Loop over all rows in the HTML target table
 	// Perform required insertions
@@ -82,18 +96,29 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 		}
 	});
 	// Remove rows
-	tableRows.each(function(index, row) {
+	var duplicates = [];
+	console.log('Duplicates');
+	console.log(duplicates);
+	$('#offer-rows tr').each(function(index, row) {
 		row = $(row);
-		if ($.inArray($(row).data('order-id'), removeList) >= 0) {
-			self.flashElement(row, function() {
-				row.find('td').wrapInner('<div style="display:block;" />')
-				.parent()
-				.find('td > div')
-				.slideUp(700, function() {
-					$(this).parent().parent().remove();
-					row.remove();
+		console.log('Considering ' + row.data('order-id'));
+		if ($.inArray(row.data('order-id'), duplicates) >= 0) {
+			console.log('Found duplicate: ' + row.data('order-id'));
+			row.remove();
+		} else {
+			duplicates.push(row.data('order-id'));
+			if ($.inArray(row.data('order-id'), removeList) >= 0) {
+				console.log('Removing ' + row.data('order-id'));
+				self.flashElement(row, function() {
+						row.find('td').wrapInner('<div style="display:block;" />')
+					.parent()
+					.find('td > div')
+					.slideUp(700, function() {
+						$(this).parent().parent().remove();
+						row.remove();
+					});
 				});
-			});
+			}
 		}
 	});
 	/*tableRows.each(function(index, row) {
