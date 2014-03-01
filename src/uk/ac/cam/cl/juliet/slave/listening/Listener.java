@@ -50,12 +50,14 @@ public class Listener {
 	private long delayMs = initialMs;
 	private static long cutOff = 10000;
 	
+	private Thread sendThread, receiveThread;
+	
+	private void interruptComms() {
+		sendThread.interrupt();
+		receiveThread.interrupt();
+	}
 	public synchronized boolean connect(String ip, int port) {
 		Debug.println(Debug.INFO,"RUNNING CONNECT METHOD");
-	/*	if(socket != null && !socket.isClosed()) {
-			Debug.println(Debug.INFO,"RETURNING AS THE SOCKET IS OPEN");
-			return true;
-		}*/
 		if(delayMs <= cutOff) {
 			try {
 				Thread.sleep(delayMs);
@@ -84,18 +86,11 @@ public class Listener {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		try {
-			if(null != socket) {
-				socket.close();
-				socket = null;
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		
 		try {
 			this.socket = new Socket(ip,port);
 			this.output = new ObjectOutputStream(socket.getOutputStream());
+			output.flush();
 			this.input = new ObjectInputStream(socket.getInputStream());
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -133,7 +128,6 @@ public class Listener {
 		this.output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		output.flush();
 		this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));*/
-		while(!connect(ip,port)) continue;
 
 		this.databaseConnection = db;
 		this.xdp = xdpProcessor;
@@ -163,60 +157,78 @@ public class Listener {
 				}
 			}
 		};
+		
 		readThread.start();
-
-		Thread receiveThread = new Thread() {
-			public void run() {
-
-				while (true) {
-					Object o;
-					try {
-						o = input.readObject();
-						if (o instanceof Container) {
-							if (o instanceof LatencyMonitor) {
-								((LatencyMonitor) o).outboundArrive = System.nanoTime();
-							}
-							receiveQueue.put((Container) o);
-						} else
+		while(true) {
+			while(!connect(ip,port)) continue;
+			Thread receiveThread = new Thread() {
+				public void run() {
+	
+					while (true) {
+						Object o;
+						try {
+							o = input.readObject();
+							if (o instanceof Container) {
+								if (o instanceof LatencyMonitor) {
+									((LatencyMonitor) o).outboundArrive = System.nanoTime();
+								}
+								receiveQueue.put((Container) o);
+							} else
+								Debug.println(Debug.ERROR, "Unrecognised object type");
+						} catch (ClassNotFoundException e) {
 							Debug.println(Debug.ERROR, "Unrecognised object type");
-					} catch (ClassNotFoundException e) {
-						Debug.println(Debug.ERROR, "Unrecognised object type");
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						
-						Debug.println(Debug.ERROR, "An error occurred communicating with the server.");
-						e.printStackTrace();
-						while(!connect(ip,port)) continue;
-						// Just attempt to reconnect
-
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+							return;
+						} catch (IOException e) {
+							interruptComms();
+							Debug.println(Debug.ERROR, "An error occurred communicating with the server.");
+							e.printStackTrace();
+							// Just attempt to reconnect
+							return;
+						}
 					}
 				}
-			}
-		};
-		receiveThread.start();
-
-		// Sends any waiting responses back to the server.
-		while (true) {
-			try {
-				Container response = responseQueue.take();
-				if (response instanceof LatencyMonitor) {
-					LatencyMonitor m = (LatencyMonitor) response;
-					m.inboundDepart = System.nanoTime();
+			};
+			receiveThread.start();
+	
+			// Sends any waiting responses back to the server.
+			Thread sendThread = new Thread() {
+				public void run() {
+	
+					while (true) {
+						try {
+							Container response = responseQueue.take();
+							if (response instanceof LatencyMonitor) {
+								LatencyMonitor m = (LatencyMonitor) response;
+								m.inboundDepart = System.nanoTime();
+							}
+							output.writeObject(response);
+							output.flush();
+							Debug.println("sent: size: " + responseQueue.size());
+						} catch (IOException e) {
+							e.printStackTrace();
+							// Just attempt to reconnect
+							interruptComms();
+							return;
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+							return;
+						}
+					}
 				}
-				output.writeObject(response);
-				output.flush();
-				Debug.println("sent: size: " + responseQueue.size());
-			} catch (IOException e) {
-				e.printStackTrace();
-				// Just attempt to reconnect
-				while(!connect(ip,port)) continue;
+			};
+			sendThread.start();
+			try  {
+				sendThread.join();
+				receiveThread.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-				System.exit(0);
+				Debug.println(Debug.ERROR,"WHY, I WAS INTERRUPTED WAITING FOR THEM TO BE INTERRUPTED?!!");
 			}
 		}
+		
 	}
 
 	private void flushWaitingForBatchQueries() {
