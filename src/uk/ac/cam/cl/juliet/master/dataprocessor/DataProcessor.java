@@ -63,7 +63,7 @@ public class DataProcessor {
 		Debug.println(100, "Finished entire stream");
 	}
 	
-	public void restart() {
+	public void restartAfresh() {
 		try {
 			// Very harsh, but should work
 			this.dataStream = new SampleXDPDataStream(f1, f2, f3, f4, skip);

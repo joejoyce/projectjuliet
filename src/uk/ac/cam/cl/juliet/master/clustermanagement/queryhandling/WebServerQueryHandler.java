@@ -292,7 +292,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		if (query.equals("restart")) {
 			System.out.println("Got query");
-			ClusterServer.dp.restart();
+			ClusterServer.dp.restartAfresh();
 			System.out.println("restasted");
 			try {
 				Statement s = con.createStatement();

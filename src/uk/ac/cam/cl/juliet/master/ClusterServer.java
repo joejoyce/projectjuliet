@@ -1,7 +1,9 @@
 package uk.ac.cam.cl.juliet.master;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.io.StringReader;
 
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
@@ -9,7 +11,10 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMasterUn
 import uk.ac.cam.cl.juliet.common.Debug;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
 import uk.ac.cam.cl.juliet.master.dataprocessor.DataProcessor;
@@ -33,23 +38,24 @@ public class ClusterServer {
 	public static SpikeDetectionRunnable spikeDetector;
 	public static ShutdownSettingsSaver settingsSaver;
 	public static final String SETTINGS_FILE = "settings";
+	private static boolean USE_INPUT_FILES_FROM_SETTING = false;
 	
 	@SuppressWarnings("unused")
 	public static void main(String args[]) throws IOException, SQLException {
 		Debug.registerOutputLocation(System.out);
         Debug.setPriority(10);
 		
-		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
+		Connection con = null;//DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
         WebServerListener wsl = new WebServerListener(1337, con);
         DatabaseCleaner c = new DatabaseCleaner(con);
 		
-        String file1, file2, file3, file4;
+        String[] files = new String[4];
         float skipBoundary;
         try {
-                file1 = args[0];
-                file2 = args[1];
-                file3 = args[2];
-                file4 = args[3];
+                files[0] = args[0];
+                files[1] = args[1];
+                files[2] = args[2];
+                files[3] = args[3];
                 skipBoundary = Float.parseFloat(args[4]);
         } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
                 System.err.println("Usage: <file1> <files2> <file3> <file4> <skipBoundary>");
@@ -58,16 +64,23 @@ public class ClusterServer {
         
         //read in settings
         Map<String, String> clusterMasterSettings = new HashMap<String,String>();
-        StringReader r = new StringReader(SETTINGS_FILE);
-		BufferedReader bf = new BufferedReader(r);
+        long[] dataStreamPositions = new long[4];
+        FileReader fr = new FileReader(SETTINGS_FILE);
+		BufferedReader bf = new BufferedReader(fr);
 		try {
-			bf.readLine();
+			//bf.readLine();
 			String line = null;
+			int i = 0;
 			while(null != (line = bf.readLine())) {
 				String arr[] = line.split(" ");
 				if(arr.length > 2) {
 					if(arr[0].equals("client")) {
 						clusterMasterSettings.put(arr[1], arr[2]);
+					}
+					if(USE_INPUT_FILES_FROM_SETTING && arr[0].equals("datastream")) {
+						files[i] = arr[1];
+						dataStreamPositions[i] = Long.parseLong(arr[2]);
+						i++;
 					}
 				}
 			}
@@ -81,9 +94,19 @@ public class ClusterServer {
 		
         cm = new ClusterMasterUnit(clusterMasterSettings, settingsSaver);
         cm.start(5000);
-        SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4, skipBoundary);
-        final DataProcessor dp = new DataProcessor(ds, cm);
-        dp.setFiles(file1, file2, file3, file4, skipBoundary);
+        //create an XDPDataStream, use the settings if they are available
+        SampleXDPDataStream ds;
+        final DataProcessor dp;
+        if(USE_INPUT_FILES_FROM_SETTING && dataStreamPositions.length == 4) {
+        	ds = new SampleXDPDataStream(files[0], dataStreamPositions[0], 
+        			files[1], dataStreamPositions[1],files[2], dataStreamPositions[2],
+        			files[3], dataStreamPositions[3],skipBoundary);
+        } else {
+        	ds = new SampleXDPDataStream(files[0], files[1], files[2],files[3], skipBoundary);
+        }
+        
+        dp = new DataProcessor(ds, cm);
+        dp.setFiles(files[0], files[1], files[2], files[3], skipBoundary);
         dp.pause = true;
         ClusterServer.dp = dp;
         //create a new spike detection thread with default values

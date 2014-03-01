@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 public class SampleXDPDataStream implements XDPDataStream {
 	private long skipBoundary;
 
+	private String file1, file2, file3, file4;
+	
 	private RandomAccessFile summaryFileHandle;
 	private RandomAccessFile channelOneFileHandle;
 	private RandomAccessFile channelTwoFileHandle;
@@ -47,6 +49,11 @@ public class SampleXDPDataStream implements XDPDataStream {
 	 * @throws IOException
 	 */
 	public SampleXDPDataStream(String summaryFile, String channelOne, String channelTwo, String channelThree, float pSkipBoundary) throws IOException {
+		this.file1 = summaryFile;
+		this.file2 = channelOne;
+		this.file3 = channelTwo;
+		this.file4 = channelThree;
+		
 		this.skipBoundary = (long) (1000000000*pSkipBoundary); //convert to nanoseconds
 		this.summaryFileHandle = new RandomAccessFile(summaryFile, "r");
 		this.channelOneFileHandle = new RandomAccessFile(channelOne, "r");
@@ -87,6 +94,11 @@ public class SampleXDPDataStream implements XDPDataStream {
 		this.channelOneFileHandle.seek(offsetChannelOne);
 		this.channelTwoFileHandle.seek(offsetChannelTwo);
 		this.channelThreeFileHandle.seek(offsetChannelThree);
+		Debug.println(Debug.INFO, "Using file "+summaryFile+" starting at "+offsetSummaryFile);
+		Debug.println(Debug.INFO, "Using file "+channelOne+" starting at "+offsetChannelOne);
+		Debug.println(Debug.INFO, "Using file "+channelTwo+" starting at "+offsetChannelTwo);
+		Debug.println(Debug.INFO, "Using file "+channelThree+" starting at "+offsetChannelThree);
+
 	}
 
 	public void setSkipBoundary(float pSkipBoundary) {
@@ -290,10 +302,10 @@ public class SampleXDPDataStream implements XDPDataStream {
 		this.notAllowedToRun = true;
 		Map<String, String> filePositions = new HashMap<String, String>();
 		try {
-			filePositions.put("file1", ""+summaryFileHandle.getFilePointer());
-			filePositions.put("file2", ""+summaryFileHandle.getFilePointer());
-			filePositions.put("file3", ""+summaryFileHandle.getFilePointer());
-			filePositions.put("file4", ""+summaryFileHandle.getFilePointer());
+			filePositions.put(file1, ""+summaryFileHandle.getFilePointer());
+			filePositions.put(file2, ""+summaryFileHandle.getFilePointer());
+			filePositions.put(file3, ""+summaryFileHandle.getFilePointer());
+			filePositions.put(file4, ""+summaryFileHandle.getFilePointer());
 		} catch (IOException ioe) {
 			Debug.print(Debug.ERROR, "Could not get the filepointer from the input files");
 		}
