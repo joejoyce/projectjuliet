@@ -17,7 +17,10 @@ public class ShutdownSettingsSaver extends Thread {
 	
 	public ShutdownSettingsSaver (String filename) {
 		this.filename = filename;
+		Debug.println(Debug.INFO, "created a new ShutdownSettingsSaver");
 	}
+	
+	//I don't think that any of the debug-print-statements are executed as the system is closing -lucas
 	public void run (){
         try {
         	Debug.println(Debug.INFO,"Saving settings on exit");

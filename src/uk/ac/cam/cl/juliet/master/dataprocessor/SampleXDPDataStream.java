@@ -98,10 +98,6 @@ public class SampleXDPDataStream implements XDPDataStream {
 		Debug.println(Debug.INFO, "Using file "+channelOne+" starting at "+offsetChannelOne);
 		Debug.println(Debug.INFO, "Using file "+channelTwo+" starting at "+offsetChannelTwo);
 		Debug.println(Debug.INFO, "Using file "+channelThree+" starting at "+offsetChannelThree);
-		
-		
-		//TODO remove test
-		summaryFileHandle.seek(42);
 	}
 
 	public void setSkipBoundary(float pSkipBoundary) {
@@ -306,13 +302,9 @@ public class SampleXDPDataStream implements XDPDataStream {
 		Map<String, String> filePositions = new HashMap<String, String>();
 		try {
 			filePositions.put(file1, ""+summaryFileHandle.getFilePointer());
-			Debug.println(Debug.INFO, "saving file"+file1+" with pointer at "+summaryFileHandle.getFilePointer());
 			filePositions.put(file2, ""+channelOneFileHandle.getFilePointer());
-			Debug.println(Debug.INFO, "saving file"+file1+" with pointer at "+channelOneFileHandle.getFilePointer());
 			filePositions.put(file3, ""+channelTwoFileHandle.getFilePointer());
-			Debug.println(Debug.INFO, "saving file"+file1+" with pointer at "+channelTwoFileHandle.getFilePointer());
 			filePositions.put(file4, ""+channelThreeFileHandle.getFilePointer());
-			Debug.println(Debug.INFO, "saving file"+file1+" with pointer at "+channelThreeFileHandle.getFilePointer());
 
 		} catch (IOException ioe) {
 			Debug.print(Debug.ERROR, "Could not get the filepointer from the input files");

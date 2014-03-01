@@ -44,7 +44,7 @@ public class ClusterServer {
 	public static void main(String args[]) throws IOException, SQLException {
 		Debug.registerOutputLocation(System.out);
         Debug.setPriority(10);
-		
+        
 		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
         WebServerListener wsl = new WebServerListener(1337, con);
         DatabaseCleaner c = new DatabaseCleaner(con);
@@ -97,6 +97,7 @@ public class ClusterServer {
 		//create new thread to save settings when exiting JVM
 		settingsSaver = new ShutdownSettingsSaver(SETTINGS_FILE);
 		
+		
         cm = new ClusterMasterUnit(clusterMasterSettings, settingsSaver);
         cm.start(5000);
         //create an XDPDataStream, use the settings if they are available
@@ -114,6 +115,9 @@ public class ClusterServer {
         dp.setFiles(files[0], files[1], files[2], files[3], skipBoundary);
         dp.pause = true;
         ClusterServer.dp = dp;
+        
+        Runtime.getRuntime().addShutdownHook(settingsSaver);
+        
         //create a new spike detection thread with default values
         spikeDetector = new SpikeDetectionRunnable(cm, 10, 1800, 0.05f);
         Scanner s = new Scanner(System.in);
