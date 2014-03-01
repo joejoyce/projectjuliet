@@ -102,10 +102,21 @@ public class ClusterServer {
         cm.start(5000);
         //create an XDPDataStream, use the settings if they are available
         SampleXDPDataStream ds;
-        if(USE_INPUT_FILES_FROM_SETTING && dataStreamPositions.length == 4) {
-        	ds = new SampleXDPDataStream(files[0], dataStreamPositions[0], 
-        			files[1], dataStreamPositions[1],files[2], dataStreamPositions[2],
-        			files[3], dataStreamPositions[3],skipBoundary);
+        if(USE_INPUT_FILES_FROM_SETTING) {
+        	if(files[3] != null && files[2] != null && files[1] != null && files[0] != null) {
+        		ds = new SampleXDPDataStream(files[0], dataStreamPositions[0], 
+            			files[1], dataStreamPositions[1],files[2], dataStreamPositions[2],
+            			files[3], dataStreamPositions[3],skipBoundary);
+        	} else {
+        		//if the settings file does not specify enough arguments
+        		ds = null;
+        		Debug.println(Debug.SHOWSTOP, "insufficient number of input files! "
+        				+ "Either provide the input file names as arguments to the main function "
+        				+ "or specify all for in the settings file, including file pointer position "
+        				+ "(choose 0 to start at the beginning of the file)");
+        		return;
+        	}
+        	
         } else {
         	ds = new SampleXDPDataStream(files[0], files[1], files[2],files[3], skipBoundary);
         }
