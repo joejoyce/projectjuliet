@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,6 +28,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 	private RandomAccessFile channelThreeFileHandle;
 	private HashMap<Integer, TimeStamp> timeStampBuffer = new HashMap<Integer, TimeStamp>();
 	
+	private boolean notAllowedToRun = false;
 	private long currentPacketCount = 0L;
 	private long initialCallTimeNS;	
 	private TimeStamp firstPacketTime;
@@ -60,6 +62,32 @@ public class SampleXDPDataStream implements XDPDataStream {
 		this.firstPacketTime = getNextPacketDataStream();
 		this.initialCallTimeNS = System.nanoTime();
 	}
+	/**
+	 * create and return a new SampleSDPDataStream to read in the four files of 
+	 * sample data specified in the arguments.
+	 * @param summaryFile		first file
+	 * @param offsetSummaryFile	point at which to read from the first file
+	 * @param channelOne		second file
+	 * @param offsetChannelOne	point at which to read from the second file
+	 * @param channelTwo		third file
+	 * @param offsetChannelTwo 	point at which to read from the third file
+	 * @param channelThree		fourth file
+	 * @param offsetChannelThree	point at which to read from the fourth file
+	 * @param pSkipBoundary		If there is a time difference of more than 
+	 * 			skipBoundary seconds between two consecutive packet timestamps,
+	 * 			then the time between them is skipped to get a throughput and to 
+	 * 			skip large periods of inactivity
+	 * @throws IOException
+	 */
+	public SampleXDPDataStream(String summaryFile, long offsetSummaryFile, 
+			String channelOne, long offsetChannelOne, String channelTwo, long offsetChannelTwo, 
+			String channelThree, long offsetChannelThree, float pSkipBoundary) throws IOException {
+		this(summaryFile, channelOne, channelTwo, channelThree, pSkipBoundary);
+		this.summaryFileHandle.seek(offsetSummaryFile);
+		this.channelOneFileHandle.seek(offsetChannelOne);
+		this.channelTwoFileHandle.seek(offsetChannelTwo);
+		this.channelThreeFileHandle.seek(offsetChannelThree);
+	}
 
 	public void setSkipBoundary(float pSkipBoundary) {
 		this.skipBoundary = (long) (1000000000*pSkipBoundary);
@@ -77,7 +105,9 @@ public class SampleXDPDataStream implements XDPDataStream {
 	 * @return The packet as a XDPRequest object
 	 */
 	@SuppressWarnings("static-access")
-	public XDPRequest getPacket() throws IOException {
+	public synchronized XDPRequest getPacket() throws IOException {
+		//if the system is exiting this will return another packet
+		if(this.notAllowedToRun) return null;
 		
 		if(currentPacketCount % 10000 == 0)
 			Debug.println(1000,"packet num: " + currentPacketCount);
@@ -254,6 +284,28 @@ public class SampleXDPDataStream implements XDPDataStream {
 	 */
 	private int toUnsignedInt(byte x) {
 		return ((int) x) & 0xff;
+	}
+	
+	public synchronized Map<String, String> endAndGetSettings() {
+		this.notAllowedToRun = true;
+		Map<String, String> filePositions = new HashMap<String, String>();
+		try {
+			filePositions.put("file1", ""+summaryFileHandle.getFilePointer());
+			filePositions.put("file2", ""+summaryFileHandle.getFilePointer());
+			filePositions.put("file3", ""+summaryFileHandle.getFilePointer());
+			filePositions.put("file4", ""+summaryFileHandle.getFilePointer());
+		} catch (IOException ioe) {
+			Debug.print(Debug.ERROR, "Could not get the filepointer from the input files");
+		}
+		try {
+			summaryFileHandle.close();
+			channelOneFileHandle.close();
+			channelTwoFileHandle.close();
+			channelThreeFileHandle.close();
+		} catch (IOException ioe) {
+			Debug.print(Debug.ERROR, "could not properly close the input files");
+		}
+		return filePositions;
 	}
 	
 	public class TimeStamp {

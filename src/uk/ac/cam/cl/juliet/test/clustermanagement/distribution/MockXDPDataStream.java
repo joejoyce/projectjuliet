@@ -1,6 +1,7 @@
 package uk.ac.cam.cl.juliet.test.clustermanagement.distribution;
 
 import java.io.IOException;
+import java.util.Map;
 
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
@@ -109,6 +110,12 @@ public class MockXDPDataStream implements XDPDataStream {
 	public float getSkipBoundary() {
 		// not needed for this test
 		return 0;
+	}
+
+	@Override
+	public Map<String, String> endAndGetSettings() {
+		// not needed for this test
+		return null;
 	}
 
 }
