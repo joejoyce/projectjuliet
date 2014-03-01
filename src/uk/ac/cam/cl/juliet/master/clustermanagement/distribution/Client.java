@@ -67,6 +67,8 @@ public class Client {
 	private long totalPackets = 0;
 	public int packetsSentThisSecond = 0;
 	
+	private static final int OUTPUT_RESET_LIMIT = 50000;
+	
 	private Semaphore sem = new Semaphore(2000); //Allows 2000 at one time
 
 	private boolean amClosing = false; //NASTY HACK
@@ -218,6 +220,7 @@ public class Client {
 			public void run() {
 				// This method sends the packets to the client
 				long then = System.nanoTime();
+				int packetCounter = 0;
 				while (true) {
 					try {
 						InFlightContainer container = sendQueue.take();
@@ -229,6 +232,12 @@ public class Client {
 						}
 						out.writeObject(c);
 						out.flush();
+						packetCounter++;
+						if(packetCounter >= OUTPUT_RESET_LIMIT) {
+							packetCounter = 0;
+							out.reset();
+							Debug.println(Debug.ERROR, "reset outputStream on client");
+						}
 						totalPackets++; 
 						packetsSentThisSecond++;
 						if (Math.abs(System.nanoTime() - then) > 1000000000) {

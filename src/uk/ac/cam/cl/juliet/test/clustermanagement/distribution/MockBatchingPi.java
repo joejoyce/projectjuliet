@@ -32,6 +32,8 @@ public class MockBatchingPi {
 	private Runnable processor;
 	private static long batchInterval;
 	private final static ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+	private static final int RESET_LIMIT = 100000; 
+	private int outputPacketCount = 0;
 	
 	/**
 	 * Create a new MockPi and give it a name for testing/debugging reasons.
@@ -54,7 +56,7 @@ public class MockBatchingPi {
 		output = new ObjectOutputStream(socket.getOutputStream());
 		output.flush();
 		input = new ObjectInputStream(socket.getInputStream());
-		this.batchInterval = waitingTime;
+		batchInterval = waitingTime;
 		
 		packetsToProcess = new LinkedBlockingQueue<Container>();
 		
@@ -71,6 +73,7 @@ public class MockBatchingPi {
 						System.err.println(name+": error while receiving "
 								+ "object from server");
 						e.printStackTrace();
+						return;
 					}
 				}
 			}
@@ -93,12 +96,21 @@ public class MockBatchingPi {
 								XDPResponse response = new MockXDPResponse(c.getPacketId(),
 										true, seq);
 								output.writeObject(response);
+								outputPacketCount++;
+								if(outputPacketCount >= RESET_LIMIT) {
+									output.reset();
+									outputPacketCount = 0;
+									System.out.println("reset output stream");
+								}
+									
+								
 							}
 						}
 						output.flush();
 					} catch (IOException e) {
 						System.err.println(name+": could not send response");
 						e.printStackTrace();
+						return;
 					}
 				}
 		};
