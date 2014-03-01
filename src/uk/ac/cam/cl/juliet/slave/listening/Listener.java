@@ -46,6 +46,7 @@ public class Listener {
 	private XDPProcessor xdp;
 	private QueryProcessor query;
 	
+	private static int OUTPUT_RESET_LIMIT = 100000;
 	private static long initialMs = 500;
 	private long delayMs = initialMs;
 	private static long cutOff = 10000;
@@ -196,7 +197,7 @@ public class Listener {
 			// Sends any waiting responses back to the server.
 			Thread sendThread = new Thread() {
 				public void run() {
-	
+					int packetCounter = 0;
 					while (true) {
 						try {
 							Container response = responseQueue.take();
@@ -206,6 +207,12 @@ public class Listener {
 							}
 							output.writeObject(response);
 							output.flush();
+							packetCounter++;
+							if(packetCounter >= OUTPUT_RESET_LIMIT) {
+								packetCounter = 0;
+								output.reset();
+								Debug.println(Debug.INFO, "reset ouputStream on Pi");
+							}
 							Debug.println("sent: size: " + responseQueue.size());
 						} catch (IOException e) {
 							e.printStackTrace();

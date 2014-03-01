@@ -5,6 +5,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.XDPRequest;
 import uk.ac.cam.cl.juliet.master.ShutdownSettingsSaver;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
@@ -19,7 +20,7 @@ import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
  *
  */
 public class ClusterMasterLoadTest {
-	static MockPi[] mockPis;
+	static MockBatchingPi[] mockPis;
 	
 	/**
 	 * Runs a test with the given clustermaster and datastream.
@@ -53,6 +54,10 @@ public class ClusterMasterLoadTest {
 	 */
 	public static long runTest(int pNoOfPackets,int pPacketsPerSecond, 
 			long pWaitingTimeOfPis_ms, int pNumberOfPis, int pPacketSize) {
+		//settings for the debugger:
+		Debug.registerOutputLocation(System.out);
+        Debug.setPriority(10);
+		
 		Trackkeeper myTracker = new Trackkeeper(pNoOfPackets);
 		XDPDataStream ds = new MockXDPDataStream(pPacketsPerSecond, pNoOfPackets, 
 				myTracker, pPacketSize);
@@ -120,7 +125,8 @@ public class ClusterMasterLoadTest {
 					waitingTimeOfPi_ms, numberOfPis, 500);
 			System.out.println("The system needed "+executionTime+"ms to send "+
 					noOfPackets+" at a rate of "+packetsPerSecond+" packets per "
-					+ "second to "+numberOfPis+" pis!");
+					+ "second to "+numberOfPis+" pis!\nAt each Pi, the packets were "
+							+ "batched up for "+waitingTimeOfPi_ms+" milliseconds");
 			
 			
 		} catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
@@ -143,9 +149,9 @@ public class ClusterMasterLoadTest {
 	 */
 	private static void addLocalMockPisToClusterMaster(int number, long waitingTime,
 			int port, Trackkeeper tracker) throws UnknownHostException, IOException {
-		mockPis = new MockPi[number];
+		mockPis = new MockBatchingPi[number];
 		for(int i = 0; i<number;i++) {
-			mockPis[i] = new MockPi("Pi"+i, "localhost", port, waitingTime, 
+			mockPis[i] = new MockBatchingPi("Pi"+i, "localhost", port, waitingTime, 
 					tracker);
 			System.out.println("added a pi: "+number+"!");
 		}
@@ -156,7 +162,7 @@ public class ClusterMasterLoadTest {
 	 * @throws IOException
 	 */
 	private static void removePis() throws IOException {
-		for(MockPi pi : mockPis) {
+		for(MockBatchingPi pi : mockPis) {
 			pi.teardown();
 		}
 	}
