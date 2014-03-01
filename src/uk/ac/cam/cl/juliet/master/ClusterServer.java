@@ -101,7 +101,6 @@ public class ClusterServer {
         cm.start(5000);
         //create an XDPDataStream, use the settings if they are available
         SampleXDPDataStream ds;
-        final DataProcessor dp;
         if(USE_INPUT_FILES_FROM_SETTING && dataStreamPositions.length == 4) {
         	ds = new SampleXDPDataStream(files[0], dataStreamPositions[0], 
         			files[1], dataStreamPositions[1],files[2], dataStreamPositions[2],
@@ -109,8 +108,9 @@ public class ClusterServer {
         } else {
         	ds = new SampleXDPDataStream(files[0], files[1], files[2],files[3], skipBoundary);
         }
+        settingsSaver.setDataStream(ds);
         
-        dp = new DataProcessor(ds, cm);
+        final DataProcessor dp = new DataProcessor(ds, cm);
         dp.setFiles(files[0], files[1], files[2], files[3], skipBoundary);
         dp.pause = true;
         ClusterServer.dp = dp;
