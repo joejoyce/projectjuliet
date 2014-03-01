@@ -6,7 +6,10 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
@@ -19,14 +22,16 @@ import uk.ac.cam.cl.juliet.common.XDPResponse;
  * @author Lucas Sonnabend
  *@see ClusterMasterLoadTest
  */
-public class MockPi {
+public class MockBatchingPi {
 	private String name;
 	private final Socket socket;
 	private final ObjectInputStream input;
 	private final ObjectOutputStream output;
 	private BlockingQueue<Container> packetsToProcess;
 	private KillableThread receiver;
-	private KillableThread processor;
+	private Runnable processor;
+	private static long batchInterval;
+	private final static ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 	
 	/**
 	 * Create a new MockPi and give it a name for testing/debugging reasons.
@@ -42,23 +47,23 @@ public class MockPi {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public MockPi(String pName, String server, int port, final long waitingTime,
+	public MockBatchingPi(String pName, String server, int port, final long waitingTime,
 			final Trackkeeper tracker) throws UnknownHostException, IOException {
 		name = pName;
 		socket = new Socket(server, port);
 		output = new ObjectOutputStream(socket.getOutputStream());
 		output.flush();
 		input = new ObjectInputStream(socket.getInputStream());
+		this.batchInterval = waitingTime;
 		
 		packetsToProcess = new LinkedBlockingQueue<Container>();
 		
 		receiver = new KillableThread() {
 			@Override
 			public void run() {
-				Container c;
 				while(alive) {
 					try {
-						c = (Container) input.readObject();
+						Container c = (Container) input.readObject();
 						packetsToProcess.put(c);
 						
 					} catch (ClassNotFoundException | IOException
@@ -73,34 +78,31 @@ public class MockPi {
 		};
 		receiver.start();
 		
-		processor = new KillableThread() {
+		processor = new Runnable() {
 			@Override
 			public void run() {
-				Container c;
-				int seq;
-				while (alive) {
-					c = packetsToProcess.poll();
-					if(c instanceof ConfigurationPacket) {
-						System.out.println(name+": received configuration packet");
-					} else if(c instanceof XDPRequest) {
-						seq = getPacketTestSequenceNumber(c);
-						//System.out.println(seq +" arrived at pi "+name);
-						tracker.ackPacketAtPi(seq);
-						XDPResponse response = new MockXDPResponse(c.getPacketId(),
-								true, seq);
-						try {
-							Thread.sleep(waitingTime);
-							output.writeObject(response);
-							output.flush();
-						} catch (IOException | InterruptedException e) {
-							System.err.println(name+": could not send response");
-							e.printStackTrace();
+					try {
+						while(!packetsToProcess.isEmpty()) {
+							Container c = packetsToProcess.poll();
+							if(c instanceof ConfigurationPacket) {
+								System.out.println(name+": received configuration packet");
+							} else if(c instanceof XDPRequest) {
+								int seq = getPacketTestSequenceNumber(c);
+								//System.out.println(seq +" arrived at pi "+name);
+								tracker.ackPacketAtPi(seq);
+								XDPResponse response = new MockXDPResponse(c.getPacketId(),
+										true, seq);
+								output.writeObject(response);
+							}
 						}
+						output.flush();
+					} catch (IOException e) {
+						System.err.println(name+": could not send response");
+						e.printStackTrace();
 					}
 				}
-			}
 		};
-		processor.start();
+		scheduler.scheduleAtFixedRate(processor, batchInterval, batchInterval, TimeUnit.SECONDS);
 	}
 	
 	private int getPacketTestSequenceNumber(Container c) {
@@ -119,7 +121,6 @@ public class MockPi {
 	 */
 	public void teardown() throws IOException {
 		this.receiver.kill();
-		this.processor.kill();
 		this.output.close();
 		this.input.close();
 	}

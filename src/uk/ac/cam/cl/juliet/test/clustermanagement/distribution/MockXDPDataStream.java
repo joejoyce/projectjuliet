@@ -55,6 +55,9 @@ public class MockXDPDataStream implements XDPDataStream {
 	public XDPRequest getPacket() throws IOException {
 		if(packetCounter >= noOfPackets) {
 			return null;
+		} 
+		if(packetCounter % 10000 == 0) {
+			System.out.println(packetCounter+ "packets have been send");
 		}
 		byte[] emptyPacketData = new byte[packetSize];
 		enterSequenceNumber(emptyPacketData,packetCounter);
