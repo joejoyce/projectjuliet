@@ -49,9 +49,13 @@ public class Listener {
 	private static long initialMs = 500;
 	private long delayMs = initialMs;
 	private static long cutOff = 10000;
+	
 	public synchronized boolean connect(String ip, int port) {
-		if(socket != null && !socket.isClosed())
+		Debug.println(Debug.INFO,"RUNNING CONNECT METHOD");
+		if(socket != null && !socket.isClosed()) {
+			Debug.println(Debug.INFO,"RETURNING AS THE SOCKET IS OPEN");
 			return true;
+		}
 		if(delayMs <= cutOff) {
 			try {
 				Thread.sleep(delayMs);
@@ -69,10 +73,18 @@ public class Listener {
 				output.close();
 				output = null;
 			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
 			if(null != input) {
 				input.close();
 				input = null;
 			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
 			if(null != socket) {
 				socket.close();
 				socket = null;
@@ -82,7 +94,7 @@ public class Listener {
 		}
 		
 		try {
-			socket = new Socket(ip,port);
+			this.socket = new Socket(ip,port);
 			this.output = new ObjectOutputStream(socket.getOutputStream());
 			this.input = new ObjectInputStream(socket.getInputStream());
 		} catch (UnknownHostException e) {
