@@ -55,7 +55,7 @@ public class ClusterServer {
                 System.err.println("Usage: <file1> <files2> <file3> <file4> <skipBoundary>");
                 return;
         }
-        SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4, skipBoundary);
+        
         //read in settings
         Map<String, String> clusterMasterSettings = new HashMap<String,String>();
         StringReader r = new StringReader(SETTINGS_FILE);
@@ -73,14 +73,15 @@ public class ClusterServer {
 			}
 			bf.close();
 		} catch (IOException e) {
+			Debug.print(Debug.ERROR, "could not read in settings file "+SETTINGS_FILE+".");
 			e.printStackTrace();
 		}
 		//create new thread to save settings when exiting JVM
 		settingsSaver = new ShutdownSettingsSaver(SETTINGS_FILE);
 		
         cm = new ClusterMasterUnit(clusterMasterSettings, settingsSaver);
-
         cm.start(5000);
+        SampleXDPDataStream ds = new SampleXDPDataStream(file1, file2, file3,file4, skipBoundary);
         final DataProcessor dp = new DataProcessor(ds, cm);
         dp.setFiles(file1, file2, file3, file4, skipBoundary);
         dp.pause = true;
