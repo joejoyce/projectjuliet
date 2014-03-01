@@ -52,10 +52,10 @@ public class Listener {
 	
 	public synchronized boolean connect(String ip, int port) {
 		Debug.println(Debug.INFO,"RUNNING CONNECT METHOD");
-		if(socket != null && !socket.isClosed()) {
+	/*	if(socket != null && !socket.isClosed()) {
 			Debug.println(Debug.INFO,"RETURNING AS THE SOCKET IS OPEN");
 			return true;
-		}
+		}*/
 		if(delayMs <= cutOff) {
 			try {
 				Thread.sleep(delayMs);
