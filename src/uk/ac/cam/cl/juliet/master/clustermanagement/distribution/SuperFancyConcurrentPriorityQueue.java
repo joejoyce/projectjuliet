@@ -2,18 +2,19 @@ package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SuperFancyConcurrentPriorityQueue <T>{
-	private PriorityBlockingQueue<T> q;
+	private ArrayBlockingQueue<T> q;
 	//private Semaphore sem;
 	private Lock read,write;
 	
 	public SuperFancyConcurrentPriorityQueue (/*int limit,*/ Comparator<T> comp) {
-		q = new PriorityBlockingQueue<T>(20,comp);
+		q = new ArrayBlockingQueue<T>(20,true);//,comp);
 		//sem = new Semaphore(limit);
 		ReentrantReadWriteLock l = new ReentrantReadWriteLock();
 		read = l.readLock();
@@ -23,7 +24,8 @@ public class SuperFancyConcurrentPriorityQueue <T>{
 	public void push( T elem ) throws InterruptedException {
 		read.lock();
 		//sem.acquire();
-		q.add(elem);
+		q.put(elem);
+		
 		read.unlock();
 	}
 	
@@ -35,9 +37,15 @@ public class SuperFancyConcurrentPriorityQueue <T>{
 		return elem;
 	}
 	public T peek() {
-		read.lock();
-		T elem = q.peek();
-		read.unlock();
+		write.lock();
+		T elem = q.poll();
+		if(null != elem) {
+			try { q.put(elem);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		write.unlock();
 		return elem;
 	}
 	public boolean remove( T elem ) {
@@ -52,14 +60,6 @@ public class SuperFancyConcurrentPriorityQueue <T>{
 		T arr[] = q.toArray(a);
 		read.unlock();
 		return arr;
-	}
-	public void reorder() {
-		write.lock();
-		T elem = q.poll();
-		if(null != elem) {
-			q.add(elem);
-		}	
-		write.unlock();
 	}
 	public Iterator<T> getIterator() {
 		read.lock();
