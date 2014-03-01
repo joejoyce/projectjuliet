@@ -45,20 +45,26 @@ public class ClusterServer {
 		Debug.registerOutputLocation(System.out);
         Debug.setPriority(10);
 		
-		Connection con = null;//DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
+		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
         WebServerListener wsl = new WebServerListener(1337, con);
         DatabaseCleaner c = new DatabaseCleaner(con);
 		
         String[] files = new String[4];
-        float skipBoundary;
+        float skipBoundary = 0;
         try {
-                files[0] = args[0];
-                files[1] = args[1];
-                files[2] = args[2];
-                files[3] = args[3];
-                skipBoundary = Float.parseFloat(args[4]);
+                if(args.length > 4) {
+                	files[0] = args[0];
+                	files[1] = args[1];
+                	files[2] = args[2];
+                	files[3] = args[3];
+                	skipBoundary = Float.parseFloat(args[4]);
+                } else if(args.length > 0) {
+                	skipBoundary = Float.parseFloat(args[0]);
+                	USE_INPUT_FILES_FROM_SETTING = true;
+                }
         } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
-                System.err.println("Usage: <file1> <files2> <file3> <file4> <skipBoundary>");
+                System.err.println("Usage: <file1> <files2> <file3> <file4> <skipBoundary> or\n"
+                		+ "Usage: <skipBoundary>");
                 return;
         }
         
@@ -68,7 +74,6 @@ public class ClusterServer {
         FileReader fr = new FileReader(SETTINGS_FILE);
 		BufferedReader bf = new BufferedReader(fr);
 		try {
-			//bf.readLine();
 			String line = null;
 			int i = 0;
 			while(null != (line = bf.readLine())) {
