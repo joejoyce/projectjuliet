@@ -3,18 +3,19 @@ package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class SuperFancyConcurrentPriorityQueue <T>{
-	private ArrayBlockingQueue<T> q;
+public class SuperFancyConcurrentPriorityQueue <T extends Comparable<T>>{
+	private LinkedBlockingDeque<T> q;
 	//private Semaphore sem;
 	private Lock read,write;
 	
 	public SuperFancyConcurrentPriorityQueue (/*int limit,*/ Comparator<T> comp) {
-		q = new ArrayBlockingQueue<T>(20,true);//,comp);
+		q = new LinkedBlockingDeque<T>(20);//,comp);
 		//sem = new Semaphore(limit);
 		ReentrantReadWriteLock l = new ReentrantReadWriteLock();
 		read = l.readLock();
@@ -38,15 +39,34 @@ public class SuperFancyConcurrentPriorityQueue <T>{
 	}
 	public T peek() {
 		write.lock();
-		T elem = q.poll();
-		if(null != elem) {
-			try { q.put(elem);
+		T a = q.poll(), b = q.poll(), rtn = null;
+		if(null != a && null != b) {
+			try {
+				if(a.compareTo(b) <= 0) {
+					rtn = a;
+					q.put(b);
+					q.putFirst(a);
+				} else {
+					rtn = b;
+					q.put(a);
+					q.putFirst(b);
+				}
+					
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+		} else if( null == b){
+			if(null != a) {
+				try {
+					q.put(a);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 		write.unlock();
-		return elem;
+		return rtn;
 	}
 	public boolean remove( T elem ) {
 		read.lock();

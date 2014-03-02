@@ -250,7 +250,7 @@ public class Listener {
 		try {
 			Container container = receiveQueue.take();
 
-			Debug.println(100, "Got new object: " + container.toString());
+			Debug.println(Debug.INFO, "Got new object: " + container.toString());
 
 			if (container instanceof ConfigurationPacket) {
 				handleConfigurationPacket((ConfigurationPacket) container);
@@ -265,12 +265,12 @@ public class Listener {
 				} else if (container instanceof QueryPacket) {
 					processQueryPacket((QueryPacket) container);
 				} else if (container instanceof StringTestPacket) {
-					System.out.println(container);
+					Debug.println(container.toString());
 				}
 
 				long diff = Math.abs(System.nanoTime() - then);
 				diff /= 1000000;
-				Debug.println(100, "Time taken for processing: " + diff + "ms");
+				Debug.println(Debug.INFO, "Time taken for processing: " + diff + "ms");
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
