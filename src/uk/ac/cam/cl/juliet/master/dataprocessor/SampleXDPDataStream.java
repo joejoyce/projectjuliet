@@ -30,7 +30,6 @@ public class SampleXDPDataStream implements XDPDataStream {
 	private RandomAccessFile channelThreeFileHandle;
 	private HashMap<Integer, TimeStamp> timeStampBuffer = new HashMap<Integer, TimeStamp>();
 
-	private boolean notAllowedToRun = false;
 	private long currentPacketCount = 0L;
 	private long initialCallTimeNS;
 	private TimeStamp firstPacketTime;
@@ -327,7 +326,6 @@ public class SampleXDPDataStream implements XDPDataStream {
 	}
 
 	public Map<String, String> endAndGetSettings() {
-		this.notAllowedToRun = true;
 		Map<String, String> filePositions = new HashMap<String, String>();
 		
 		try {			
