@@ -48,7 +48,7 @@ public class Client {
 				Connection c = DriverManager.getConnection("jdbc:mysql://" + args[0] + ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false", "root", "rootword");
 				DatabaseConnection db = new DatabaseConnectionUnit(c);
 				listener.listen(args[0], 5000, db, new XDPProcessorUnit(db), new QueryProcessorUnit(db));
-				
+				sleepDelay = 2000;
 			} catch (IOException e) {
 				System.err.println("An error occurred communicating with the server.");
 				e.printStackTrace();

@@ -125,6 +125,8 @@ public class Listener {
 						// Just attempt to reconnect
 						return;
 					}
+					if(Thread.interrupted())
+						return;
 				}
 			}
 		};
@@ -157,6 +159,8 @@ public class Listener {
 						e.printStackTrace();
 						return;
 					}
+					if(Thread.interrupted())
+						return;
 				}
 			}
 		};
@@ -169,16 +173,25 @@ public class Listener {
 		readThread.start();
 		receiveThread.start();
 		sendThread.start();
-			
+		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e1) {}
 		try  {
+			nanosLastReceive = System.nanoTime();
 			long fiveseconds = 5000000000L;
 			while(sendThread.isAlive() && receiveThread.isAlive() && System.nanoTime() < (nanosLastReceive + fiveseconds))
 				Thread.sleep(500);
+			Debug.println("Interrupting threads");
 			//Oh dear we've stopped!!
 			//Kill everything!!
-			sendThread.stop();
-			receiveThread.stop();
-			readThread.stop();
+			sendThread.interrupt();
+			receiveThread.interrupt();
+			readThread.interrupt();
+			sendThread.join();
+			receiveThread.join();
+			readThread.join();
+			
 			try {
 				output.close();
 			} catch (IOException e) {}
@@ -236,8 +249,11 @@ public class Listener {
 				diff /= 1000000;
 				Debug.println(Debug.INFO, "Time taken for processing: " + diff + "ms");
 			}
+			if(Thread.interrupted())
+				return;
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Debug.println("Read thread was interrupted");
+			return;
 		}
 	}
 
