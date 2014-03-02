@@ -12,13 +12,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SuperFancyConcurrentPriorityQueue <T extends Comparable<T>>{
 	private LinkedBlockingDeque<T> q;
-	private CopyOnWriteArrayList<T>bq;
+	private PriorityBlockingQueue<T>bq;
 	//private Semaphore sem;
 	//private Lock read,write;
 	
-	public SuperFancyConcurrentPriorityQueue (/*int limit,*/ Comparator<T> comp) {
+	public SuperFancyConcurrentPriorityQueue (/*int limit,*/ Comparator<T> comp, Comparator <T> toArrComp) {
 		q = new LinkedBlockingDeque<T>(20);//,comp);
-		bq = new CopyOnWriteArrayList<T>();
+		bq = new PriorityBlockingQueue<T>(16,toArrComp);
 		//sem = new Semaphore(limit);
 		//ReentrantReadWriteLock l = new ReentrantReadWriteLock();
 		//read = l.readLock();
@@ -75,6 +75,7 @@ public class SuperFancyConcurrentPriorityQueue <T extends Comparable<T>>{
 	public boolean remove( T elem ) {
 		//read.lock();
 		boolean rtn = q.remove(elem);
+		bq.remove(elem);
 		//if(rtn) sem.release();
 		//read.unlock();
 		return rtn;

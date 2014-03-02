@@ -90,7 +90,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	private static ClientLoadComparator clc = new ClientLoadComparator();
 	private static ClientNameComparator cnc = new ClientNameComparator();
-	private SuperFancyConcurrentPriorityQueue<Client> clientQueue = new SuperFancyConcurrentPriorityQueue<Client>(clc);
+	private SuperFancyConcurrentPriorityQueue<Client> clientQueue = new SuperFancyConcurrentPriorityQueue<Client>(clc,cnc);
 	private ScheduledExecutorService workers = null;
 	
 	public ClusterMasterUnit(Map<String, String> settings, ShutdownSettingsSaver saver) {
@@ -226,7 +226,6 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	@Override
 	public Client[] listClients() {
 		Client arr[] = clientQueue.toArray(new Client[0]);
-		Arrays.sort(arr,cnc);
 		return arr;
 	}
 	
