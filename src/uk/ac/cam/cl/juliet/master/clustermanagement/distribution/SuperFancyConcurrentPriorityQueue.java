@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -11,34 +12,36 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SuperFancyConcurrentPriorityQueue <T extends Comparable<T>>{
 	private LinkedBlockingDeque<T> q;
+	private CopyOnWriteArrayList<T>bq;
 	//private Semaphore sem;
-	private Lock read,write;
+	//private Lock read,write;
 	
 	public SuperFancyConcurrentPriorityQueue (/*int limit,*/ Comparator<T> comp) {
 		q = new LinkedBlockingDeque<T>(20);//,comp);
+		bq = new CopyOnWriteArrayList<T>();
 		//sem = new Semaphore(limit);
-		ReentrantReadWriteLock l = new ReentrantReadWriteLock();
-		read = l.readLock();
-		write = l.writeLock();
+		//ReentrantReadWriteLock l = new ReentrantReadWriteLock();
+		//read = l.readLock();
+		//write = l.writeLock();
 	}
 	
 	public void push( T elem ) throws InterruptedException {
-		read.lock();
+		//read.lock();
 		//sem.acquire();
 		q.put(elem);
-		
-		read.unlock();
+		bq.add(elem);
+		//read.unlock();
 	}
 	
-	public T poll() {
+	/*public T poll() {
 		read.lock();
 		T elem = q.poll();
 		//sem.release();
 		read.unlock();
 		return elem;
-	}
+	}*/
 	public T peek() {
-		write.lock();
+		//write.lock();
 		T a = q.poll(), b = q.poll(), rtn = null;
 		if(null != a && null != b) {
 			try {
@@ -65,34 +68,34 @@ public class SuperFancyConcurrentPriorityQueue <T extends Comparable<T>>{
 				}
 			}
 		}
-		write.unlock();
+		//write.unlock();
 		return rtn;
 	}
 	public boolean remove( T elem ) {
-		read.lock();
+		//read.lock();
 		boolean rtn = q.remove(elem);
 		//if(rtn) sem.release();
-		read.unlock();
+		//read.unlock();
 		return rtn;
 	}
 	public T[] toArray(T a[]) {
-		read.lock();
-		T arr[] = q.toArray(a);
-		read.unlock();
+		//read.lock();
+		T arr[] = bq.toArray(a);
+		//read.unlock();
 		return arr;
 	}
-	public Iterator<T> getIterator() {
-		read.lock();
-		return q.iterator();
+	public Iterator<T> iterator() {
+		//read.lock();
+		return bq.iterator();
 	}
-	public void releaseIterator() {
+	/*public void releaseIterator() {
 		read.unlock();
 		return;
-	}
+	}*/
 	public int size() {
-		read.lock();
-		int s = q.size();
-		read.unlock();
+	//	read.lock();
+		int s = bq.size();
+	//	read.unlock();
 		return s;
 	}
 }

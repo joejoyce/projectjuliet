@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
@@ -22,6 +23,15 @@ import uk.ac.cam.cl.juliet.master.ShutdownSettingsSaver;
 final class ClientLoadComparator implements Comparator<Client> {
 	public int compare(Client o1, Client o2){
 		return (int) (o1.getCurrentWork() - o2.getCurrentWork() );
+	}
+}
+final class ClientNameComparator implements Comparator<Client> {
+	public int compare(Client o1, Client o2){
+		String a = o1.getClientIP().toString(), b = o2.getClientIP().toString();
+		a = a.substring(a.lastIndexOf("."));
+		b = b.substring(b.lastIndexOf("."));
+		int aint = Integer.parseInt(a), bint = Integer.parseInt(b);
+		return aint - bint;
 	}
 }
 
@@ -77,6 +87,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public volatile long currentSystemTime;
 	
 	private static ClientLoadComparator clc = new ClientLoadComparator();
+	private static ClientNameComparator cnc = new ClientNameComparator();
 	private SuperFancyConcurrentPriorityQueue<Client> clientQueue = new SuperFancyConcurrentPriorityQueue<Client>(clc);
 	private ScheduledExecutorService workers = null;
 	
@@ -140,11 +151,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		socket = null;
 	}
 	
-	@Override
-	public long sendPacket(Container msg) throws NoClusterException {
-		//Send the message - the process doesn't care about the reply
-		return sendPacket(msg,(Callback)null);
-	}
+
 	
 	@Override
 	public long sendPacket(Container msg, Callback cb) throws NoClusterException {
@@ -159,6 +166,26 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		}
 		currentSystemTime = msg.getTimeStampS();
 		return l;
+	}
+	@Override
+	public int broadcast(Container c, Callback cb) {
+		c.setPacketId(getNextId());
+		Iterator<Client> iter = clientQueue.iterator();
+		int i = 0;
+		for(;iter.hasNext();i++)
+			iter.next().broadcast(c,cb);
+		//clientQueue.releaseIterator();
+		return i;
+	}
+	
+	@Override
+	public int broadcast(Container c) {
+		return broadcast(c,(Callback)null);
+	}
+	@Override
+	public long sendPacket(Container msg) throws NoClusterException {
+		//Send the message - the process doesn't care about the reply
+		return sendPacket(msg,(Callback)null);
 	}
 	
 	@Override
@@ -196,7 +223,9 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	@Override
 	public Client[] listClients() {
-		return clientQueue.toArray(new Client[0]);
+		Client arr[] = clientQueue.toArray(new Client[0]);
+		Arrays.sort(arr,cnc);
+		return arr;
 	}
 	
 	public long getTime() {
@@ -205,37 +234,14 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	
 	public int getPacketThroughput() {
 		int total = 0;
-		Iterator<Client> i = clientQueue.getIterator();
+		Iterator<Client> i = clientQueue.iterator();
 		while(i.hasNext())
 			total += i.next().packetsSentThisSecond;
-		clientQueue.releaseIterator();
+		//clientQueue.releaseIterator();
 		return total;
 	}
 	
-	@Override
-	public int broadcast(Container c) {
-		c.setPacketId(getNextId());
-		Iterator<Client> iter = clientQueue.getIterator();
-		int i = 0;
-		for(;iter.hasNext();i++)
-			iter.next().broadcast(c);
-		clientQueue.releaseIterator();
-		return i;
-	}
-	
-	
-	@Override
-	public int broadcast(Container c, Callback cb) {
-		c.setPacketId(getNextId());
-		Iterator<Client> iter = clientQueue.getIterator();
-		int i = 0;
-		for(;iter.hasNext();i++)
-			iter.next().broadcast(c,cb);
-		clientQueue.releaseIterator();
-		return i;
-	}
-
-	@Override
+@Override
 	public int getClientCount() {
 		return clientQueue.size();
 	}
