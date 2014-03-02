@@ -28,8 +28,10 @@ final class ClientLoadComparator implements Comparator<Client> {
 final class ClientNameComparator implements Comparator<Client> {
 	public int compare(Client o1, Client o2){
 		String a = o1.getClientIP().toString(), b = o2.getClientIP().toString();
+		Debug.println(Debug.SHOWSTOP,a+" ::: " +b);
 		a = a.substring(a.lastIndexOf("."));
 		b = b.substring(b.lastIndexOf("."));
+		Debug.println(Debug.SHOWSTOP,a+" ::: " +b);
 		int aint = Integer.parseInt(a), bint = Integer.parseInt(b);
 		return aint - bint;
 	}
