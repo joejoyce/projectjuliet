@@ -40,6 +40,7 @@ public class Client {
 		t.setDaemon(true);
 		t.start();
 		
+		int sleepDelay = 2000;
 		for(int i = 0; i < 5; i++) {
 			try {
 				Debug.println(Debug.INFO,"Spawning new listener and everything!!!!!");
@@ -47,13 +48,18 @@ public class Client {
 				Connection c = DriverManager.getConnection("jdbc:mysql://" + args[0] + ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false", "root", "rootword");
 				DatabaseConnection db = new DatabaseConnectionUnit(c);
 				listener.listen(args[0], 5000, db, new XDPProcessorUnit(db), new QueryProcessorUnit(db));
-				Thread.sleep(4);
+				
 			} catch (IOException e) {
 				System.err.println("An error occurred communicating with the server.");
 				e.printStackTrace();
+				sleepDelay *= 2;
 			} catch (SQLException e) {
 				System.err.println("A database error occurred.");
 				e.printStackTrace();
+				sleepDelay *= 2;
+			}
+			try {
+				Thread.sleep(sleepDelay);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
