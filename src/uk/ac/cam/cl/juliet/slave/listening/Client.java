@@ -1,6 +1,7 @@
 package uk.ac.cam.cl.juliet.slave.listening;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Scanner;
@@ -38,18 +39,23 @@ public class Client {
 		};		
 		t.start();
 		
-		Listener listener = new Listener();
-		try {
-			DatabaseConnection db = new DatabaseConnectionUnit(DriverManager.getConnection("jdbc:mysql://" + args[0] + ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false", "root", "rootword"));
-			listener.listen(args[0], 5000, db, new XDPProcessorUnit(db), new QueryProcessorUnit(db));
-		} catch (IOException e) {
-			System.err.println("An error occurred communicating with the server.");
-			e.printStackTrace();
-			System.exit(0);
-		} catch (SQLException e) {
-			System.err.println("A database error occurred.");
-			e.printStackTrace();
-			System.exit(0);
+		for(int i = 0; i < 5; i++) {
+			try {
+				Debug.println(Debug.INFO,"Spawning new listener and everything!!!!!");
+				Listener listener = new Listener();
+				Connection c = DriverManager.getConnection("jdbc:mysql://" + args[0] + ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false", "root", "rootword");
+				DatabaseConnection db = new DatabaseConnectionUnit(c);
+				listener.listen(args[0], 5000, db, new XDPProcessorUnit(db), new QueryProcessorUnit(db));
+				Thread.sleep(4);
+			} catch (IOException e) {
+				System.err.println("An error occurred communicating with the server.");
+				e.printStackTrace();
+			} catch (SQLException e) {
+				System.err.println("A database error occurred.");
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
