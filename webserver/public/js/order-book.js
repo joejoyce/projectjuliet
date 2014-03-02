@@ -6,22 +6,24 @@
 
 /*
  * Constructor
- * url         URL for ajax call for server-side data
- * parameter   parameter for ajax call
- * symbol      the symbol for which this order book is created
- * clientData  data currently on client-side
- * targetRows  the rows of the target order book table
- * sorter      a sorter function that sorts orders strictly (order * order -> bool)
- * flashTime   the time for which new/removed rows should flash for (ms)
+ * url               URL for ajax call for server-side data
+ * parameter         parameter for ajax call
+ * symbol            the symbol for which this order book is created
+ * clientData        data currently on client-side
+ * targetRows        the rows of the target order book table
+ * sorter            a sorter function that sorts orders strictly (order * order -> bool)
+ * insertFlashTime   the time for which newly inserted rows should flash (ms)
+ * removeFlashTime   the time for which removed rows should flash (ms)
  */
-function OrderBook(url, parameter, symbol, clientData, targetRows, sorter, flashTime) {
+function OrderBook(url, parameter, symbol, clientData, targetRows, sorter, insertFlashTime, removeFlashTime) {
 	this.url = url;
 	this.parameter = parameter;
 	this.symbol = symbol;
 	this.clientData = clientData;
 	this.targetRows = targetRows;
 	this.sorter = sorter;
-	this.flashTime = flashTime
+	this.insertFlashTime = insertFlashTime;
+	this.removeFlashTime = removeFlashTime;
 }
 
 /*
@@ -65,19 +67,17 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 	var rowCount = 25;
 	// Perform required insertions
 	$.each(insertList, function(i, insertOrder) {
-		if (insertOrder) {
-			$(self.targetRows).each(function(index, row) {
-				row = $(row);
-				if (sorter(parseInt(row.data('price')), insertOrder.price)) {
-					self.insertRowBefore(row, insertOrder);
-					return false;
-				} else {
-					if (index >= rowCount - 2) {
-						self.insertRowAfter(row, insertOrder);
-					}
+		$(self.targetRows).each(function(index, row) {
+			row = $(row);
+			if (sorter(parseInt(row.data('price')), insertOrder.price)) {
+				self.insertRowBefore(row, insertOrder);
+				return false;
+			} else {
+				if (index >= rowCount - 2) {
+					self.insertRowAfter(row, insertOrder);
 				}
-			});
-		}
+			}
+		});
 	});
 	// Remove rows
 	var duplicates = [];
@@ -89,13 +89,7 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 			duplicates.push(row.data('order-id'));
 			if ($.inArray(row.data('order-id'), removeList) >= 0) {
 				self.flashElement(row, function() {
-						row.find('td').wrapInner('<div style="display:block;" />')
-					.parent()
-					.find('td > div')
-					.slideUp(700, function() {
-						$(this).parent().parent().remove();
-						row.remove();
-					});
+					row.remove();
 				});
 			}
 		}
@@ -159,7 +153,7 @@ OrderBook.prototype.flashElement = function(element, callback) {
 	element.addClass('flash-old');
 	var interval = window.setTimeout(
 		function() { callback(); },
-		self.flashTime
+		self.removeFlashTime
 	);
 }
 
@@ -184,18 +178,9 @@ OrderBook.prototype.insertRowBefore = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertBefore(row);
-	$(newRow)
-		.find('td')
-		.wrapInner('<div style="display: none;" />')
-		.parent()
-		.find('td > div')
-		.slideDown(700, function(){
-			var $set = $(this);
-			$set.replaceWith($set.contents());
-		});
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
-		self.flashTime
+		self.insertFlashTime
 	);
 }
 
@@ -203,18 +188,9 @@ OrderBook.prototype.insertRowAfter = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertAfter(row);
-	$(newRow)
-		.find('td')
-		.wrapInner('<div style="display: none;" />')
-		.parent()
-		.find('td > div')
-		.slideDown(700, function(){
-			var $set = $(this);
-			$set.replaceWith($set.contents());
-		});
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
-		self.flashTime
+		self.insertFlashTime
 	);
 }
 
@@ -229,6 +205,7 @@ $(document).ready(function() {
 		client.offerList,
 		'#offer-rows tr',
 		function(orderA, orderB) { return (orderA >= orderB); },
+		1200,
 		800
 	);
 	window.setInterval(function() { offerTable.refresh(offerTable); }, 2000);
@@ -240,6 +217,7 @@ $(document).ready(function() {
 		client.bidList,
 		'#bid-rows tr',
 		function(orderA, orderB) { return (orderA <= orderB); },
+		1200,
 		800
 	);
 	window.setInterval(function() { bidTable.refresh(bidTable); }, 2000);
