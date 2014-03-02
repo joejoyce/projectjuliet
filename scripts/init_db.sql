@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS trade (
   added bit(1) NOT NULL,
   deleted bit(1) NOT NULL,
   PRIMARY KEY(trade_id, symbol_id),
-  INDEX name (trade_id, symbol_idd)
+  INDEX name (trade_id, symbol_id)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
 DROP TABLE IF EXISTS order_book;
