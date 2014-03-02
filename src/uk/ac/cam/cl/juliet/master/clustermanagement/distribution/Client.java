@@ -44,7 +44,7 @@ class ClientCleanup implements Runnable {
  * 
  * @author Joseph
  */
-public class Client {
+public class Client implements Comparable<Client>{
 	private ObjectOutputStream out = null;
 	private ObjectInputStream in = null;
 	private Socket s = null;
@@ -399,5 +399,11 @@ public class Client {
 				closeClient();
 			}
 		}
+	}
+
+	@Override
+	public int compareTo(Client o) {
+		// TODO Auto-generated method stub
+		return this.getCurrentWork() - o.getCurrentWork();
 	}
 }
