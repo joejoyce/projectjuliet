@@ -133,7 +133,7 @@ $(document).ready(function() {
         }]
     });
 
-/* $('#latency-chart').highcharts({
+   $('#latency-chart').highcharts({
         chart: {
             type: 'spline',
             animation: Highcharts.svg, // don't animate in old IE
@@ -199,5 +199,5 @@ $(document).ready(function() {
             color: '#FF1000',
             data: []
         }]
-    });*/
+    });
 });
