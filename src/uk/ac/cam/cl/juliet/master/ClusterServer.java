@@ -36,7 +36,7 @@ public class ClusterServer {
 	private static boolean USE_INPUT_FILES_FROM_SETTING = false;
 
 	@SuppressWarnings("unused")
-	public static void main(String args[]) throws IOException, SQLException {
+	public static void main(String args[]) throws IOException, SQLException, InterruptedException {
 		Debug.registerOutputLocation(System.out);
 		Debug.setPriority(Debug.INFO);
 		
@@ -114,14 +114,12 @@ public class ClusterServer {
 		} else {
 			ds = new SampleXDPDataStream(files[0], files[1], files[2], files[3], skipBoundary);
 		}
-		settingsSaver.setDataStream(ds);
-
+		
 		final DataProcessor dp = new DataProcessor(ds, cm);
 		dp.setFiles(files[0], files[1], files[2], files[3], skipBoundary);
 		dp.pause = true;
 		ClusterServer.dp = dp;
-
-		Runtime.getRuntime().addShutdownHook(settingsSaver);
+		settingsSaver.setDataStream(dp);
 
 		// Start the DataProcessor
 		Thread t = new Thread() {
@@ -155,6 +153,8 @@ public class ClusterServer {
 			}
 		}
 		s.close();
-		System.exit(0);
+		dp.pause = true;
+		settingsSaver.savePointers();
+		System.exit(1);
 	}
 }

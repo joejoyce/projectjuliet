@@ -8,12 +8,13 @@ import java.util.Map.Entry;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Debug;
+import uk.ac.cam.cl.juliet.master.dataprocessor.DataProcessor;
 import uk.ac.cam.cl.juliet.master.dataprocessor.XDPDataStream;
 
-public class ShutdownSettingsSaver extends Thread {
+public class ShutdownSettingsSaver {
 	private String filename;
 	private ConfigurationPacket cp = null;
-	private XDPDataStream xdpStream;
+	private DataProcessor dp;
 	
 	public ShutdownSettingsSaver (String filename) {
 		this.filename = filename;
@@ -21,8 +22,9 @@ public class ShutdownSettingsSaver extends Thread {
 	}
 	
 	//I don't think that any of the debug-print-statements are executed as the system is closing -lucas
-	public void run (){
+	public void savePointers() {
         try {
+        	XDPDataStream xdpStream = dp.getDataStream();
         	Debug.println(Debug.INFO,"Saving settings on exit");
 			File f = new File(filename);
 	        FileWriter fw = new FileWriter(f);
@@ -41,7 +43,7 @@ public class ShutdownSettingsSaver extends Thread {
 	        	}
 	        }
 	        //write current position of the xdpDataStream
-	        if(this.xdpStream == null) {
+	        if(xdpStream == null) {
 	        	Debug.println(Debug.ERROR, "Could not save current position of datastream");
 	        } else {
 	        	Map<String, String> xdpStreamSettings = xdpStream.endAndGetSettings();
@@ -55,7 +57,7 @@ public class ShutdownSettingsSaver extends Thread {
 		            fw.write("\n");
 		        }
 	        }
-	        
+	        fw.flush();
 	        fw.close();
 		} catch (IOException e) {
 			Debug.println(Debug.SHOWSTOP,"Error saving settings on exit");
@@ -66,7 +68,7 @@ public class ShutdownSettingsSaver extends Thread {
 		this.cp = cp;
 	}
 	
-	public void setDataStream(XDPDataStream ds) {
-		this.xdpStream = ds;
+	public void setDataStream(DataProcessor ds) {
+		this.dp = ds;
 	}
 }

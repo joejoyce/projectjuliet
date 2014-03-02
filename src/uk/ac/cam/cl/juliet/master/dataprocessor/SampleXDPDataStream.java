@@ -127,12 +127,7 @@ public class SampleXDPDataStream implements XDPDataStream {
 		channelThreeFileHandle.seek(offsetChannelThree);
 
 		this.firstPacketTime = getNextPacketDataStream();
-		this.initialCallTimeNS = System.nanoTime();
-
-		Debug.println(Debug.INFO, "Using file " + summaryFile + " starting at " + offsetSummaryFile);
-		Debug.println(Debug.INFO, "Using file " + channelOne + " starting at " + offsetChannelOne);
-		Debug.println(Debug.INFO, "Using file " + channelTwo + " starting at " + offsetChannelTwo);
-		Debug.println(Debug.INFO, "Using file " + channelThree + " starting at " + offsetChannelThree);
+		this.initialCallTimeNS = System.nanoTime();		
 	}
 
 	public void setSkipBoundary(float pSkipBoundary) {
@@ -152,10 +147,6 @@ public class SampleXDPDataStream implements XDPDataStream {
 	 */
 	@SuppressWarnings("static-access")
 	public synchronized XDPRequest getPacket() throws IOException {
-		// if the system is exiting this will return another packet
-		if (this.notAllowedToRun)
-			return null;
-
 		if (currentPacketCount % 10000 == 0)
 			Debug.println(1000, "packet num: " + currentPacketCount);
 
@@ -200,11 +191,6 @@ public class SampleXDPDataStream implements XDPDataStream {
 			// System is falling behind realtime
 			Debug.println("System is " + (-systemDifferenceMS) + " milliseconds behind realtime stream");
 		} else {
-			/*
-			 * initialCallTimeNS -= systemDifferenceNS; currentPacketCount ++;
-			 * return new XDPRequest(fileData, toUnsignedInt(deliveryFlag));
-			 */
-
 			// System is ahead of realtime stream - wait for a bit
 			Debug.println("System is " + systemDifferenceMS + " milliseconds ahead of realtime stream");
 			try {
@@ -340,15 +326,15 @@ public class SampleXDPDataStream implements XDPDataStream {
 		return ((int) x) & 0xff;
 	}
 
-	public synchronized Map<String, String> endAndGetSettings() {
+	public Map<String, String> endAndGetSettings() {
 		this.notAllowedToRun = true;
 		Map<String, String> filePositions = new HashMap<String, String>();
-		try {
+		
+		try {			
 			filePositions.put(file1, "" + summaryFileHandle.getFilePointer());
 			filePositions.put(file2, "" + channelOneFileHandle.getFilePointer());
 			filePositions.put(file3, "" + channelTwoFileHandle.getFilePointer());
 			filePositions.put(file4, "" + channelThreeFileHandle.getFilePointer());
-
 		} catch (IOException ioe) {
 			Debug.print(Debug.ERROR, "Could not get the filepointer from the input files");
 		}

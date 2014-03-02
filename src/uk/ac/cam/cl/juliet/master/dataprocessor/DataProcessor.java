@@ -71,4 +71,8 @@ public class DataProcessor {
 			e.printStackTrace();
 		}
 	}
+	
+	public XDPDataStream getStream() {
+		return this.dataStream;
+	}
 }
