@@ -36,7 +36,8 @@ public class Client {
 				s.close();
 				System.exit(0);
 			}
-		};		
+		};	
+		t.setDaemon(true);
 		t.start();
 		
 		for(int i = 0; i < 5; i++) {
