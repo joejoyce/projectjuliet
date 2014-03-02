@@ -76,7 +76,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	
 	private long nextCommitTime = System.nanoTime() + 1000000000L;
 	private int opsBatched = 0;
-	private static int batchThreshold = 100;
+	private static int batchThreshold = 4500;
 	private void maybeExecuteBatch() {
 		if(++opsBatched >= batchThreshold || System.nanoTime() >= nextCommitTime) {
 			executeBatch();
