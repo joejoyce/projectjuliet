@@ -321,7 +321,7 @@ public class Listener {
 		String ip = packet.getSetting("db.addr");
 		if (ip != null) {
 			try {
-				this.databaseConnection.setConnection(DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/juliet", "root", "rootword"));
+				this.databaseConnection.setConnection(DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false", "root", "rootword"));
 
 			} catch (SQLException e) {
 				System.err.println("An error occurred connecting to the database");

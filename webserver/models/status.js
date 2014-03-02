@@ -34,7 +34,7 @@ exports.getTime = function(callback) {
 
   client.on('data', function(data) {
     client.end();
-    callback(data);
+    callback(Number(data)-18000);
   });
 };
 

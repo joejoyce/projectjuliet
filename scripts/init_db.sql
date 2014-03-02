@@ -36,8 +36,9 @@ CREATE TABLE IF NOT EXISTS trade (
   updated_seq_num int(10) unsigned NOT NULL,
   added bit(1) NOT NULL,
   deleted bit(1) NOT NULL,
-  PRIMARY KEY(trade_id, symbol_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
+  PRIMARY KEY(trade_id, symbol_id),
+  INDEX name (trade_id, symbol_idd)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
 
 DROP TABLE IF EXISTS order_book;
 CREATE TABLE IF NOT EXISTS order_book (

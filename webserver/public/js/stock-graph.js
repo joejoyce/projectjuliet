@@ -6,7 +6,7 @@ $(document).ready(function() {
   var chartData = [];
   
   $(stockData).each(function(i, data) {
-    chartData.push([data.offered_s*1000,data.price*priceScale]);
+    chartData.push([(data.offered_s-18000)*1000,data.price*priceScale]);
   });
   
   $('#stock-graph').highcharts('StockChart', {

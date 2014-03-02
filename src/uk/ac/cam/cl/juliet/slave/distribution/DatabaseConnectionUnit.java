@@ -96,6 +96,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 		final Runnable executeBatch = new Runnable() {
 			public void run() {
+				long start = System.nanoTime();
 				try {
 					synchronized (batchQueryExecuteStartCallbacks) {
 						for (Runnable r : batchQueryExecuteStartCallbacks) {
@@ -104,8 +105,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					}
 
 					Debug.println(Debug.INFO, "Total batch size: " + batchSize);
-					long start = System.nanoTime();
-
+					
 					Debug.println(Debug.INFO, "About to execute addOrder batch: " + add);
 					add = 0;
 					long then = start;
@@ -158,23 +158,22 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 					}
 
 					batchSize = 0;
-
-					long totalTaken = Math.abs(System.nanoTime() - start);
-					lastCommitNs = totalTaken;
-					totalTaken /= 1000000;
-					
-					System.out.println("Waiting to enter batchQueryExecuteEndCallbacks");
-					synchronized (batchQueryExecuteEndCallbacks) {
-						for (Runnable r : batchQueryExecuteEndCallbacks) {
-							r.run();
-						}
-					}
-
-					Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
-					Debug.println(Debug.INFO, "-------------------------------------");
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
+				long totalTaken = Math.abs(System.nanoTime() - start);
+				lastCommitNs = totalTaken;
+				totalTaken /= 1000000;
+				
+				System.out.println("Waiting to enter batchQueryExecuteEndCallbacks");
+				synchronized (batchQueryExecuteEndCallbacks) {
+					for (Runnable r : batchQueryExecuteEndCallbacks) {
+						r.run();
+					}
+				}
+
+				Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
+				Debug.println(Debug.INFO, "-------------------------------------");
 			}
 		};
 		scheduler.scheduleAtFixedRate(executeBatch, 5, 1, TimeUnit.SECONDS);

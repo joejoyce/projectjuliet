@@ -30,9 +30,9 @@ public class WebServerListener implements Runnable {
 	public void run() {		
 		while(true) {
 			try {
-				Debug.println(100,"Waiting for connection");
+				Debug.println("Waiting for connection");
 				Socket webserver = querySocket.accept();
-				Debug.println(100,"Accepted new connection");
+				Debug.println("Accepted new connection");
 				WebServerQueryHandler wqh = new WebServerQueryHandler(webserver, con);
 				Thread t = new Thread(wqh);
 				t.start();
