@@ -61,6 +61,7 @@ public class SuperFancyConcurrentPriorityQueue <T extends Comparable<T>>{
 		} else if( null == b){
 			if(null != a) {
 				try {
+					rtn = a;
 					q.put(a);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
