@@ -172,7 +172,7 @@ OrderBook.prototype.generateRow = function(order) {
 	   +'<td>'+(order.price * this.symbol.price_scale).toFixed(2)+'</td>'
 	   +'<td>'+order.volume+'</td>'
 	   +'<td>'+(order.price * this.symbol.price_scale * order.volume).toFixed(2)+'</td>'
-	   +'<td>'+moment(order.updated_s * 1000).format('DD/MM/YYYY - HH:mm:ss')+'</td>'
+	   +'<td>'+moment((order.updated_s-18000) * 1000).format('DD/MM/YYYY - HH:mm:ss')+'</td>'
 	   +'</tr>';
 }
 /*
