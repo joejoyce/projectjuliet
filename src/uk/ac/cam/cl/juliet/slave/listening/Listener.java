@@ -190,11 +190,11 @@ public class Listener {
 			while(true) {
 				boolean send = sendThread.isAlive();
 				boolean rec = receiveThread.isAlive();
-				boolean timeout = System.nanoTime() < (nanosLastReceive + fiveseconds);
+				boolean timeout = true; //System.nanoTime() < (nanosLastReceive + fiveseconds);
 				if(!send || !rec || !timeout)
 					break;
 				Thread.sleep(500);
-				Debug.println("s " + send + " r " + rec + " t " + timeout);	
+				//Debug.println("s " + send + " r " + rec + " t " + timeout);	
 			}
 			Debug.println("Interrupting threads");
 			//Oh dear we've stopped!!
@@ -203,8 +203,11 @@ public class Listener {
 			receiveThread.interrupt();
 			readThread.interrupt();
 			sendThread.join();
+			Debug.println("send joined");
 			receiveThread.join();
+			Debug.println("receive joined");
 			readThread.join();
+			Debug.println("read joined");
 			
 			try {
 				output.close();
