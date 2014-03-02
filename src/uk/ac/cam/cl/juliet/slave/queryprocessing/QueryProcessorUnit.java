@@ -127,7 +127,11 @@ public class QueryProcessorUnit implements QueryProcessor {
 					lastTrade = trade;
 				
 				else if (secondLastTrade == null)
-					secondLastTrade = trade;
+					if (trade.compareTo(lastTrade)>0) {
+						secondLastTrade = lastTrade;
+						lastTrade = trade;
+					} else
+						secondLastTrade = trade;
 				
 				else if (trade.compareTo(secondLastTrade) > 0) {
 					// if the trade is later than the second last trade
