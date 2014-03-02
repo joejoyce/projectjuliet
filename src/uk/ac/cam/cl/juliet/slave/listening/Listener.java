@@ -93,7 +93,13 @@ public class Listener {
 			@Override
 			public void run() {
 				while (true) {
-					readPacket();
+					try {
+						readPacket();
+					} catch (InterruptedException e) {
+						return;
+					}
+					if(Thread.interrupted())
+						return;
 				}
 			}
 		};		
@@ -177,11 +183,19 @@ public class Listener {
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e1) {}
+		
 		try  {
 			nanosLastReceive = System.nanoTime();
 			long fiveseconds = 5000000000L;
-			while(sendThread.isAlive() && receiveThread.isAlive() && System.nanoTime() < (nanosLastReceive + fiveseconds))
+			while(true) {
+				boolean send = sendThread.isAlive();
+				boolean rec = receiveThread.isAlive();
+				boolean timeout = System.nanoTime() < (nanosLastReceive + fiveseconds);
+				if(!send || !rec || !timeout)
+					break;
 				Thread.sleep(500);
+				Debug.println("s " + send + " r " + rec + " t " + timeout);	
+			}
 			Debug.println("Interrupting threads");
 			//Oh dear we've stopped!!
 			//Kill everything!!
@@ -223,37 +237,30 @@ public class Listener {
 		Debug.println(Debug.INFO, "Finished flush: " + waitingForBatchQueries.size());
 	}
 
-	private void readPacket() {
-		try {
-			Container container = receiveQueue.take();
+	private void readPacket() throws InterruptedException {
+		Container container = receiveQueue.take();
 
-			Debug.println(Debug.INFO, "Got new object: " + container.toString());
+		Debug.println(Debug.INFO, "Got new object: " + container.toString());
 
-			if (container instanceof ConfigurationPacket) {
-				handleConfigurationPacket((ConfigurationPacket) container);
-			} else if (container instanceof LatencyMonitor) {
-				LatencyMonitor m = (LatencyMonitor) container;
-				handleLatencyMonitor(m);
-			} else {
-				long then = System.nanoTime();
+		if (container instanceof ConfigurationPacket) {
+			handleConfigurationPacket((ConfigurationPacket) container);
+		} else if (container instanceof LatencyMonitor) {
+			LatencyMonitor m = (LatencyMonitor) container;
+			handleLatencyMonitor(m);
+		} else {
+			long then = System.nanoTime();
 
-				if (container instanceof XDPRequest) {
-					processXDPRequest((XDPRequest) container);
-				} else if (container instanceof QueryPacket) {
-					processQueryPacket((QueryPacket) container);
-				} else if (container instanceof StringTestPacket) {
-					Debug.println(container.toString());
-				}
-
-				long diff = Math.abs(System.nanoTime() - then);
-				diff /= 1000000;
-				Debug.println(Debug.INFO, "Time taken for processing: " + diff + "ms");
+			if (container instanceof XDPRequest) {
+				processXDPRequest((XDPRequest) container);
+			} else if (container instanceof QueryPacket) {
+				processQueryPacket((QueryPacket) container);
+			} else if (container instanceof StringTestPacket) {
+				Debug.println(container.toString());
 			}
-			if(Thread.interrupted())
-				return;
-		} catch (InterruptedException e) {
-			Debug.println("Read thread was interrupted");
-			return;
+
+			long diff = Math.abs(System.nanoTime() - then);
+			diff /= 1000000;
+			Debug.println(Debug.INFO, "Time taken for processing: " + diff + "ms");
 		}
 	}
 
