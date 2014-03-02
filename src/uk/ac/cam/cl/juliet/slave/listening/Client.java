@@ -26,24 +26,20 @@ public class Client {
 			public void run() {
 				Scanner s = new Scanner(System.in);
 				String input = "";
-				// Although this won't close it!
 				while (input != "quit") {
 					input = s.nextLine();
-					System.out.println("input: " + input);
 					if (Debug.parseDebugArgs(input)) {
 						continue;
 					}
 				}
 				s.close();
 				System.exit(0);
-				//Not pretty but it should work.
 			}
-		};
-		
+		};		
 		t.start();
+		
 		Listener listener = new Listener();
 		try {
-
 			DatabaseConnection db = new DatabaseConnectionUnit(DriverManager.getConnection("jdbc:mysql://" + args[0] + ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false", "root", "rootword"));
 			listener.listen(args[0], 5000, db, new XDPProcessorUnit(db), new QueryProcessorUnit(db));
 		} catch (IOException e) {

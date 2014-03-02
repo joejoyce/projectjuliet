@@ -8,7 +8,7 @@ import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.NoClusterException;
 
 /**
- * @description This class attaches to a XDPDataStream and requests packets.
+ * This class attaches to a XDPDataStream and requests packets.
  * Only packets with dilveryFlag == 11 are passed on to the Distributor
  * 
  * @author Scott Williams

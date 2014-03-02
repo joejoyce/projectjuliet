@@ -38,8 +38,8 @@ public class Listener {
 	private int port;
 	private ObjectInputStream input = null;
 	private ObjectOutputStream output = null;
-	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(2100);
-	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(2100);
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(5100);
+	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(5100);
 	private LinkedList<XDPRequest> waitingForBatchQueries = new LinkedList<XDPRequest>();
 	private ReentrantLock waitingForBatchQueriesLock = new ReentrantLock();
 	private DatabaseConnection databaseConnection;
@@ -63,12 +63,11 @@ public class Listener {
 			try {
 				Thread.sleep(delayMs);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			delayMs *= 2;
 		} else {
-			Debug.println(Debug.SHOWSTOP,"System restarting due to inability to reconnect");
+			Debug.println(Debug.SHOWSTOP, "System restarting due to inability to reconnect");
 			System.exit(0);
 		}
 		try {
@@ -90,15 +89,13 @@ public class Listener {
 		
 		try {
 			this.socket = new Socket(ip,port);
-			this.output = new ObjectOutputStream(socket.getOutputStream());
+			this.output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 			output.flush();
-			this.input = new ObjectInputStream(socket.getInputStream());
+			this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -125,11 +122,6 @@ public class Listener {
 	public void listen(String server, int thePort, DatabaseConnection db, XDPProcessor xdpProcessor, QueryProcessor queryProcessor) throws IOException, SQLException {
 		this.ip = server;
 		this.port = thePort;
-		/*this.socket = new Socket(server, thePort);
-		this.output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-		output.flush();
-		this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));*/
-
 		this.databaseConnection = db;
 		this.xdp = xdpProcessor;
 		this.query = queryProcessor;
@@ -157,9 +149,9 @@ public class Listener {
 					readPacket();
 				}
 			}
-		};
-		
+		};		
 		readThread.start();
+		
 		while(true) {
 			while(!connect(ip,port)) continue;
 			Thread receiveThread = new Thread() {
@@ -227,19 +219,19 @@ public class Listener {
 				}
 			};
 			sendThread.start();
+			
 			try  {
 				sendThread.join();
 				receiveThread.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-				Debug.println(Debug.ERROR,"WHY, I WAS INTERRUPTED WAITING FOR THEM TO BE INTERRUPTED?!!");
+				Debug.println(Debug.ERROR, "WHY, I WAS INTERRUPTED WAITING FOR THEM TO BE INTERRUPTED?!!");
 			}
 		}
-		
 	}
 
 	private void flushWaitingForBatchQueries() {
-		System.out.println("Starting flush: " + waitingForBatchQueries.size());
+		Debug.println(Debug.INFO, "Starting flush: " + waitingForBatchQueries.size());
 		XDPResponse response = null;
 		XDPRequest r = null;
 		while (waitingForBatchQueries.peek() != null) {
@@ -251,7 +243,7 @@ public class Listener {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Finished flush: " + waitingForBatchQueries.size());
+		Debug.println(Debug.INFO, "Finished flush: " + waitingForBatchQueries.size());
 	}
 
 	private void readPacket() {
@@ -288,8 +280,7 @@ public class Listener {
 	private void processXDPRequest(XDPRequest container) {
 		boolean result = this.xdp.decode(container);
 		if (result == false) {
-			// The decoding did not require the database - send the response
-			// straight back.
+			// The decoding did not require the database - send the response straight back.
 			XDPResponse response = new XDPResponse(container.getPacketId(), false);
 			try {
 				responseQueue.put(response);
@@ -297,8 +288,7 @@ public class Listener {
 				e.printStackTrace();
 			}
 		} else {
-			// The decoding required the database - wait until all changes have
-			// been committed.
+			// The decoding required the database - wait until all changes have been committed.
 			waitingForBatchQueriesLock.lock();
 			waitingForBatchQueries.add(container);
 			waitingForBatchQueriesLock.unlock();
@@ -307,14 +297,11 @@ public class Listener {
 	}
 
 	private void processQueryPacket(QueryPacket container) {
-		while (true) {
-			try {
-				responseQueue.put(this.query.runQuery(container));
-				return;
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+		try {
+			responseQueue.put(query.runQuery(container));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}		
 	}
 
 	private void handleConfigurationPacket(ConfigurationPacket packet) {
@@ -324,7 +311,7 @@ public class Listener {
 				this.databaseConnection.setConnection(DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false", "root", "rootword"));
 
 			} catch (SQLException e) {
-				System.err.println("An error occurred connecting to the database");
+				Debug.println(Debug.ERROR, "An error occurred connecting to the database");
 				e.printStackTrace();
 				System.exit(1);
 			}
