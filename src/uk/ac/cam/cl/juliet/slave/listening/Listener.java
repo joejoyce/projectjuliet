@@ -265,7 +265,7 @@ public class Listener {
 				} else if (container instanceof QueryPacket) {
 					processQueryPacket((QueryPacket) container);
 				} else if (container instanceof StringTestPacket) {
-					System.out.println(container);
+					Debug.println(container.toString());
 				}
 
 				long diff = Math.abs(System.nanoTime() - then);
