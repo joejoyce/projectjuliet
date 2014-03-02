@@ -192,11 +192,10 @@ public class QueryProcessorUnit implements QueryProcessor {
 					detectSpike(tradeList, response, p.getStartTimeSpikes(), p.getLimit(), currentSymbol);
 				}
 			}
-			} catch (SQLException e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 			return new QueryResponse(p.getPacketId(), false); // query failed
 		}
-
 		return response;
 	}
 
