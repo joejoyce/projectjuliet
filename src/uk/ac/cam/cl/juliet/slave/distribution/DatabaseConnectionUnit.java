@@ -80,6 +80,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private void maybeExecuteBatch() {
 		if(++opsBatched >= batchThreshold || System.nanoTime() >= nextCommitTime) {
 			executeBatch();
+			opsBatched = 0;
 			nextCommitTime = System.nanoTime() + 1000000000L;
 		}
 	}
