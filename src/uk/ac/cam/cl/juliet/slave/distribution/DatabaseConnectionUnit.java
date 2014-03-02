@@ -223,6 +223,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long volumeReduction, long packetTimestamp) throws SQLException {
 		synchronized (volumeReductions) {
 			this.volumeReductions.add(new OrderVolumeReduction(orderID, symbolIndex, volumeReduction, packetTimestamp, symbolSeqNumber));
+			maybeExecuteBatch();
 		}
 	}
 
