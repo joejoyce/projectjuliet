@@ -220,7 +220,6 @@ public class QueryProcessorUnit implements QueryProcessor {
 				spikeDetectionPointer = counter;
 			counter++;
 		}
-		// look for a spike
 		
 		if(spikeDetectionPointer == -1)
 			return;

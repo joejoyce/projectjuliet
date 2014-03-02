@@ -1,7 +1,5 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -40,10 +38,16 @@ class ClientCleanup implements Runnable {
 	}
 }
 
+
+/**
+ * In charge of sending and receiving packets foe a specific client 
+ * 
+ * @author Joseph
+ */
 public class Client {
 	private ObjectOutputStream out = null;
 	private ObjectInputStream in = null;
-	private Socket s;
+	private Socket s = null;
 	private InetAddress address = null;
 	private ClusterMaster parent = null;
 
@@ -52,26 +56,25 @@ public class Client {
 	private static ScheduledExecutorService workers = null;
 
 	private ScheduledFuture<?> cleaner = null;
-	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(
-			200);
+	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(200);
 
 	private static AtomicInteger numberClients = new AtomicInteger(0);
 	private AtomicInteger workCount = new AtomicInteger(0);
 
 	private static ContainerTimeComparator comparator = new ContainerTimeComparator();
-	// Keep track of the objects in flight
+	
 	private ConcurrentHashMap<Long, InFlightContainer> hash = new ConcurrentHashMap<Long, InFlightContainer>();
-	private PriorityBlockingQueue<InFlightContainer> jobqueue = new PriorityBlockingQueue<InFlightContainer>(
-			16, comparator);
+	private PriorityBlockingQueue<InFlightContainer> jobqueue = new PriorityBlockingQueue<InFlightContainer>(16, comparator);
 
 	private long totalPackets = 0;
 	public int packetsSentThisSecond = 0;
-	
-	private static final int OUTPUT_RESET_LIMIT = 50000;
-	
-	private Semaphore sem = new Semaphore(2000); //Allows 2000 at one time
 
-	private boolean amClosing = false; //NASTY HACK
+	private static final int OUTPUT_RESET_LIMIT = 50000;
+
+	private Semaphore sem = new Semaphore(5000); // Allows 5000 at one time
+
+	private boolean amClosing = false;
+
 	/**
 	 * Get the IP address of the Client that this Client object is connected to.
 	 * 
@@ -91,10 +94,8 @@ public class Client {
 		try {
 			sem.acquire();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//workCount.incrementAndGet(); moved this to before being put on the queue 
 		jobqueue.add(container);
 		hash.put(container.getPacketId(), container);
 	}
@@ -116,8 +117,7 @@ public class Client {
 			hash.remove(l);
 			workCount.decrementAndGet();
 		} else {
-			Debug.println(Debug.ERROR,
-					"Null InFlightContainer recieved from hash");
+			Debug.println(Debug.ERROR, "Null InFlightContainer recieved from hash");
 		}
 		return cont;
 	}
@@ -128,28 +128,31 @@ public class Client {
 	 * salvage the jobs waiting on returns.
 	 */
 	public void closeClient() {
-		if(amClosing)
+		if (amClosing) {
 			return;
+		}
 		amClosing = true;
-		Debug.println(Debug.INFO,"closeClient was called on client" + address.toString());
+		
+		Debug.println(Debug.INFO, "closeClient was called on client" + address.toString());
 
 		parent.removeClient(this);
 		cleaner.cancel(false);
+		
 		if (0 == numberClients.decrementAndGet()) {
 			workers.shutdown();
 			workers = null;
 		}
 
 		try {
-			Debug.println(100,"---------------Close Client has been called----------------");
 			out.close();
-			in.close(); // Should also have the effect of closing the threads that read and write on them
+			in.close();
 			s.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		fullyFlushQueues();
 		amClosing = false;
 	}
@@ -157,29 +160,29 @@ public class Client {
 	public Client(Socket s, ClusterMaster parent) {
 		this.parent = parent;
 		this.s = s;
+		
 		if (0 == numberClients.getAndIncrement()) {
 			workers = Executors.newScheduledThreadPool(numberPooledThreads);
 		}
-		// Schedule queueflush for me
-		while(null == workers) continue; //Someone else is creating it.
 		
-		cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0,queueFlushTime, TimeUnit.MILLISECONDS);
+		while (null == workers)
+			continue; // Someone else is creating it.
 
-		address = s.getInetAddress();
+		this.cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0, queueFlushTime, TimeUnit.MILLISECONDS);
+		this.address = s.getInetAddress();
+		
 		try {
-			out = new ObjectOutputStream(s.getOutputStream());
-			in = new ObjectInputStream(s.getInputStream());
+			this.out = new ObjectOutputStream(s.getOutputStream());
+			this.in = new ObjectInputStream(s.getInputStream());
 			out.writeObject(parent.getConfiguration());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		// Run myself to start listening for objects being sent my way!
+		// Run myself to start listening for objects being sent my way
 		Thread listener = new Thread() {
 			@Override
 			public void run() {
-				// This method needs to use the
 				while (true) {
 					Object recieve = null;
 					try {
@@ -196,20 +199,19 @@ public class Client {
 					if (null == recieve)
 						continue;
 					if (recieve instanceof Container) {
-						// fantastic!
-						// Count the packets back in
+						// Count the packet back in
 						Container container = (Container) recieve;
 						if (container instanceof LatencyMonitor) {
 							LatencyMonitor lm = (LatencyMonitor) container;
 							lm.inboundArrive = System.nanoTime();
-							lm.addr = getClientIP().toString();
 							// Identify which Pi this came from
+							lm.addr = getClientIP().toString();
 						}
+						
 						InFlightContainer record = checkbackContainer(container);
 						if (record != null)
 							record.executeCallback(container);
 					}
-					// Otherwise ignore for the moment
 				}
 			}
 		};
@@ -233,20 +235,19 @@ public class Client {
 						out.writeObject(c);
 						out.flush();
 						packetCounter++;
-						if(packetCounter >= OUTPUT_RESET_LIMIT) {
+						if (packetCounter >= OUTPUT_RESET_LIMIT) {
 							packetCounter = 0;
 							out.reset();
 							Debug.println(Debug.ERROR, "reset outputStream on client");
 						}
-						totalPackets++; 
+						totalPackets++;
 						packetsSentThisSecond++;
 						if (Math.abs(System.nanoTime() - then) > 1000000000) {
-							Debug.println(100, "Packets sent this second: "
-									+ packetsSentThisSecond);
+							Debug.println(100, "Packets sent this second: " + packetsSentThisSecond + ", to client: " + getClientIP().toString());
 							then = System.nanoTime();
 							packetsSentThisSecond = 0;
 						}
-						Debug.println("Written packet ID: "+ container.getPacketId());
+						Debug.println("Written packet ID: " + container.getPacketId());
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					} catch (Exception e) {
@@ -266,7 +267,6 @@ public class Client {
 	 * @return The current number of Containers out on this Client
 	 */
 	public int getCurrentWork() {
-		// This is the amount of work which has not been accounted for
 		return workCount.get();
 	}
 
@@ -275,7 +275,6 @@ public class Client {
 	 *         since the object was created - the Client itself is not queried.
 	 */
 	public long getTotalWork() {
-		// The total amount of work done since the beginning
 		return totalPackets;
 	}
 
@@ -289,7 +288,7 @@ public class Client {
 				LatencyMonitor m = (LatencyMonitor) c;
 				m.outboundQueue = System.nanoTime();
 			}
-			if(!sendQueue.offer(ifc,200, TimeUnit.MILLISECONDS))
+			if (!sendQueue.offer(ifc, 200, TimeUnit.MILLISECONDS))
 				return -1;
 			workCount.incrementAndGet();
 			Debug.println("Added to send queue");
@@ -355,30 +354,30 @@ public class Client {
 		return send(c, cb, c.getPacketId(), true);
 	}
 
-	
 	private void fullyFlushQueues() {
 		InFlightContainer ifc;
-		while(null != (ifc = jobqueue.poll())) {
-			if(!ifc.getBroadcast()) { //Reply hasn't been received and not broadcast so resend
-				Debug.println(Debug.INFO,"Resending packet: " + ifc.getPacketId()); 
+		while (null != (ifc = jobqueue.poll())) {
+			if (!ifc.getBroadcast()) {
+				Debug.println(Debug.INFO, "Resending packet: " + ifc.getPacketId());
 				try {
-						parent.sendPacket(ifc.getContainer(),ifc.getCallback()); 
-				} catch (NoClusterException e) { 
+					parent.sendPacket(ifc.getContainer(), ifc.getCallback());
+				} catch (NoClusterException e) {
 					e.printStackTrace();
-				} 
+				}
 			}
 		}
-		while(null != (ifc = sendQueue.poll())) {
-			if(!ifc.getBroadcast()) { //Reply hasn't been received and not broadcast so resend
-				Debug.println(Debug.INFO,"Resending packet from waiting: " + ifc.getPacketId()); 
+		while (null != (ifc = sendQueue.poll())) {
+			if (!ifc.getBroadcast()) {
+				Debug.println(Debug.INFO, "Resending packet from waiting: " + ifc.getPacketId());
 				try {
-						parent.sendPacket(ifc.getContainer(),ifc.getCallback()); 
-				} catch (NoClusterException e) { 
+					parent.sendPacket(ifc.getContainer(), ifc.getCallback());
+				} catch (NoClusterException e) {
 					e.printStackTrace();
-				} 
+				}
 			}
 		}
 	}
+
 	/**
 	 * This method checks the front of the priority queue ( the timeout that'll
 	 * expire soonest, if it finds the timeout has passed then the client is
@@ -396,12 +395,8 @@ public class Client {
 		if (null != (ifc = jobqueue.peek())) {
 			if (ifc.getDueTime() <= time) {
 				// Remove and flush the rest of the queue
-				Debug.println(Debug.ERROR,
-						"Timeout waiting for response from client " + address
-								+ ", packet: "
-								+ ifc.getContainer().getPacketId() + ",: "
-								+ ifc.getContainer().toString());
-				 closeClient();
+				Debug.println(Debug.ERROR, "Timeout waiting for response from client " + address + ", packet: " + ifc.getContainer().getPacketId() + ",: " + ifc.getContainer().toString());
+				closeClient();
 			}
 		}
 	}

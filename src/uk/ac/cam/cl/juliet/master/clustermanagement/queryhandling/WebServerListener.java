@@ -4,10 +4,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-import uk.ac.cam.cl.juliet.common.Debug;
 
 /**
  * @description WebServerListener
@@ -30,9 +26,7 @@ public class WebServerListener implements Runnable {
 	public void run() {		
 		while(true) {
 			try {
-				Debug.println("Waiting for connection");
 				Socket webserver = querySocket.accept();
-				Debug.println("Accepted new connection");
 				WebServerQueryHandler wqh = new WebServerQueryHandler(webserver, con);
 				Thread t = new Thread(wqh);
 				t.start();
@@ -41,10 +35,5 @@ public class WebServerListener implements Runnable {
 				e.printStackTrace();
 			}
 		}
-	}
-	
-	public static void main(String[] args) throws IOException, SQLException {
-		Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/juliet", "root", "rootword");
-		new WebServerListener(1337, con);	
 	}
 }
