@@ -69,8 +69,7 @@ public class SpikeDetectionRunnable implements Runnable {
 	public void run() {
 		this.isRunning = true;
 		while (this.isRunning) {
-			// check whether another request has not yet returned, if so wait
-			// for it
+			// check whether another request has not yet returned, if so wait for it
 			while (this.requestOnItsWay) {
 				try {
 					Thread.sleep(1000);
@@ -102,7 +101,7 @@ public class SpikeDetectionRunnable implements Runnable {
 			try {
 				Thread.sleep(this.sleepingTime * 1000);
 			} catch (InterruptedException e) {
-				Debug.println(Debug.ERROR, "SpikeDetectionRunnable: " + "InterruptedException while trying to sleep.");
+				Debug.println(Debug.ERROR, "SpikeDetectionRunnable: InterruptedException while trying to sleep.");
 			}
 
 		}
@@ -185,11 +184,12 @@ public class SpikeDetectionRunnable implements Runnable {
 	/**
 	 * Returns a queue of buffered spikes.
 	 * 
-	 * @return
+	 * @return Buffered Spikes
 	 */
 	public ConcurrentLinkedQueue<Spike> getSpikeBuffer() {
 		return this.spikeBuffer;
 	}
+	
 	/**
 	 * Class that encapsulates a detected spike, namely the stock symbol and the
 	 * time when the spike was observed

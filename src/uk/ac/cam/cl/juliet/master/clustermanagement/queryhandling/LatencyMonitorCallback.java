@@ -23,7 +23,7 @@ public class LatencyMonitorCallback extends Callback{
 	}
 	public boolean isDone() {
 		
-		return(numBack > 1 /* == numSentTo */ || timeoutStamp <= System.nanoTime());
+		return(numBack >= 1 /* == numSentTo */ || timeoutStamp <= System.nanoTime());
 	}
 	
 	private long average(long av, long nVal) {

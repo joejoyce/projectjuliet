@@ -1,20 +1,13 @@
 package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +26,7 @@ final class ClientLoadComparator implements Comparator<Client> {
 }
 
 
-class RepeatedSend implements Runnable{
+class RepeatedSend implements Runnable {
 	private ClusterMaster cm;
 	private Container c;
 	private Callback cb;
@@ -58,7 +51,6 @@ class RepeatedSend implements Runnable{
 			else
 				cm.sendPacket(c,cb);
 		} catch (NoClusterException e) {
-			// TODO Auto-generated catch block
 			Debug.println(Debug.ERROR,"Problems sending a packet scheduled for repeated Send");
 			e.printStackTrace();
 		}

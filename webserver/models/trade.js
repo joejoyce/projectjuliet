@@ -55,7 +55,7 @@ exports.getCandle = function(symbolIndex, priceScale, callback) {
       candle.low *= priceScale;
       candles.push(candle);
     });
-
+    console.dir(candles);
     callback(candles);
   });
 };

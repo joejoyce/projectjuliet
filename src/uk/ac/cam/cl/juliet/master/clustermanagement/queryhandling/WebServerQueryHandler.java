@@ -239,7 +239,6 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		int total = cm.getPacketThroughput();
 		j.pushPair("throughput", total);
 
-		// I think this might only work on linux?
 		double la = os.getSystemLoadAverage();
 		if (la >= 0)
 			j.pushPair("loadAv", la);
@@ -315,35 +314,23 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				if (key.equals("data.rate")) {
 					// Need to pass it onto the data handler
 					Debug.println(Debug.INFO, "Adjusting the data rate");
-					// TODO make it change the data rate
-					// if you mean changing the skip boundary to make the
-					// XDPDataStream
-					// run faster: -lucas
 					ClusterServer.dp.getDataStream().setSkipBoundary(Float.parseFloat(value));
 				} else {
 					ClusterServer.cm.setSetting(key, value);
-				}// Set a value
+				}
 			} else {
 				Debug.println(Debug.ERROR, "Invalid form for settings set string");
 				pw.write("{}");
 			}
 
 		} else if (query.matches("\\s*get\\s+(\\S+)\\s*")) {
-			Pattern p = Pattern.compile("\\s*get\\s+(\\S+)\\s*"); // TODO is
-																	// this
-																	// supposed
-																	// to be
-																	// s*get ??
+			Pattern p = Pattern.compile("\\s*get\\s+(\\S+)\\s*");
 			Matcher m = p.matcher(query);
 			if (m.find()) {
 				String key = m.group(1);
 				JsonBuilder jb = new JsonBuilder();
 				if (key.equals("data.rate")) {
 					Debug.println(Debug.INFO, "Getting the data rate");
-					// TODO make it retrieve the data rate
-					// if you mean the skip boundary that indicates whether the
-					// XDPDataStream
-					// runs faster than real time: here it is:
 					float skip = ClusterServer.dp.getDataStream().getSkipBoundary();
 					pw.write("{\"skip\": \"" + skip + "\"}");
 				} else {
@@ -358,10 +345,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			}
 
 		} else if (query.trim().equals("list")) {
-			// List settings
-			// TODO get current rate
 			JsonBuilder jb = new JsonBuilder();
-			// (sb, "data.rate", ClusterServer.dp.getRate());
 			jb.pushMap(ClusterServer.cm.getConfiguration().getSettings());
 			pw.write(jb.toString());
 		} else {
@@ -417,7 +401,6 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 				public PriceToClearResponse ptc = null;
 
 				public void callback(Container data) {
-					// TODO Auto-generated method stub
 					if (data instanceof PriceToClearResponse) {
 						this.ptc = (PriceToClearResponse) data;
 						this.finished = true;
@@ -530,24 +513,25 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		DistributedQueryCallback c = new DistributedQueryCallback(numberOfQueries) {
 			PrintWriter writer = pw;
-                        boolean before = false;
+            boolean before = false;
 
 			protected void processContainer(Container data) {
 				MovingAverageResponse response = (MovingAverageResponse) data;
-				if (before == false && received > 1 && response.getAverageCount() > 0)
+				if (before == true && received > 1 && response.getAverageCount() > 0) {
 					writer.write(",");
+				}
 				for (int i = 0; i < response.getAverageCount(); i++) {
 					writer.write("{");
 					writer.write("\"time\":\"" + response.getTime(i) + "\", ");
 					writer.write("\"average\":\"" + response.getAverage(i) + "\"");
 					writer.write("}");
-					if (i < response.getAverageCount() - 1)
+					if (i < response.getAverageCount() - 1) {
 						writer.write(",");
+					}
 				}
-                                if(response.getAverageCount() != 0) {
-				  before = true;
-                                }
-
+                if(response.getAverageCount() != 0) {
+                	before = true;
+                }
 			}
 		};
 
@@ -631,55 +615,4 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 		jb.finArr();
 		return jb.toString();
 	}
-
-	/**
-	 * Converts a ResultSet object to a JSON string Example: [{name: "scott",
-	 * age: 20},{name: "greg", age: 19}]
-	 * 
-	 * @param r
-	 *            The ResultSet to convert
-	 * @return The JSON String
-	 */
-	/*
-	 * private String toJSON(ResultSet r) throws SQLException {
-	 * ResultSetMetaData rsmd = r.getMetaData(); int columnCount =
-	 * rsmd.getColumnCount(); String[] columnNames = new String[columnCount];
-	 * 
-	 * for (int i = 1; i <= columnCount; i++) { columnNames[i - 1] =
-	 * rsmd.getColumnName(i); }
-	 * 
-	 * ArrayList<ArrayList<String>> results = new
-	 * ArrayList<ArrayList<String>>();
-	 * 
-	 * while (r.next()) { ArrayList<String> a = new ArrayList<String>(); for
-	 * (int i = 1; i <= columnCount; i++) { a.add(r.getString(i)); }
-	 * results.add(a); }
-	 * 
-	 * String result = "";
-	 * 
-	 * for (int i = 0; i < results.size(); i++) { String rowJSON =
-	 * singleRowToJSON(results.get(i), columnNames); result += rowJSON + ","; }
-	 * 
-	 * return "[" + result.substring(0, result.length() - 1) + "]"; }
-	 */
-
-	/**
-	 * Converts a single result row to JSON string Example: row=["scott", 20,
-	 * "Christ's"], columnNames=["Name", "Age", "College"] Output:
-	 * {"name":"scott", "age":"20", "college":"Christ's"}
-	 * 
-	 * @param row
-	 *            The row data
-	 * @param columnNames
-	 *            Table column names
-	 * @return A JSON string for the row
-	 */
-	/*
-	 * private String singleRowToJSON(ArrayList<String> row, String[]
-	 * columnNames) { String result = ""; for (int i = 0; i < row.size(); i++) {
-	 * result += "\"" + columnNames[i] + "\": " + "\"" + row.get(i) + "\"" +
-	 * ","; }
-	 * 
-	 * return "{" + result.substring(0, result.length() - 1) + "}"; }
-	 */
 }

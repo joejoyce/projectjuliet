@@ -62,16 +62,109 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private PreparedStatement addTradeBatch;
 	private PreparedStatement deleteOrderBatch;
 	private PreparedStatement modifyOrderBatch;
+	
 	private ArrayList<OrderVolumeReduction> volumeReductions = new ArrayList<OrderVolumeReduction>();
-	private final static ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+	//private final static ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 	private ArrayList<Runnable> batchQueryExecuteStartCallbacks = new ArrayList<Runnable>();
 	private ArrayList<Runnable> batchQueryExecuteEndCallbacks = new ArrayList<Runnable>();
+	
 	private int batchSize = 0;
 	private int delete = 0;
 	private int add = 0;
 
 	private long lastCommitNs = -1;
+	
+	private long nextCommitTime = System.nanoTime() + 1000000000L;
+	private int opsBatched = 0;
+	private static int batchThreshold = 4500;
+	private void maybeExecuteBatch() {
+		if(++opsBatched >= batchThreshold || System.nanoTime() >= nextCommitTime) {
+			executeBatch();
+			nextCommitTime = System.nanoTime() + 1000000000L;
+		}
+	}
+	private void executeBatch () {
+		long start = System.nanoTime();
+		
+		try {
+			synchronized (batchQueryExecuteStartCallbacks) {
+				for (Runnable r : batchQueryExecuteStartCallbacks) {
+					r.run();
+				}
+			}
 
+			Debug.println(Debug.INFO, "Total batch size: " + batchSize);
+			
+			Debug.println(Debug.INFO, "About to execute addOrder batch: " + add);
+			add = 0;
+			long then = start;
+			synchronized (addOrderBatch) {
+				addOrderBatch.executeBatch();
+				addOrderBatch.clearBatch();
+			}
+			double diff = Math.abs(System.nanoTime() - then);
+			diff /= 1000000;
+			Debug.println(Debug.INFO, "Taken: " + diff);
+
+			Debug.println(Debug.INFO, "About to execute addTrade batch");
+			then = System.nanoTime();
+			synchronized (addTradeBatch) {
+				addTradeBatch.executeBatch();
+				addTradeBatch.clearBatch();
+			}
+			diff = Math.abs(System.nanoTime() - then);
+			diff /= 1000000;
+			Debug.println(Debug.INFO, "Taken: " + diff);
+
+			Debug.println(Debug.INFO, "About to execute deleteOrder batch: " + delete);
+			delete = 0;
+			then = System.nanoTime();
+			synchronized (deleteOrderBatch) {
+				deleteOrderBatch.executeBatch();
+				deleteOrderBatch.clearBatch();
+			}
+			diff = Math.abs(System.nanoTime() - then);
+			diff /= 1000000;
+			Debug.println(Debug.INFO, "Taken: " + diff);
+
+			Debug.println(Debug.INFO, "About to execute modifyOrderBatch batch");
+			then = System.nanoTime();
+			synchronized (modifyOrderBatch) {
+				modifyOrderBatch.executeBatch();
+				modifyOrderBatch.clearBatch();
+			}
+			diff = Math.abs(System.nanoTime() - then);
+			diff /= 1000000;
+			Debug.println(Debug.INFO, "Taken: " + diff);
+
+			synchronized (volumeReductions) {
+				for (int i = 0; i < volumeReductions.size();) {
+					if (volumeReductions.get(i).tryToApply()) {
+						volumeReductions.remove(i);
+					} else {
+						i++;
+					}
+				}
+			}
+
+			batchSize = 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		long totalTaken = Math.abs(System.nanoTime() - start);
+		lastCommitNs = totalTaken;
+		totalTaken /= 1000000;
+		
+		synchronized (batchQueryExecuteEndCallbacks) {
+			for (Runnable r : batchQueryExecuteEndCallbacks) {
+				r.run();
+			}
+		}
+
+		Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
+		Debug.println(Debug.INFO, "-------------------------------------");
+	}
 	/**
 	 * Creates a new DatabaseConnectionUnit and schedules execution of batch queries.
 	 * @param c A connection to the database.
@@ -81,103 +174,15 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		this.connection = c;
 		this.addOrderBatch = connection.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		this.addTradeBatch = connection.prepareStatement("CALL addTrade(?, ?, ?, ?, ?, ?, ?, ?)");
-		// this.addTradeBatch =
-		// connection.prepareStatement("INSERT INTO trade VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0)");
-		// this.deleteOrderBatch =
-		// connection.prepareStatement("UPDATE order_book SET is_deleted=1 WHERE (order_id = ?) AND (symbol_id = ?)");
-		// this.deleteOrderBatch =
-		// connection.prepareStatement("DELETE FROM order_book WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.deleteOrderBatch = connection.prepareStatement("CALL deleteOrder(?, ?, ?, ?)");
-		// this.modifyOrderBatch =
-		// connection.prepareStatement("UPDATE order_book SET price = ?, volume = ?, updated_s = ?, updated_seq_num = ? WHERE (order_id = ?) AND (symbol_id = ?)");
 		this.modifyOrderBatch = connection.prepareStatement("CALL modifyOrder(?, ?, ?, ?, ?, ?)");
 
-		// Negative as not yet done
-
-		final Runnable executeBatch = new Runnable() {
+		/*final Runnable executeBatch = new Runnable() {
 			public void run() {
-				try {
-					synchronized (batchQueryExecuteStartCallbacks) {
-						for (Runnable r : batchQueryExecuteStartCallbacks) {
-							r.run();
-						}
-					}
-
-					Debug.println(Debug.INFO, "Total batch size: " + batchSize);
-					long start = System.nanoTime();
-
-					Debug.println(Debug.INFO, "About to execute addOrder batch: " + add);
-					add = 0;
-					long then = start;
-					synchronized (addOrderBatch) {
-						addOrderBatch.executeBatch();
-						addOrderBatch.clearBatch();
-					}
-					double diff = Math.abs(System.nanoTime() - then);
-					diff /= 1000000;
-					Debug.println(Debug.INFO, "Taken: " + diff);
-
-					Debug.println(Debug.INFO, "About to execute addTrade batch");
-					then = System.nanoTime();
-					synchronized (addTradeBatch) {
-						addTradeBatch.executeBatch();
-						addTradeBatch.clearBatch();
-					}
-					diff = Math.abs(System.nanoTime() - then);
-					diff /= 1000000;
-					Debug.println(Debug.INFO, "Taken: " + diff);
-
-					Debug.println(Debug.INFO, "About to execute deleteOrder batch: " + delete);
-					delete = 0;
-					then = System.nanoTime();
-					synchronized (deleteOrderBatch) {
-						deleteOrderBatch.executeBatch();
-						deleteOrderBatch.clearBatch();
-					}
-					diff = Math.abs(System.nanoTime() - then);
-					diff /= 1000000;
-					Debug.println(Debug.INFO, "Taken: " + diff);
-
-					Debug.println(Debug.INFO, "About to execute modifyOrderBatch batch");
-					then = System.nanoTime();
-					synchronized (modifyOrderBatch) {
-						modifyOrderBatch.executeBatch();
-						modifyOrderBatch.clearBatch();
-					}
-					diff = Math.abs(System.nanoTime() - then);
-					diff /= 1000000;
-					Debug.println(Debug.INFO, "Taken: " + diff);
-
-					synchronized (volumeReductions) {
-						for (int i = 0; i < volumeReductions.size();) {
-							if (volumeReductions.get(i).tryToApply()) {
-								volumeReductions.remove(i);
-							} else
-								i++;
-						}
-					}
-
-					batchSize = 0;
-
-					long totalTaken = Math.abs(System.nanoTime() - start);
-					lastCommitNs = totalTaken;
-					totalTaken /= 1000000;
-					
-					System.out.println("Waiting to enter batchQueryExecuteEndCallbacks");
-					synchronized (batchQueryExecuteEndCallbacks) {
-						for (Runnable r : batchQueryExecuteEndCallbacks) {
-							r.run();
-						}
-					}
-
-					Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
-					Debug.println(Debug.INFO, "-------------------------------------");
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
+				
 			}
 		};
-		scheduler.scheduleAtFixedRate(executeBatch, 5, 1, TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(executeBatch, 5, 1, TimeUnit.SECONDS);*/
 	}
 
 	@Override
@@ -196,6 +201,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		}
 		batchSize++;
 		add++;
+		maybeExecuteBatch();
 	}
 
 	@Override
@@ -210,6 +216,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			modifyOrderBatch.addBatch();
 		}
 		batchSize++;
+		maybeExecuteBatch();
 	}
 
 	@Override
@@ -230,6 +237,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		}
 		batchSize++;
 		delete++;
+		maybeExecuteBatch();
 	}
 
 	@Override
@@ -246,17 +254,18 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			addTradeBatch.addBatch();
 		}
 		batchSize++;
+		maybeExecuteBatch();
 	}
 
 	@Override
 	public void addStockSummary(long symbolIndex, long time_s, long time_ns, long highPrice, long lowPrice, long openPrice, long closePrice, long totalVolume) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("INSERT INTO stock_summary (symbol_id, high_price, low_price, total_volume, " + "updated_s, updated_ns) " + "VALUES (?, ?, ?, ?, ?, ?)");
+		/*PreparedStatement statement = connection.prepareStatement("INSERT INTO stock_summary (symbol_id, high_price, low_price, total_volume, " + "updated_s, updated_ns) " + "VALUES (?, ?, ?, ?, ?, ?)");
 		statement.setLong(1, symbolIndex);
 		statement.setLong(2, highPrice);
 		statement.setLong(3, lowPrice);
 		statement.setLong(4, totalVolume);
 		statement.setLong(5, time_s);
-		statement.setLong(6, time_ns);
+		statement.setLong(6, time_ns);*/
 		// batchQuery.addBatch(statement.toString().split(":")[1]);
 		// batchSize ++;
 	}

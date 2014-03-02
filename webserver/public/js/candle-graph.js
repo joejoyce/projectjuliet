@@ -1,15 +1,17 @@
 $(document).ready(function() {
 	var cData = $('meta[name=cData]').attr("content");
 	cData = $.parseJSON(cData);
+  cData.sort(function(a,b) {
+		return a.time - b.time;
+	});
  	var symbol = $('meta[name=symbol]').attr("content");
 
  	var volume = [];
  	var ohlc = [];
 
  	for (i = 0; i < cData.length; i++) {
- 		console.log(cData[i].time*1000);
 		ohlc.push([			
-			Number(cData[i].time*1000), 
+			Number((cData[i].time-18000)*1000), 
 			Number(cData[i].open.toFixed(2)), 
 			Number(cData[i].high.toFixed(2)), 
 			Number(cData[i].low.toFixed(2)), 
@@ -17,7 +19,7 @@ $(document).ready(function() {
 		]);
 		
 		volume.push([
-			Number(cData[i].time*1000),
+			Number((cData[i].time-18000)*1000),
 			Number(cData[i].volume) 
 		]);
 	}

@@ -78,7 +78,7 @@ $(document).ready(function() {
                             var x = (new Date()).getTime();
                             var y = Number(response.data);
 
- 			    if(series.data.length > 30) {
+ 			                if(series.data.length > 30) {
                                 var graph = series.graph;
                                 var area = series.area;
                                 var currentShift = (graph && graph.shift) || 0;
@@ -133,7 +133,7 @@ $(document).ready(function() {
         }]
     });
 
- $('#latency-chart').highcharts({
+   $('#latency-chart').highcharts({
         chart: {
             type: 'spline',
             animation: Highcharts.svg, // don't animate in old IE

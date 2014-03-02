@@ -26,6 +26,8 @@ public class TestCallback extends Callback {
 	public void callback(Container data) {
 		MockXDPResponse response = (MockXDPResponse) data;
 		int seq = response.getSequenceNo();
+		if(seq % 10000 == 0)
+			System.out.println("received ACK for "+seq+"th packet.");
 		tracker.ackPacketReturned(seq);
 	}
 
