@@ -6,22 +6,24 @@
 
 /*
  * Constructor
- * url         URL for ajax call for server-side data
- * parameter   parameter for ajax call
- * symbol      the symbol for which this order book is created
- * clientData  data currently on client-side
- * targetRows  the rows of the target order book table
- * sorter      a sorter function that sorts orders strictly (order * order -> bool)
- * flashTime   the time for which new/removed rows should flash for (ms)
+ * url               URL for ajax call for server-side data
+ * parameter         parameter for ajax call
+ * symbol            the symbol for which this order book is created
+ * clientData        data currently on client-side
+ * targetRows        the rows of the target order book table
+ * sorter            a sorter function that sorts orders strictly (order * order -> bool)
+ * insertFlashTime   the time for which newly inserted rows should flash (ms)
+ * removeFlashTime   the time for which removed rows should flash (ms)
  */
-function OrderBook(url, parameter, symbol, clientData, targetRows, sorter, flashTime) {
+function OrderBook(url, parameter, symbol, clientData, targetRows, sorter, insertFlashTime, removeFlashTime) {
 	this.url = url;
 	this.parameter = parameter;
 	this.symbol = symbol;
 	this.clientData = clientData;
 	this.targetRows = targetRows;
 	this.sorter = sorter;
-	this.flashTime = flashTime
+	this.insertFlashTime = insertFlashTime;
+	this.removeFlashTime = removeFlashTime;
 }
 
 /*
@@ -151,7 +153,7 @@ OrderBook.prototype.flashElement = function(element, callback) {
 	element.addClass('flash-old');
 	var interval = window.setTimeout(
 		function() { callback(); },
-		self.flashTime
+		self.removeFlashTime
 	);
 }
 
@@ -178,7 +180,7 @@ OrderBook.prototype.insertRowBefore = function(row, order) {
 	var newRow = $(htmlRow).insertBefore(row);
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
-		self.flashTime
+		self.insertFlashTime
 	);
 }
 
@@ -188,7 +190,7 @@ OrderBook.prototype.insertRowAfter = function(row, order) {
 	var newRow = $(htmlRow).insertAfter(row);
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
-		self.flashTime
+		self.insertFlashTime
 	);
 }
 
@@ -203,6 +205,7 @@ $(document).ready(function() {
 		client.offerList,
 		'#offer-rows tr',
 		function(orderA, orderB) { return (orderA >= orderB); },
+		1200,
 		800
 	);
 	window.setInterval(function() { offerTable.refresh(offerTable); }, 2000);
@@ -214,6 +217,7 @@ $(document).ready(function() {
 		client.bidList,
 		'#bid-rows tr',
 		function(orderA, orderB) { return (orderA <= orderB); },
+		1200,
 		800
 	);
 	window.setInterval(function() { bidTable.refresh(bidTable); }, 2000);
