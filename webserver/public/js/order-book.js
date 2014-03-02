@@ -149,14 +149,6 @@ OrderBook.prototype.extractArrayOrderID = function(orderArray) {
 OrderBook.prototype.flashElement = function(element, callback) {
 	var self = this;
 	element.addClass('flash-old');
-	/*
-		.find('td').wrapInner('<div style="display:block;" />')
-		.parent()
-		.find('td > div')
-		.slideUp(700, function() {
-			$(this).parent().parent().remove();
-		});
-	*/
 	var interval = window.setTimeout(
 		function() { callback(); },
 		self.flashTime
@@ -184,16 +176,6 @@ OrderBook.prototype.insertRowBefore = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertBefore(row);
-	/*newRow
-		.find('td')
-		.wrapInner('<div style="display: none;" />')
-		.parent()
-		.find('td > div')
-		.slideDown(700, function(){
-			var $set = $(this);
-			$set.replaceWith($set.contents());
-		});
-	*/
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
 		self.flashTime
@@ -204,16 +186,6 @@ OrderBook.prototype.insertRowAfter = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertAfter(row);
-	/*$(newRow)
-		.find('td')
-		.wrapInner('<div style="display: none;" />')
-		.parent()
-		.find('td > div')
-		.slideDown(700, function(){
-			var $set = $(this);
-			$set.replaceWith($set.contents());
-		});
-	*/
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
 		self.flashTime
