@@ -31,6 +31,7 @@ public class MovingAverageRequest extends QueryPacket {
 		this.start = start;
 		this.length = length;
 		this.secondsPerAverage = secondsPerAverage;
+		this.setHighPriority();
 	}
 
 	public long getSymbolId() {

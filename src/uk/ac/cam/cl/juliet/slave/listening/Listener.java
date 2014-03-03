@@ -244,7 +244,7 @@ public class Listener {
 	private void readPacket() throws InterruptedException {
 		Container container = null;
 
-		while(null == (container = receiveQueue.poll(100,TimeUnit.SECONDS))) {
+		while(null == (container = receiveQueue.poll(100,TimeUnit.MILLISECONDS))) {
 			databaseConnection.maybeEmergencyBatch();
 			if(Thread.interrupted())
 				return;
@@ -276,31 +276,31 @@ public class Listener {
 		databaseConnection.maybeEmergencyBatch();
 	}
 
-	private void processXDPRequest(XDPRequest container) {
+	private void processXDPRequest(XDPRequest container) throws InterruptedException {
 		boolean result = this.xdp.decode(container);
 		if (result == false) {
 			// The decoding did not require the database - send the response straight back.
 			XDPResponse response = new XDPResponse(container.getPacketId(), false);
-			try {
+			//try {
 				responseQueue.put(response);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			//} catch (InterruptedException e) {
+			//	e.printStackTrace();
+			//}
 		} else {
 			// The decoding required the database - wait until all changes have been committed.
-			waitingForBatchQueriesLock.lock();
+			waitingForBatchQueriesLock.lockInterruptibly();
 			waitingForBatchQueries.add(container);
 			waitingForBatchQueriesLock.unlock();
 			return;
 		}
 	}
 
-	private void processQueryPacket(QueryPacket container) {
-		try {
+	private void processQueryPacket(QueryPacket container) throws InterruptedException {
+		//try {
 			responseQueue.put(query.runQuery(container));
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}		
+		//} catch (InterruptedException e) {
+		//	e.printStackTrace();
+		//}		
 	}
 
 	private void handleConfigurationPacket(ConfigurationPacket packet) {
@@ -317,16 +317,16 @@ public class Listener {
 		}
 	}
 
-	private void handleLatencyMonitor(LatencyMonitor m) {
+	private void handleLatencyMonitor(LatencyMonitor m) throws InterruptedException {
 		m.outboundDequeue = System.nanoTime();
 		if (null != databaseConnection)
 			m.databaseRoundTrip = databaseConnection.getLastCommitNS();
 		m.inboundQueue = System.nanoTime();
-		try {
+		//try {
 			responseQueue.put(m);
-		} catch (InterruptedException e) {
+		/*} catch (InterruptedException e) {
 			Debug.println(Debug.ERROR, "Unable to queue up latencyMonitor return");
 			e.printStackTrace();
-		}
+		}*/
 	}
 }

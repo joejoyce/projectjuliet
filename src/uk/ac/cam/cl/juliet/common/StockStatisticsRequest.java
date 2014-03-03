@@ -20,6 +20,7 @@ public class StockStatisticsRequest extends QueryPacket {
 	public StockStatisticsRequest(long symbolID) {
 		super();
 		this.symbol_id = symbolID;
+		this.setHighPriority();
 	}
 	/**
 	 * Returns the symbol index of the stock which statistics you are requesting
