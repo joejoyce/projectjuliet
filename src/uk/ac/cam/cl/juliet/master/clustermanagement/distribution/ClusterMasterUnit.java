@@ -159,12 +159,12 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public long sendPacket(Container msg, Callback cb) throws NoClusterException {
 		Client c = clientQueue.peek();
 		if(null == c)
-			throw new NoClusterException("The Pis have all gone :'(");
+			throw new NoClusterException("The Pis have all gone :'(" + clientQueue.size());
 		long l = 0;
 		while(0 > (l = c.send(msg,cb))) {
 			c = clientQueue.peek();
 			if(null == c)
-				throw new NoClusterException("The Pis have all gone :'(");
+				throw new NoClusterException("The Pis have all gone :'(: " + clientQueue.size());
 		}
 		currentSystemTime = msg.getTimeStampS();
 		return l;

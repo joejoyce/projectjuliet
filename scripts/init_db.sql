@@ -80,7 +80,7 @@ BEGIN
     
     IF last_updated_s IS NULL THEN
         -- New order
-        INSERT INTO order_book VALUES (p_order_id, p_symbol_id, p_price,
+        REPLACE order_book VALUES (p_order_id, p_symbol_id, p_price,
                                        p_volume, p_is_ask, p_placed_s,
                                        p_placed_seq_num, p_updated_s,
                                        p_updated_seq_num, 1, 0);
@@ -122,7 +122,7 @@ BEGIN
 
     IF last_updated_s IS NULL THEN
         -- The delete for this order was processed first
-        INSERT INTO order_book VALUES (p_order_id, p_symbol_id, 0, 0, 0,
+        REPLACE order_book VALUES (p_order_id, p_symbol_id, 0, 0, 0,
                                        0, 0, p_s, p_seq_num, 0, 1);
     ELSEIF last_updated_s < p_s OR (last_updated_s = p_s
                  AND last_updated_seq_num < p_seq_num) THEN
@@ -154,7 +154,7 @@ BEGIN
     
     IF last_updated_s IS NULL THEN
         -- This modify is the first message for the order to be processed
-        INSERT INTO order_book VALUES (p_order_id, p_symbol_id, p_price,
+        REPLACE order_book VALUES (p_order_id, p_symbol_id, p_price,
                                        p_volume, 0, 0, 0, p_s, p_seq_num,
                                        0, 0);
     ELSEIF last_updated_s < p_s OR (last_updated_s = p_s
@@ -191,7 +191,7 @@ BEGIN
 
     IF last_updated_s IS NULL THEN
         -- New trade
-        INSERT INTO trade VALUES (p_trade_id, p_symbol_id, p_price, p_volume,
+        REPLACE trade VALUES (p_trade_id, p_symbol_id, p_price, p_volume,
                                   p_offered_s, p_offered_seq_num,
                                   p_updated_s, p_updated_seq_num, 1, 0);
     ELSEIF last_updated_s < p_updated_s OR (last_updated_s = p_updated_s
@@ -232,7 +232,7 @@ BEGIN
 
     IF last_updated_s IS NULL THEN
         -- The delete trade message was processed first
-        INSERT INTO trade VALUES (p_trade_id, p_symbol_id, 0, 0,
+        REPLACE trade VALUES (p_trade_id, p_symbol_id, 0, 0,
                                   0, 0, p_s, p_seq_num, 0, 1);
     ELSEIF last_updated_s < p_s OR (last_updated_s = p_s
                  AND last_updated_seq_num < p_seq_num) THEN
@@ -244,6 +244,8 @@ BEGIN
     END IF;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS modifyTrade;
 
 DELIMITER //
 CREATE PROCEDURE modifyTrade(IN p_original_trade_id int(10) unsigned,
@@ -262,7 +264,7 @@ BEGIN
 
     IF last_updated_s IS NULL THEN
         -- The modify trade message was processed first
-        INSERT INTO trade VALUES (p_trade_id, p_symbol_id, p_price,
+        REPLACE trade VALUES (p_trade_id, p_symbol_id, p_price,
                                   p_volume, 0, 0, p_s, p_seq_num,
                                   0, 0);
     ELSEIF last_updated_s < p_s OR (last_updated_s = p_s
