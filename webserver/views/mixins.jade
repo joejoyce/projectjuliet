@@ -2,7 +2,7 @@ mixin symbol_list(list)
   ul#symbols
     each symbol in list
       li(data-symbol="#{symbol.symbol}")
-        a(href="/stock-price/#{symbol.symbol_id}" title="#{symbol.company_name}") #{symbol.symbol}
+        a(href="/order-book/#{symbol.symbol_id}" title="#{symbol.company_name}") #{symbol.symbol}
 
 mixin symbol_summary(symbol, stats)
   div.symbol-panel
@@ -34,13 +34,14 @@ mixin symbol_summary(symbol, stats)
   nav.symbol-nav
     ul.symbol-menu
       li
-        a(href="/stock-price/#{symbol.symbol_id}")
-          i.icon.icon-math_ico
-          |  Stock Price
-      li
         a(href="/order-book/#{symbol.symbol_id}")
           i.icon.icon-newspaper
           |  Order Book
+      li
+        a(href="/stock-price/#{symbol.symbol_id}")
+          i.icon.icon-math_ico
+          |  Stock Price
+      
 
 mixin client_list(list)
   div#client-list
