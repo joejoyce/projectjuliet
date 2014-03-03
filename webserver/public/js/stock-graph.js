@@ -5,7 +5,11 @@ $(document).ready(function() {
   var symbol = $('meta[name=symbol]').attr("content");
   var chartData = [];
   
-  $(stockData).each(function(i, data) {
+  stockData.sort(function(a, b) {
+    return a.time - b.time;
+  });
+
+  stockData.forEach(function(data) {
     chartData.push([(data.offered_s-18000)*1000,data.price*priceScale]);
   });
   
