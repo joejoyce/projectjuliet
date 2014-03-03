@@ -248,8 +248,7 @@ public class Listener {
 			databaseConnection.maybeEmergencyBatch();
 			ck = true;
 		}
-		if(!ck)
-			databaseConnection.maybeEmergencyBatch();
+
 
 		Debug.println(Debug.INFO, "Got new object: " + container.toString());
 
@@ -273,6 +272,8 @@ public class Listener {
 			diff /= 1000000;
 			Debug.println(Debug.INFO, "Time taken for processing: " + diff + "ms");
 		}
+		if(!ck)
+			databaseConnection.maybeEmergencyBatch();
 	}
 
 	private void processXDPRequest(XDPRequest container) {
