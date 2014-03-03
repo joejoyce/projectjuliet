@@ -62,14 +62,15 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 	var removeList = this.listSubtract(clientData, serverData, this.compareOrders);
 	console.log("inlen: " + insertList.length + ", remlen: " + removeList.length);
 	console.log("targetlength: " + self.targetRows.length);
+        console.dir($(self.targetRows));
 	// Reduce the remove list to an array of order IDs
 	removeList = this.extractArrayOrderID(removeList);
 
 	var rowCount = 25;
 	// Perform required insertions
-	$.each(insertList, function(i, insertOrder) {
+        insertList.forEach(function(insertOrder) {
 		$(self.targetRows).each(function(index, row) {
-			console.log("why>?");
+			//console.log("why>?: " + index);
 			row = $(row);
 			if (sorter(parseInt(row.data('price')), insertOrder.price)) {
 				self.insertRowBefore(row, insertOrder);
@@ -77,6 +78,7 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 			} else {
 				if (index >= rowCount - 2) {
 					self.insertRowAfter(row, insertOrder);
+					return false;
 				}
 			}
 		});
