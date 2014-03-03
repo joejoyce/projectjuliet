@@ -237,7 +237,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		int total = 0;
 		Iterator<Client> i = clientQueue.iterator();
 		while(i.hasNext())
-			total += i.next().packetsSentThisSecond;
+			total += i.next().packetThroughput;
 		//clientQueue.releaseIterator();
 		return total;
 	}
