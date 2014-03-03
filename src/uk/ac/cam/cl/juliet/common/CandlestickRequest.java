@@ -30,6 +30,7 @@ public class CandlestickRequest extends QueryPacket {
 		this.start = start;
 		this.resolution = resolution;
 		this.timeStamp = timeS;
+		this.setHighPriority();
 	}
 
 	public long getSymbolId() {
