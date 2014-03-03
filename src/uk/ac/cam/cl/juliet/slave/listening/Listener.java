@@ -246,6 +246,8 @@ public class Listener {
 
 		while(null == (container = receiveQueue.poll(100,TimeUnit.SECONDS))) {
 			databaseConnection.maybeEmergencyBatch();
+			if(Thread.interrupted())
+				return;
 		}
 
 
