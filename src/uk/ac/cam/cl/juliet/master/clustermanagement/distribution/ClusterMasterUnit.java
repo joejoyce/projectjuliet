@@ -37,7 +37,6 @@ final class ClientNameComparator implements Comparator<Client> {
 	}
 }
 
-
 class RepeatedSend implements Runnable {
 	private ClusterMaster cm;
 	private Container c;

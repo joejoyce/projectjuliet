@@ -36,6 +36,7 @@ public class LatencyMonitorCallback extends Callback {
 	}
 	@Override
 	public void callback(Container data) {
+		Debug.println(Debug.ERROR,"Repeated callback for latencymonitor");
 		lock.lock();
 		if(data instanceof LatencyMonitor) {
 			LatencyMonitor m = (LatencyMonitor) data;

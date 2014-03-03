@@ -47,7 +47,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	private Socket server;
 	private Connection con;
 
-	private static LatencyMonitorCallback lm = new LatencyMonitorCallback(1000); //Run every second
+	private static LatencyMonitorCallback lm = null; //Run every second
 	
 	private NotificationsList notifications = new NotificationsList();
 	private OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
@@ -204,7 +204,8 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 																		
 			//cb.numSentTo = cm.broadcast(lm, cb);
 			//cb.waitUntilDone();
-			
+			if(null == lm)
+				lm = new LatencyMonitorCallback(1000);
 			pw.write(lm.generateJson());
 			return;
 		}
