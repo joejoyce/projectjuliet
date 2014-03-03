@@ -6,7 +6,7 @@ $(document).ready(function() {
   var chartData = [];
   
   stockData.sort(function(a, b) {
-    return a.time - b.time;
+    return a.offered_s - b.offered_s;
   });
 
   stockData.forEach(function(data) {
