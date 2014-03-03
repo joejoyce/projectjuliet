@@ -60,7 +60,8 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 	// Construct lists of entries to insert or remove
 	var insertList = this.listSubtract(serverData, clientData, this.compareOrders);
 	var removeList = this.listSubtract(clientData, serverData, this.compareOrders);
-	
+	console.log("inlen: " + insertList.length + ", remlen: " + removeList.length);
+	console.log("targetlength: " + self.targetRows.length);
 	// Reduce the remove list to an array of order IDs
 	removeList = this.extractArrayOrderID(removeList);
 
@@ -68,6 +69,7 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 	// Perform required insertions
 	$.each(insertList, function(i, insertOrder) {
 		$(self.targetRows).each(function(index, row) {
+			console.log("why>?");
 			row = $(row);
 			if (sorter(parseInt(row.data('price')), insertOrder.price)) {
 				self.insertRowBefore(row, insertOrder);
@@ -89,7 +91,13 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 			duplicates.push(row.data('order-id'));
 			if ($.inArray(row.data('order-id'), removeList) >= 0) {
 				self.flashElement(row, function() {
-					row.remove();
+					$(row).find('td').wrapInner('<div style="display:block;" />')
+  				.parent()
+    			.find('td > div')
+					.slideUp(700, function() {
+						$(this).parent().parent().remove();
+						row.remove();
+					});
 				});
 			}
 		}
@@ -151,6 +159,7 @@ OrderBook.prototype.extractArrayOrderID = function(orderArray) {
 OrderBook.prototype.flashElement = function(element, callback) {
 	var self = this;
 	element.addClass('flash-old');
+
 	var interval = window.setTimeout(
 		function() { callback(); },
 		self.removeFlashTime
@@ -178,6 +187,13 @@ OrderBook.prototype.insertRowBefore = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertBefore(row);
+	$(newRow).find('td').wrapInner('<div style="display: none;" />')
+  .parent()
+  .find('td > div')
+  .slideDown(700, function(){
+    var $set = $(this);
+    $set.replaceWith($set.contents());
+  });
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
 		self.insertFlashTime
@@ -188,6 +204,13 @@ OrderBook.prototype.insertRowAfter = function(row, order) {
 	var self = this;
 	var htmlRow = this.generateRow(order);
 	var newRow = $(htmlRow).insertAfter(row);
+	$(newRow).find('td').wrapInner('<div style="display: none;" />')
+  .parent()
+  .find('td > div')
+  .slideDown(700, function(){
+		var $set = $(this);
+		$set.replaceWith($set.contents());
+	});
 	var interval = window.setTimeout(
 		function() { newRow.removeClass('flash-new'); },
 		self.insertFlashTime
@@ -208,7 +231,7 @@ $(document).ready(function() {
 		1200,
 		800
 	);
-	window.setInterval(function() { offerTable.refresh(offerTable); }, 2000);
+	window.setInterval(function() { offerTable.refresh(offerTable); }, 4000);
 	
 	var bidTable = new OrderBook(
 		'/api/v1/orders/bids/',
@@ -220,5 +243,5 @@ $(document).ready(function() {
 		1200,
 		800
 	);
-	window.setInterval(function() { bidTable.refresh(bidTable); }, 2000);
+	window.setInterval(function() { bidTable.refresh(bidTable); }, 4000);
 });

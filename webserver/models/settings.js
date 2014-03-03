@@ -27,8 +27,8 @@ exports.getSkip = function(callback) {
   client.setEncoding('utf8');
   client.write('config|get data.rate\n');
   client.on('data', function(data) {
-  	data = JSON.parse(data);
-        client.end();
+    data = JSON.parse(data);
+    client.end();
   	callback(data.skip);
   });
 };
