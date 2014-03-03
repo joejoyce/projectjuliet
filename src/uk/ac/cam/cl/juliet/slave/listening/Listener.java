@@ -243,10 +243,9 @@ public class Listener {
 
 	private void readPacket() throws InterruptedException {
 		Container container = null;
-		boolean ck = false;
+
 		while(null == (container = receiveQueue.poll(100,TimeUnit.SECONDS))) {
 			databaseConnection.maybeEmergencyBatch();
-			ck = true;
 		}
 
 
@@ -272,8 +271,7 @@ public class Listener {
 			diff /= 1000000;
 			Debug.println(Debug.INFO, "Time taken for processing: " + diff + "ms");
 		}
-		if(!ck)
-			databaseConnection.maybeEmergencyBatch();
+		databaseConnection.maybeEmergencyBatch();
 	}
 
 	private void processXDPRequest(XDPRequest container) {
