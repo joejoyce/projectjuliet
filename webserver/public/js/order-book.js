@@ -78,6 +78,7 @@ OrderBook.prototype.update = function(serverData, clientData, tableRows, sorter)
 			} else {
 				if (index >= rowCount - 2) {
 					self.insertRowAfter(row, insertOrder);
+					return false;
 				}
 			}
 		});
