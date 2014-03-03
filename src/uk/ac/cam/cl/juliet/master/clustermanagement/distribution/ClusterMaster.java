@@ -2,6 +2,7 @@ package uk.ac.cam.cl.juliet.master.clustermanagement.distribution;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.ScheduledFuture;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
@@ -125,5 +126,9 @@ public interface ClusterMaster {
 	 * @return The number of clients currently connected
 	 */
 	public abstract int getClientCount();
+	
+	public ScheduledFuture<?> repeatedBroadcast(Container c, Callback cb, long time);
+	
+	public ScheduledFuture<?> repeatedSend(Container c, Callback cb, long time);
 
 }

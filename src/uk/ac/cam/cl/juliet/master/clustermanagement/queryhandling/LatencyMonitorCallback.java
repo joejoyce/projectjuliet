@@ -3,11 +3,14 @@ package uk.ac.cam.cl.juliet.master.clustermanagement.queryhandling;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
 import uk.ac.cam.cl.juliet.common.LatencyMonitor;
+import uk.ac.cam.cl.juliet.master.ClusterServer;
 import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.Callback;
+import uk.ac.cam.cl.juliet.master.clustermanagement.distribution.ClusterMaster;
+
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class LatencyMonitorCallback extends Callback{
+public class LatencyMonitorCallback extends Callback {
 	private long timeoutStamp;
 	public int numSentTo;
 	private int numBack = 0;
@@ -18,8 +21,10 @@ public class LatencyMonitorCallback extends Callback{
 	private long AvNetworkRTTime;
 	private Lock lock = new ReentrantLock();
 	
-	public LatencyMonitorCallback(long seconds) {
-		timeoutStamp = System.nanoTime() + (seconds * 1000000000L);
+	public LatencyMonitorCallback(long intervalMs) {
+		ClusterMaster c = ClusterServer.cm;
+		LatencyMonitor lm = new LatencyMonitor();
+		c.repeatedSend(lm,this,intervalMs * 1000000L);
 	}
 	public boolean isDone() {
 		
@@ -27,7 +32,7 @@ public class LatencyMonitorCallback extends Callback{
 	}
 	
 	private long average(long av, long nVal) {
-		return (av * numBack + nVal) / (numBack + 1);
+		return (av/4) + 3* (nVal/4);
 	}
 	@Override
 	public void callback(Container data) {

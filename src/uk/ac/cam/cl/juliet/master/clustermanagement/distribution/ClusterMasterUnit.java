@@ -153,8 +153,6 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		socket = null;
 	}
 	
-
-	
 	@Override
 	public long sendPacket(Container msg, Callback cb) throws NoClusterException {
 		Client c = clientQueue.peek();
@@ -256,14 +254,14 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	 * @param time In milliseconds between them - this is the time between attempted send
 	 * @return A sechduledFuture - this can be used to cancel it etc...
 	 */
-	public ScheduledFuture<?> repeatedSend(Container c, Callback cb, long time) {
+	public ScheduledFuture<?> repeatedSend(Container c, Callback cb, long timeMs) {
 		RepeatedSend rs = new RepeatedSend(this,c,cb);
-		return workers.scheduleAtFixedRate(rs, 0, time, TimeUnit.MILLISECONDS);
+		return workers.scheduleAtFixedRate(rs, 0, timeMs, TimeUnit.MILLISECONDS);
 	}
 	
-	public ScheduledFuture<?> repeatedBroadcast(Container c, Callback cb, long time) {
+	public ScheduledFuture<?> repeatedBroadcast(Container c, Callback cb, long timeMs) {
 		RepeatedSend rs = new RepeatedSend(this,c,cb,true);
-		return workers.scheduleAtFixedRate(rs,0,time,TimeUnit.MILLISECONDS);
+		return workers.scheduleAtFixedRate(rs,0,timeMs,TimeUnit.MILLISECONDS);
 	}
 	
 }
