@@ -24,7 +24,7 @@ public class LatencyMonitorCallback extends Callback {
 	public LatencyMonitorCallback(long intervalMs) {
 		ClusterMaster c = ClusterServer.cm;
 		LatencyMonitor lm = new LatencyMonitor();
-		c.repeatedSend(lm,this,intervalMs * 1000000L);
+		c.repeatedSend(lm,this,intervalMs);
 	}
 	public boolean isDone() {
 		
