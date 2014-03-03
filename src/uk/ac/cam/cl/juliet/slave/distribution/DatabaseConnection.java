@@ -345,4 +345,7 @@ public interface DatabaseConnection {
 	 * @param r The runnable to run.
 	 */
 	public void addBatchQueryExecuteEndCallback(Runnable r);
+	
+	
+	public void maybeEmergencyBatch();
 }

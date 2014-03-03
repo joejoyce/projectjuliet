@@ -13,6 +13,7 @@ public abstract class Container implements Serializable {
 	private long id;
 	private long timeStampS;
 
+	private boolean highPri = false;
 	
 	public long getPacketId() {
 		return this.id;
@@ -25,5 +26,11 @@ public abstract class Container implements Serializable {
 	}
 	public void setTimeStampS(long timeStampS) {
 		this.timeStampS = timeStampS;
+	}
+	public void setHighPriority(){
+		highPri = true;
+	}
+	public boolean isHighPriority() {
+		return highPri;
 	}
 }

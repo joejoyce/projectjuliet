@@ -381,4 +381,8 @@ public class MockDatabaseConnection implements DatabaseConnection {
 		// not needed
 		
 	}
+	
+	public void maybeEmergencyBatch() {
+		
+	}
 }

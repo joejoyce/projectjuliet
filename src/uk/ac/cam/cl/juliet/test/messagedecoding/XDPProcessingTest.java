@@ -338,6 +338,9 @@ class TestDatabase implements DatabaseConnection {
 		
 	}
 	
+	public void maybeEmergencyBatch(){
+		
+	}
 
 }
 
@@ -382,4 +385,6 @@ public class XDPProcessingTest {
 		else
 			System.out.println("Some or all tests failed");
 	}
+	
+
 }

@@ -78,15 +78,29 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private int opsBatched = 0;
 	private static int batchThreshold = 4500;
 	
+	private long lastBatchAdd = Long.MAX_VALUE;
+	
+	private void coreBatchRun() {
+		Debug.println(Debug.ERROR,"Running the batch");
+		long start = System.nanoTime();
+		executeBatch();
+		opsBatched = 0;
+		long end = System.nanoTime();
+		Debug.println(Debug.ERROR,"Finished the batch: took" + (end - start) / 1000000 + " milliseconds ");
+		nextCommitTime = end + 1000000000L;
+		lastBatchAdd = Long.MAX_VALUE;
+	}
+	
 	private void maybeExecuteBatch() {
 		if(++opsBatched >= batchThreshold || System.nanoTime() >= nextCommitTime) {
-			Debug.println(Debug.ERROR,"Running the batch");
-			long start = System.nanoTime();
-			executeBatch();
-			opsBatched = 0;
-			long end = System.nanoTime();
-			Debug.println(Debug.ERROR,"Finished the batch: took" + (end - start) / 1000000 + " milliseconds ");
-			nextCommitTime = end + 1000000000L;
+			coreBatchRun();
+		} else
+			lastBatchAdd = System.nanoTime();
+	}
+	
+	public void maybeEmergencyBatch() {
+		if((System.nanoTime() - lastBatchAdd) > 5000000000L) {
+			coreBatchRun();
 		}
 	}
 	private void executeBatch () {

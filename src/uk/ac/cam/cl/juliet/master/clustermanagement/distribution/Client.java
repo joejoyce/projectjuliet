@@ -57,6 +57,7 @@ public class Client implements Comparable<Client>{
 
 	private ScheduledFuture<?> cleaner = null;
 	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(200);
+	private ArrayBlockingQueue<InFlightContainer> priorityQueue = new ArrayBlockingQueue<InFlightContainer>(50);
 
 	private static AtomicInteger numberClients = new AtomicInteger(0);
 	private AtomicInteger workCount = new AtomicInteger(0);
@@ -225,7 +226,12 @@ public class Client implements Comparable<Client>{
 				int packetCounter = 0;
 				while (true) {
 					try {
-						InFlightContainer container = sendQueue.take();
+						
+						InFlightContainer container = null;
+						while(null == container) {
+							if(null == (container = priorityQueue.poll())) 
+								container = sendQueue.poll(200,TimeUnit.MILLISECONDS); //Can adjust length of time
+						}
 						checkoutContainer(container);
 						Container c = container.getContainer();
 						if (c instanceof LatencyMonitor) {
@@ -288,7 +294,10 @@ public class Client implements Comparable<Client>{
 				LatencyMonitor m = (LatencyMonitor) c;
 				m.outboundQueue = System.nanoTime();
 			}
-			if (!sendQueue.offer(ifc, 200, TimeUnit.MILLISECONDS))
+			if(c.isHighPriority()) {
+				if (!priorityQueue.offer(ifc, 200, TimeUnit.MILLISECONDS))
+					return -1;
+			} else if (!sendQueue.offer(ifc, 200, TimeUnit.MILLISECONDS))
 				return -1;
 			workCount.incrementAndGet();
 			Debug.println("Added to send queue");
@@ -326,6 +335,7 @@ public class Client implements Comparable<Client>{
 		long uid = parent.getNextId();
 		return send(c, cb, uid, false);
 	}
+	
 
 	/**
 	 * Send the packet to this Client ensuring that it knows that on failure

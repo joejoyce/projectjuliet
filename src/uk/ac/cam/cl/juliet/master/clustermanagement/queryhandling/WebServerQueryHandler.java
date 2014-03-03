@@ -197,6 +197,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		if (query.equals("latency")) {
 			LatencyMonitor lm = new LatencyMonitor();
+			lm.setHighPriority();
 			LatencyMonitorCallback cb = new LatencyMonitorCallback(10); 
 																		
 			cb.numSentTo = cm.broadcast(lm, cb);

@@ -11,6 +11,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
@@ -241,7 +242,14 @@ public class Listener {
 	}
 
 	private void readPacket() throws InterruptedException {
-		Container container = receiveQueue.take();
+		Container container = null;
+		boolean ck = false;
+		while(null == (container = receiveQueue.poll(100,TimeUnit.SECONDS))) {
+			databaseConnection.maybeEmergencyBatch();
+			ck = true;
+		}
+		if(!ck)
+			databaseConnection.maybeEmergencyBatch();
 
 		Debug.println(Debug.INFO, "Got new object: " + container.toString());
 
