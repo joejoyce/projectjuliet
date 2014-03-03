@@ -15,11 +15,18 @@ $(document).ready(function() {
   refreshClock();
 });
 
+var lastSeen = 0;
+
 function refreshClock() {
   $.ajax({
     url: "/api/v1/status/time",
     dataType: 'json',
     success: function(result) {
+      if(result.data != 0) {
+        lastSeen = result.data;
+      } else {
+        result.data = lastSeen;
+      }
       var time = new Date(parseInt(result.data) * 1000);
       var hours = time.getHours();
       var minutes = time.getMinutes();
