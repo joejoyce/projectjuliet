@@ -214,7 +214,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			pw.write("{\"data\": \" " + total + " \"}");
 			return;
 		}
-
+		
 		JsonBuilder j = new JsonBuilder();
 
 		j.stOb();
@@ -235,20 +235,25 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 			return;
 		}
 
+		
 		j.pushPairNoQuotes("clients", jb.toString());
 
 		long t = cm.getTime();
 		j.pushPair("time", t);
+		
+		
 
 		int total = cm.getPacketThroughput();
 		j.pushPair("throughput", total);
 
+		
 		double la = os.getSystemLoadAverage();
 		if (la >= 0)
 			j.pushPair("loadAv", la);
 		else
 			j.pushPair("loadAv", "Not supported");
-
+		
+		
 		try {
 			Statement s = con.createStatement();
 			ResultSet resOrders = s.executeQuery("SELECT count(*) from order_book");
@@ -275,6 +280,7 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 
 		String ret = j.toString();
 		pw.write(ret);
+		
 	}
 
 	/**
@@ -288,13 +294,11 @@ public class WebServerQueryHandler implements QueryHandler, Runnable {
 	public void runConfigQuery(String query, PrintWriter pw) {
 		if (query.equals("pause")) {
 			ClusterServer.dp.pause = !ClusterServer.dp.pause;
-			System.out.println("paused");
 			pw.write("");
 			return;
 		}
 
 		if (query.equals("restart")) {
-			System.out.println("Got query");
 			ClusterServer.dp.restartAfresh();
 			try {
 				Statement s = con.createStatement();

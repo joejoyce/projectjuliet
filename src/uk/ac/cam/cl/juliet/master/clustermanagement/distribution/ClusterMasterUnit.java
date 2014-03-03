@@ -157,12 +157,12 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public long sendPacket(Container msg, Callback cb) throws NoClusterException {
 		Client c = clientQueue.peek();
 		if(null == c)
-			throw new NoClusterException("The Pis have all gone :'(");
+			throw new NoClusterException("The Pis have all gone :'(" + clientQueue.size());
 		long l = 0;
 		while(0 > (l = c.send(msg,cb))) {
 			c = clientQueue.peek();
 			if(null == c)
-				throw new NoClusterException("The Pis have all gone :'(");
+				throw new NoClusterException("The Pis have all gone :'(: " + clientQueue.size());
 		}
 		currentSystemTime = msg.getTimeStampS();
 		return l;
@@ -235,7 +235,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		int total = 0;
 		Iterator<Client> i = clientQueue.iterator();
 		while(i.hasNext())
-			total += i.next().packetsSentThisSecond;
+			total += i.next().packetThroughput;
 		//clientQueue.releaseIterator();
 		return total;
 	}

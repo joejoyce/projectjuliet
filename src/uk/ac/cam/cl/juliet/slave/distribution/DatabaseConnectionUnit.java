@@ -172,6 +172,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			batchSize = 0;
 		} catch (SQLException e) {
 			e.printStackTrace();
+			System.exit(0);
 		}
 		
 		long totalTaken = Math.abs(System.nanoTime() - start);
@@ -198,13 +199,6 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		this.addTradeBatch = connection.prepareStatement("CALL addTrade(?, ?, ?, ?, ?, ?, ?, ?)");
 		this.deleteOrderBatch = connection.prepareStatement("CALL deleteOrder(?, ?, ?, ?)");
 		this.modifyOrderBatch = connection.prepareStatement("CALL modifyOrder(?, ?, ?, ?, ?, ?)");
-
-		/*final Runnable executeBatch = new Runnable() {
-			public void run() {
-				
-			}
-		};
-		scheduler.scheduleAtFixedRate(executeBatch, 5, 1, TimeUnit.SECONDS);*/
 	}
 
 	@Override

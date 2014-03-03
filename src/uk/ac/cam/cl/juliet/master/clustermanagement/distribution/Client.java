@@ -38,13 +38,12 @@ class ClientCleanup implements Runnable {
 	}
 }
 
-
 /**
- * In charge of sending and receiving packets foe a specific client 
+ * In charge of sending and receiving packets foe a specific client
  * 
  * @author Joseph
  */
-public class Client implements Comparable<Client>{
+public class Client implements Comparable<Client> {
 	private ObjectOutputStream out = null;
 	private ObjectInputStream in = null;
 	private Socket s = null;
@@ -56,19 +55,24 @@ public class Client implements Comparable<Client>{
 	private static ScheduledExecutorService workers = null;
 
 	private ScheduledFuture<?> cleaner = null;
-	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(200);
-	private ArrayBlockingQueue<InFlightContainer> priorityQueue = new ArrayBlockingQueue<InFlightContainer>(50);
+	private ScheduledFuture<?> throughputUpdater = null;
+	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(
+			200);
+	private ArrayBlockingQueue<InFlightContainer> priorityQueue = new ArrayBlockingQueue<InFlightContainer>(
+			50);
 
 	private static AtomicInteger numberClients = new AtomicInteger(0);
 	private AtomicInteger workCount = new AtomicInteger(0);
 
 	private static ContainerTimeComparator comparator = new ContainerTimeComparator();
-	
+
 	private ConcurrentHashMap<Long, InFlightContainer> hash = new ConcurrentHashMap<Long, InFlightContainer>();
-	private PriorityBlockingQueue<InFlightContainer> jobqueue = new PriorityBlockingQueue<InFlightContainer>(16, comparator);
+	private PriorityBlockingQueue<InFlightContainer> jobqueue = new PriorityBlockingQueue<InFlightContainer>(
+			16, comparator);
 
 	private long totalPackets = 0;
-	public int packetsSentThisSecond = 0;
+	private AtomicInteger packetsSentThisSecond = new AtomicInteger(0);
+	public int packetThroughput = 0;
 
 	private static final int OUTPUT_RESET_LIMIT = 50000;
 
@@ -118,7 +122,8 @@ public class Client implements Comparable<Client>{
 			hash.remove(l);
 			workCount.decrementAndGet();
 		} else {
-			Debug.println(Debug.ERROR, "Null InFlightContainer recieved from hash");
+			Debug.println(Debug.ERROR,
+					"Null InFlightContainer recieved from hash");
 		}
 		return cont;
 	}
@@ -133,12 +138,14 @@ public class Client implements Comparable<Client>{
 			return;
 		}
 		amClosing = true;
-		
-		Debug.println(Debug.INFO, "closeClient was called on client" + address.toString());
+
+		Debug.println(Debug.INFO,
+				"closeClient was called on client" + address.toString());
 
 		parent.removeClient(this);
+		throughputUpdater.cancel(false);
 		cleaner.cancel(false);
-		
+
 		if (0 == numberClients.decrementAndGet()) {
 			workers.shutdown();
 			workers = null;
@@ -153,7 +160,7 @@ public class Client implements Comparable<Client>{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		fullyFlushQueues();
 		amClosing = false;
 	}
@@ -161,17 +168,28 @@ public class Client implements Comparable<Client>{
 	public Client(Socket s, ClusterMaster parent) {
 		this.parent = parent;
 		this.s = s;
-		
+
 		if (0 == numberClients.getAndIncrement()) {
 			workers = Executors.newScheduledThreadPool(numberPooledThreads);
 		}
-		
+
 		while (null == workers)
 			continue; // Someone else is creating it.
 
-		this.cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0, queueFlushTime, TimeUnit.MILLISECONDS);
+		this.cleaner = workers.scheduleAtFixedRate(new ClientCleanup(this), 0,
+				queueFlushTime, TimeUnit.MILLISECONDS);
+		this.throughputUpdater = workers.scheduleAtFixedRate(new Runnable() {
+			public void run() {
+				packetThroughput = packetsSentThisSecond.getAndSet(0);
+				if (packetThroughput > 0)
+					Debug.println(100, "Packets sent this second: "
+							+ packetThroughput + ", to client: "
+							+ getClientIP().toString());
+			}
+		}, 1, 1, TimeUnit.SECONDS);
+
 		this.address = s.getInetAddress();
-		
+
 		try {
 			this.out = new ObjectOutputStream(s.getOutputStream());
 			this.in = new ObjectInputStream(s.getInputStream());
@@ -208,7 +226,7 @@ public class Client implements Comparable<Client>{
 							// Identify which Pi this came from
 							lm.addr = getClientIP().toString();
 						}
-						
+
 						InFlightContainer record = checkbackContainer(container);
 						if (record != null)
 							record.executeCallback(container);
@@ -222,15 +240,17 @@ public class Client implements Comparable<Client>{
 			@Override
 			public void run() {
 				// This method sends the packets to the client
-				long then = System.nanoTime();
 				int packetCounter = 0;
 				while (true) {
 					try {
-						
+
 						InFlightContainer container = null;
-						while(null == container) {
-							if(null == (container = priorityQueue.poll())) 
-								container = sendQueue.poll(200,TimeUnit.MILLISECONDS); //Can adjust length of time
+						while (null == container) {
+							if (null == (container = priorityQueue.poll()))
+								container = sendQueue.poll(200,
+										TimeUnit.MILLISECONDS); // Can adjust
+																// length of
+																// time
 						}
 						checkoutContainer(container);
 						Container c = container.getContainer();
@@ -244,16 +264,13 @@ public class Client implements Comparable<Client>{
 						if (packetCounter >= OUTPUT_RESET_LIMIT) {
 							packetCounter = 0;
 							out.reset();
-							Debug.println(Debug.ERROR, "reset outputStream on client");
+							Debug.println(Debug.ERROR,
+									"reset outputStream on client");
 						}
 						totalPackets++;
-						packetsSentThisSecond++;
-						if (Math.abs(System.nanoTime() - then) > 1000000000) {
-							Debug.println(100, "Packets sent this second: " + packetsSentThisSecond + ", to client: " + getClientIP().toString());
-							then = System.nanoTime();
-							packetsSentThisSecond = 0;
-						}
-						Debug.println("Written packet ID: " + container.getPacketId());
+						packetsSentThisSecond.incrementAndGet();
+						Debug.println("Written packet ID: "
+								+ container.getPacketId());
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					} catch (Exception e) {
@@ -294,7 +311,7 @@ public class Client implements Comparable<Client>{
 				LatencyMonitor m = (LatencyMonitor) c;
 				m.outboundQueue = System.nanoTime();
 			}
-			if(c.isHighPriority()) {
+			if (c.isHighPriority()) {
 				if (!priorityQueue.offer(ifc, 200, TimeUnit.MILLISECONDS))
 					return -1;
 			} else if (!sendQueue.offer(ifc, 200, TimeUnit.MILLISECONDS))
@@ -335,7 +352,6 @@ public class Client implements Comparable<Client>{
 		long uid = parent.getNextId();
 		return send(c, cb, uid, false);
 	}
-	
 
 	/**
 	 * Send the packet to this Client ensuring that it knows that on failure
@@ -368,7 +384,8 @@ public class Client implements Comparable<Client>{
 		InFlightContainer ifc;
 		while (null != (ifc = jobqueue.poll())) {
 			if (!ifc.getBroadcast()) {
-				Debug.println(Debug.INFO, "Resending packet: " + ifc.getPacketId());
+				Debug.println(Debug.INFO,
+						"Resending packet: " + ifc.getPacketId());
 				try {
 					parent.sendPacket(ifc.getContainer(), ifc.getCallback());
 				} catch (NoClusterException e) {
@@ -378,7 +395,8 @@ public class Client implements Comparable<Client>{
 		}
 		while (null != (ifc = sendQueue.poll())) {
 			if (!ifc.getBroadcast()) {
-				Debug.println(Debug.INFO, "Resending packet from waiting: " + ifc.getPacketId());
+				Debug.println(Debug.INFO, "Resending packet from waiting: "
+						+ ifc.getPacketId());
 				try {
 					parent.sendPacket(ifc.getContainer(), ifc.getCallback());
 				} catch (NoClusterException e) {
@@ -405,7 +423,11 @@ public class Client implements Comparable<Client>{
 		if (null != (ifc = jobqueue.peek())) {
 			if (ifc.getDueTime() <= time) {
 				// Remove and flush the rest of the queue
-				Debug.println(Debug.ERROR, "Timeout waiting for response from client " + address + ", packet: " + ifc.getContainer().getPacketId() + ",: " + ifc.getContainer().toString());
+				Debug.println(Debug.ERROR,
+						"Timeout waiting for response from client " + address
+								+ ", packet: "
+								+ ifc.getContainer().getPacketId() + ",: "
+								+ ifc.getContainer().toString());
 				closeClient();
 			}
 		}

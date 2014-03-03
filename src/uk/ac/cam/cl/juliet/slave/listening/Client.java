@@ -21,7 +21,7 @@ import uk.ac.cam.cl.juliet.slave.xdpprocessing.XDPProcessorUnit;
 public class Client {
 	public static void main(String[] args) {
 		Debug.registerOutputLocation(System.out);
-		Debug.setPriority(Debug.ERROR);
+		Debug.setPriority(Debug.INFO);
 		
 		Thread t = new Thread () {
 			public void run() {
