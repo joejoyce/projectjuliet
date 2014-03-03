@@ -244,7 +244,7 @@ public class Listener {
 	private void readPacket() throws InterruptedException {
 		Container container = null;
 
-		while(null == (container = receiveQueue.poll(100,TimeUnit.SECONDS))) {
+		while(null == (container = receiveQueue.poll(100,TimeUnit.MILLISECONDS))) {
 			databaseConnection.maybeEmergencyBatch();
 			if(Thread.interrupted())
 				return;
