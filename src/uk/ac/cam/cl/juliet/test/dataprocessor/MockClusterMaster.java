@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.test.dataprocessor;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ScheduledFuture;
 
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
@@ -163,5 +164,9 @@ public class MockClusterMaster implements ClusterMaster {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+	
+	public ScheduledFuture<?> repeatedBroadcast(Container c, Callback cb, long time){ return (ScheduledFuture<?>)null;}
+	
+	public ScheduledFuture<?> repeatedSend(Container c, Callback cb, long time){return (ScheduledFuture<?>)null;}
 
 }
