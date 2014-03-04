@@ -259,7 +259,7 @@ public class Client implements Comparable<Client> {
 							m.outboundDepart = System.nanoTime();
 						}
 						out.writeObject(c);
-						out.flush();
+						//out.flush();
 						packetCounter++;
 						if (packetCounter >= OUTPUT_RESET_LIMIT) {
 							packetCounter = 0;
