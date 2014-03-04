@@ -55,7 +55,13 @@ public class DataProcessor {
 			} catch (NoClusterException e) {
 				System.err.println("Cluster error");
 				e.printStackTrace();
-				break;
+				//break;
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

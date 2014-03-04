@@ -190,7 +190,7 @@ public class Client implements Comparable<Client> {
 		
 		this.heartbeatChecker = workers.scheduleAtFixedRate(new Runnable() {
 			public void run() {
-				long timeoutlength = 4000000000L;
+				long timeoutlength = 5000000000L;
 				if(System.nanoTime() > lastPacketTime + timeoutlength )
 					closeClient();
 			}

@@ -41,9 +41,9 @@ public class Listener {
 	private ObjectInputStream input = null;
 	private ObjectOutputStream output = null;
 	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(
-			5100);
+			7000);
 	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(
-			5100);
+			7000);
 	private LinkedList<XDPRequest> waitingForBatchQueries = new LinkedList<XDPRequest>();
 	private ReentrantLock waitingForBatchQueriesLock = new ReentrantLock();
 	private DatabaseConnection databaseConnection;
@@ -202,7 +202,7 @@ public class Listener {
 
 		try {
 			nanosLastReceive = System.nanoTime();
-			long threeseconds = 3000000000L;
+			long threeseconds = 4000000000L;
 			while (true) {
 				boolean send = sendThread.isAlive();
 				boolean rec = receiveThread.isAlive();
