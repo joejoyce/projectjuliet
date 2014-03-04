@@ -182,7 +182,7 @@ public class Client implements Comparable<Client> {
 			public void run() {
 				packetThroughput = packetsSentThisSecond.getAndSet(0);
 				if (packetThroughput > 0)
-					Debug.println(100, "Packets sent this second: "
+					Debug.println(Debug.INFO, "Packets sent this second: "
 							+ packetThroughput + ", to client: "
 							+ getClientIP().toString());
 			}

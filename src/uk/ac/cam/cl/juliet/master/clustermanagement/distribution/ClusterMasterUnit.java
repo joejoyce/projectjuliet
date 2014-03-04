@@ -60,7 +60,7 @@ class RepeatedSend implements Runnable {
 			if(repeat)
 				cm.broadcast(c,cb);
 			else
-				cm.sendPacket(c,cb);
+				cm.sendNoIdStamp(c,cb);
 		} catch (NoClusterException e) {
 			Debug.println(Debug.ERROR,"Problems sending a packet scheduled for repeated Send");
 			e.printStackTrace();
@@ -244,6 +244,22 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		return clientQueue.size();
 	}
 	
+
+	public long sendNoIdStamp(Container msg, Callback cb) throws NoClusterException {
+		Client c = clientQueue.peek();
+		if(null == c)
+			throw new NoClusterException("The Pis have all gone :'(" + clientQueue.size());
+		long l = 0;
+		while(0 > (l = c.broadcast(msg,cb))) {
+			c = clientQueue.peek();
+			if(null == c)
+				throw new NoClusterException("The Pis have all gone :'(: " + clientQueue.size());
+		}
+		currentSystemTime = msg.getTimeStampS();
+		return l;
+	}
+	
+	
 	/**
 	 * Repeatedly send the packet to a client, getting a callback each time.
 	 * BEWARE if this fails it will retry after five seconds so this could easily fill the
@@ -254,6 +270,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	 * @return A sechduledFuture - this can be used to cancel it etc...
 	 */
 	public ScheduledFuture<?> repeatedSend(Container c, Callback cb, long timeMs) {
+		c.setPacketId(this.getNextId());
 		RepeatedSend rs = new RepeatedSend(this,c,cb);
 		return workers.scheduleAtFixedRate(rs, 0, timeMs, TimeUnit.MILLISECONDS);
 	}
