@@ -22,7 +22,7 @@ function refreshClock() {
     url: "/api/v1/status/time",
     dataType: 'json',
     success: function(result) {
-      if(result.data != 0) {
+      if(Number(result.data) != -18000) {
         lastSeen = result.data;
       } else {
         result.data = lastSeen;

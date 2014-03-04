@@ -24,7 +24,7 @@ mixin symbol_summary(symbol, stats)
             td.datum=stats.lowestTrade
           tr
             td.field Spread:
-            td.datum=stats.spread
+            td.datum=Math.abs(stats.spread)
             td.field Change:
             if(stats.change < 0) 
               td.datum.neg=stats.change

@@ -70,9 +70,7 @@ public class Listener {
 	 * @throws SQLException
 	 */
 	@SuppressWarnings("deprecation")
-	public void listen(String server, int thePort, DatabaseConnection db,
-			XDPProcessor xdpProcessor, QueryProcessor queryProcessor)
-			throws IOException, SQLException {
+	public void listen(String server, int thePort, DatabaseConnection db, XDPProcessor xdpProcessor, QueryProcessor queryProcessor) throws IOException, SQLException {
 		this.ip = server;
 		this.port = thePort;
 		this.databaseConnection = db;
@@ -129,8 +127,7 @@ public class Listener {
 							}
 							receiveQueue.put((Container) o);
 						} else
-							Debug.println(Debug.ERROR,
-									"Unrecognised object type");
+							Debug.println(Debug.ERROR, "Unrecognised object type");
 					} catch (ClassNotFoundException e) {
 						Debug.println(Debug.ERROR, "Unrecognised object type");
 						e.printStackTrace();
@@ -138,8 +135,7 @@ public class Listener {
 						e.printStackTrace();
 						return;
 					} catch (IOException e) {
-						Debug.println(Debug.ERROR,
-								"An error occurred communicating with the server.");
+						Debug.println(Debug.ERROR, "An error occurred communicating with the server.");
 						e.printStackTrace();
 						// Just attempt to reconnect
 						return;
@@ -185,11 +181,9 @@ public class Listener {
 		};
 
 		this.socket = new Socket(ip, port);
-		this.output = new ObjectOutputStream(new BufferedOutputStream(
-				socket.getOutputStream()));
+		this.output = new ObjectOutputStream(socket.getOutputStream());
 		output.flush();
-		this.input = new ObjectInputStream(new BufferedInputStream(
-				socket.getInputStream()));
+		this.input = new ObjectInputStream(socket.getInputStream());
 
 		readThread.start();
 		receiveThread.start();
