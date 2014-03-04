@@ -385,4 +385,10 @@ public class MockDatabaseConnection implements DatabaseConnection {
 	public void maybeEmergencyBatch() {
 		
 	}
+
+	@Override
+	public void unlockTables() throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
 }

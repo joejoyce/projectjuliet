@@ -29,7 +29,8 @@ public class DatabaseCleaner implements Runnable {
 	public DatabaseCleaner(Connection con) {
 		this.connection = con;
 		this.executor = Executors.newScheduledThreadPool(1);
-		this.future = executor.scheduleWithFixedDelay(this, 0, 10, TimeUnit.SECONDS);
+		this.future = executor.scheduleWithFixedDelay(this, 0, 10,
+				TimeUnit.SECONDS);
 	}
 
 	/**
@@ -37,15 +38,44 @@ public class DatabaseCleaner implements Runnable {
 	 */
 	public void run() {
 		try {
-			PreparedStatement s = connection.prepareStatement("DELETE FROM order_book WHERE added = 1 AND deleted = 1");
+			PreparedStatement statement = connection
+					.prepareStatement("LOCK TABLES order_book WRITE");
+			statement.execute();
+			statement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			PreparedStatement s = connection
+					.prepareStatement("DELETE FROM order_book WHERE added = 1 AND deleted = 1");
 			s.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
 		try {
-			PreparedStatement s = connection.prepareStatement("DELETE FROM trade WHERE added = 1 AND deleted = 1");
+			PreparedStatement statement = connection
+					.prepareStatement("LOCK TABLES trade WRITE");
+			statement.execute();
+			statement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			PreparedStatement s = connection
+					.prepareStatement("DELETE FROM trade WHERE added = 1 AND deleted = 1");
 			s.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			PreparedStatement statement = connection
+					.prepareStatement("UNLOCK TABLES");
+			statement.execute();
+			statement.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
