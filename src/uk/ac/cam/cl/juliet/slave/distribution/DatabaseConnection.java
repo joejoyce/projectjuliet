@@ -348,4 +348,6 @@ public interface DatabaseConnection {
 	
 	
 	public void maybeEmergencyBatch();
+
+	public void unlockTables() throws SQLException;
 }

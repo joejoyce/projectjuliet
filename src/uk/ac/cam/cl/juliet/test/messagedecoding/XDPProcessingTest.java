@@ -342,6 +342,12 @@ class TestDatabase implements DatabaseConnection {
 		
 	}
 
+	@Override
+	public void unlockTables() throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
 
 public class XDPProcessingTest {

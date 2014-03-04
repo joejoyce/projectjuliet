@@ -19,7 +19,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		long time;
 		long sequenceNumber;
 
-		OrderVolumeReduction(long orderID, long symbolID, long amount, long time, long sequenceNumber) {
+		OrderVolumeReduction(long orderID, long symbolID, long amount,
+				long time, long sequenceNumber) {
 			this.orderID = orderID;
 			this.symbolID = symbolID;
 			this.amount = amount;
@@ -29,7 +30,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 		private boolean tryToApply() {
 			try {
-				PreparedStatement statement = connection.prepareStatement("SELECT updated_s, updated_seq_num FROM order_book WHERE order_id = ? AND symbol_id = ?");
+				PreparedStatement statement = connection
+						.prepareStatement("SELECT updated_s, updated_seq_num FROM order_book WHERE order_id = ? AND symbol_id = ?");
 				statement.setLong(1, orderID);
 				statement.setLong(2, symbolID);
 				ResultSet results = statement.executeQuery();
@@ -42,8 +44,10 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 				long updated_s = results.getLong("updated_s");
 				long updated_seq_num = results.getLong("updated_seq_num");
 
-				if (updated_s < time || (updated_s == time && updated_seq_num < sequenceNumber)) {
-					statement = connection.prepareStatement("UPDATE order_book SET volume = volume - ? WHERE (order_id = ?) AND (symbol_id = ?)");
+				if (updated_s < time
+						|| (updated_s == time && updated_seq_num < sequenceNumber)) {
+					statement = connection
+							.prepareStatement("UPDATE order_book SET volume = volume - ? WHERE (order_id = ?) AND (symbol_id = ?)");
 					statement.setLong(1, amount);
 					statement.setLong(2, orderID);
 					statement.setLong(3, symbolID);
@@ -62,52 +66,56 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	private PreparedStatement addTradeBatch;
 	private PreparedStatement deleteOrderBatch;
 	private PreparedStatement modifyOrderBatch;
-	
+
 	private ArrayList<OrderVolumeReduction> volumeReductions = new ArrayList<OrderVolumeReduction>();
-	//private final static ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+	// private final static ScheduledExecutorService scheduler =
+	// Executors.newSingleThreadScheduledExecutor();
 	private ArrayList<Runnable> batchQueryExecuteStartCallbacks = new ArrayList<Runnable>();
 	private ArrayList<Runnable> batchQueryExecuteEndCallbacks = new ArrayList<Runnable>();
-	
+
 	private int batchSize = 0;
 	private int delete = 0;
 	private int add = 0;
 
 	private long lastCommitNs = -1;
-	
+
 	private long nextCommitTime = System.nanoTime() + 1000000000L;
 	private int opsBatched = 0;
 	private static int batchThreshold = 2000;
-	
-	//private long lastBatchAdd = Long.MAX_VALUE;
-	
+
+	// private long lastBatchAdd = Long.MAX_VALUE;
+
 	private void coreBatchRun() {
-		Debug.println(Debug.ERROR,"Running the batch");
+		Debug.println(Debug.ERROR, "Running the batch");
 		long start = System.nanoTime();
 		executeBatch();
 		opsBatched = 0;
 		long end = System.nanoTime();
-		Debug.println(Debug.ERROR,"Finished the batch: took" + (end - start) / 1000000 + " milliseconds ");
+		Debug.println(Debug.ERROR, "Finished the batch: took" + (end - start)
+				/ 1000000 + " milliseconds ");
 		nextCommitTime = end + 1000000000L;
-		//lastBatchAdd = Long.MAX_VALUE;
+		// lastBatchAdd = Long.MAX_VALUE;
 	}
-	
+
 	private void maybeExecuteBatch() {
 		opsBatched++;
-	//	if(++opsBatched >= batchThreshold || System.nanoTime() >= nextCommitTime) {
-	//		coreBatchRun();
-	//	} //else
-			//lastBatchAdd = System.nanoTime();
+		// if(++opsBatched >= batchThreshold || System.nanoTime() >=
+		// nextCommitTime) {
+		// coreBatchRun();
+		// } //else
+		// lastBatchAdd = System.nanoTime();
 	}
-	
+
 	public void maybeEmergencyBatch() {
-		////if((System.nanoTime() - lastBatchAdd) >= 3000000000L) {
-		if(opsBatched >= batchThreshold || System.nanoTime() >= nextCommitTime) 
+		// //if((System.nanoTime() - lastBatchAdd) >= 3000000000L) {
+		if (opsBatched >= batchThreshold || System.nanoTime() >= nextCommitTime)
 			coreBatchRun();
-		//}
+		// }
 	}
-	private void executeBatch () {
+
+	private void executeBatch() {
 		long start = System.nanoTime();
-		
+
 		try {
 			synchronized (batchQueryExecuteStartCallbacks) {
 				for (Runnable r : batchQueryExecuteStartCallbacks) {
@@ -116,13 +124,15 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			}
 
 			Debug.println(Debug.INFO, "Total batch size: " + batchSize);
-			
+
 			Debug.println(Debug.INFO, "About to execute addOrder batch: " + add);
 			add = 0;
 			long then = start;
 			synchronized (addOrderBatch) {
+				lockOrderBook();
 				addOrderBatch.executeBatch();
 				addOrderBatch.clearBatch();
+				unlockTables();
 			}
 			double diff = Math.abs(System.nanoTime() - then);
 			diff /= 1000000;
@@ -131,19 +141,24 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			Debug.println(Debug.INFO, "About to execute addTrade batch");
 			then = System.nanoTime();
 			synchronized (addTradeBatch) {
+				lockTradeTable();
 				addTradeBatch.executeBatch();
 				addTradeBatch.clearBatch();
+				unlockTables();
 			}
 			diff = Math.abs(System.nanoTime() - then);
 			diff /= 1000000;
 			Debug.println(Debug.INFO, "Taken: " + diff);
 
-			Debug.println(Debug.INFO, "About to execute deleteOrder batch: " + delete);
+			Debug.println(Debug.INFO, "About to execute deleteOrder batch: "
+					+ delete);
 			delete = 0;
 			then = System.nanoTime();
 			synchronized (deleteOrderBatch) {
+				lockOrderBook();
 				deleteOrderBatch.executeBatch();
 				deleteOrderBatch.clearBatch();
+				unlockTables();
 			}
 			diff = Math.abs(System.nanoTime() - then);
 			diff /= 1000000;
@@ -152,14 +167,17 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			Debug.println(Debug.INFO, "About to execute modifyOrderBatch batch");
 			then = System.nanoTime();
 			synchronized (modifyOrderBatch) {
+				lockOrderBook();
 				modifyOrderBatch.executeBatch();
 				modifyOrderBatch.clearBatch();
+				unlockTables();
 			}
 			diff = Math.abs(System.nanoTime() - then);
 			diff /= 1000000;
 			Debug.println(Debug.INFO, "Taken: " + diff);
 
 			synchronized (volumeReductions) {
+				lockOrderBook();
 				for (int i = 0; i < volumeReductions.size();) {
 					if (volumeReductions.get(i).tryToApply()) {
 						volumeReductions.remove(i);
@@ -167,6 +185,7 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 						i++;
 					}
 				}
+				unlockTables();
 			}
 
 			batchSize = 0;
@@ -174,11 +193,17 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 			e.printStackTrace();
 			System.exit(0);
 		}
-		
+
+		try {
+			unlockTables();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 		long totalTaken = Math.abs(System.nanoTime() - start);
 		lastCommitNs = totalTaken;
 		totalTaken /= 1000000;
-		
+
 		synchronized (batchQueryExecuteEndCallbacks) {
 			for (Runnable r : batchQueryExecuteEndCallbacks) {
 				r.run();
@@ -188,21 +213,52 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		Debug.println(Debug.INFO, "Total time taken: " + totalTaken);
 		Debug.println(Debug.INFO, "-------------------------------------");
 	}
+
+	private void lockOrderBook() throws SQLException {
+		PreparedStatement statement = connection
+				.prepareStatement("LOCK TABLES order_book WRITE");
+		statement.execute();
+		statement.close();
+	}
+
+	private void lockTradeTable() throws SQLException {
+		PreparedStatement statement = connection
+				.prepareStatement("LOCK TABLES trade WRITE");
+		statement.execute();
+		statement.close();
+	}
+
+	public void unlockTables() throws SQLException {
+		PreparedStatement statement = connection
+				.prepareStatement("UNLOCK TABLES");
+		statement.execute();
+		statement.close();
+	}
+
 	/**
-	 * Creates a new DatabaseConnectionUnit and schedules execution of batch queries.
-	 * @param c A connection to the database.
+	 * Creates a new DatabaseConnectionUnit and schedules execution of batch
+	 * queries.
+	 * 
+	 * @param c
+	 *            A connection to the database.
 	 * @throws SQLException
 	 */
 	public DatabaseConnectionUnit(Connection c) throws SQLException {
 		this.connection = c;
-		this.addOrderBatch = connection.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-		this.addTradeBatch = connection.prepareStatement("CALL addTrade(?, ?, ?, ?, ?, ?, ?, ?)");
-		this.deleteOrderBatch = connection.prepareStatement("CALL deleteOrder(?, ?, ?, ?)");
-		this.modifyOrderBatch = connection.prepareStatement("CALL modifyOrder(?, ?, ?, ?, ?, ?)");
+		this.addOrderBatch = connection
+				.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		this.addTradeBatch = connection
+				.prepareStatement("CALL addTrade(?, ?, ?, ?, ?, ?, ?, ?)");
+		this.deleteOrderBatch = connection
+				.prepareStatement("CALL deleteOrder(?, ?, ?, ?)");
+		this.modifyOrderBatch = connection
+				.prepareStatement("CALL modifyOrder(?, ?, ?, ?, ?, ?)");
 	}
 
 	@Override
-	public void addOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, boolean isSell, int tradeSession, long packetTimestamp) throws SQLException {
+	public void addOrder(long orderID, long symbolIndex, long time_ns,
+			long symbolSeqNumber, long price, long volume, boolean isSell,
+			int tradeSession, long packetTimestamp) throws SQLException {
 		synchronized (addOrderBatch) {
 			addOrderBatch.setLong(1, orderID);
 			addOrderBatch.setLong(2, symbolIndex);
@@ -221,7 +277,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public void modifyOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, boolean isSell, long packetTimestamp) throws SQLException {
+	public void modifyOrder(long orderID, long symbolIndex, long time_ns,
+			long symbolSeqNumber, long price, long volume, boolean isSell,
+			long packetTimestamp) throws SQLException {
 		synchronized (modifyOrderBatch) {
 			modifyOrderBatch.setLong(1, orderID);
 			modifyOrderBatch.setLong(2, symbolIndex);
@@ -236,15 +294,20 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long volumeReduction, long packetTimestamp) throws SQLException {
+	public void reduceOrderVolume(long orderID, long symbolIndex, long time_ns,
+			long symbolSeqNumber, long volumeReduction, long packetTimestamp)
+			throws SQLException {
 		synchronized (volumeReductions) {
-			this.volumeReductions.add(new OrderVolumeReduction(orderID, symbolIndex, volumeReduction, packetTimestamp, symbolSeqNumber));
+			this.volumeReductions.add(new OrderVolumeReduction(orderID,
+					symbolIndex, volumeReduction, packetTimestamp,
+					symbolSeqNumber));
 			maybeExecuteBatch();
 		}
 	}
 
 	@Override
-	public void deleteOrder(long orderID, long symbolIndex, long time_ns, long symbolSeqNumber, long packetTimestamp) throws SQLException {
+	public void deleteOrder(long orderID, long symbolIndex, long time_ns,
+			long symbolSeqNumber, long packetTimestamp) throws SQLException {
 		synchronized (deleteOrderBatch) {
 			deleteOrderBatch.setLong(1, orderID);
 			deleteOrderBatch.setLong(2, symbolIndex);
@@ -258,7 +321,9 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public void addTrade(long tradeID, long symbolIndex, long time_ns, long symbolSeqNumber, long price, long volume, long packetTimestamp) throws SQLException {
+	public void addTrade(long tradeID, long symbolIndex, long time_ns,
+			long symbolSeqNumber, long price, long volume, long packetTimestamp)
+			throws SQLException {
 		synchronized (addTradeBatch) {
 			addTradeBatch.setLong(1, tradeID);
 			addTradeBatch.setLong(2, symbolIndex);
@@ -275,21 +340,28 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public void addStockSummary(long symbolIndex, long time_s, long time_ns, long highPrice, long lowPrice, long openPrice, long closePrice, long totalVolume) throws SQLException {
-		/*PreparedStatement statement = connection.prepareStatement("INSERT INTO stock_summary (symbol_id, high_price, low_price, total_volume, " + "updated_s, updated_ns) " + "VALUES (?, ?, ?, ?, ?, ?)");
-		statement.setLong(1, symbolIndex);
-		statement.setLong(2, highPrice);
-		statement.setLong(3, lowPrice);
-		statement.setLong(4, totalVolume);
-		statement.setLong(5, time_s);
-		statement.setLong(6, time_ns);*/
+	public void addStockSummary(long symbolIndex, long time_s, long time_ns,
+			long highPrice, long lowPrice, long openPrice, long closePrice,
+			long totalVolume) throws SQLException {
+		/*
+		 * PreparedStatement statement = connection.prepareStatement(
+		 * "INSERT INTO stock_summary (symbol_id, high_price, low_price, total_volume, "
+		 * + "updated_s, updated_ns) " + "VALUES (?, ?, ?, ?, ?, ?)");
+		 * statement.setLong(1, symbolIndex); statement.setLong(2, highPrice);
+		 * statement.setLong(3, lowPrice); statement.setLong(4, totalVolume);
+		 * statement.setLong(5, time_s); statement.setLong(6, time_ns);
+		 */
 		// batchQuery.addBatch(statement.toString().split(":")[1]);
 		// batchSize ++;
 	}
 
 	@Override
-	public void correctTrade(long originalTradeID, long tradeID, long symbolIndex, long time_s, long time_ns, long symbolSeqNumber, long price, long volume) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("CALL modifyTrade(?, ?, ?, ?, ?, ?, ?)");
+	public void correctTrade(long originalTradeID, long tradeID,
+			long symbolIndex, long time_s, long time_ns, long symbolSeqNumber,
+			long price, long volume) throws SQLException {
+		lockTradeTable();
+		PreparedStatement statement = this.connection
+				.prepareStatement("CALL modifyTrade(?, ?, ?, ?, ?, ?, ?)");
 		statement.setLong(1, originalTradeID);
 		statement.setLong(2, tradeID);
 		statement.setLong(3, symbolIndex);
@@ -299,24 +371,32 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 		statement.setLong(7, symbolSeqNumber);
 		statement.execute();
 		statement.close();
+		unlockTables();
 	}
 
 	@Override
-	public void addSourceTimeReference(long symbolIndex, long symbolSeqNumber, long referenceTime) throws SQLException {
+	public void addSourceTimeReference(long symbolIndex, long symbolSeqNumber,
+			long referenceTime) throws SQLException {
 	}
 
 	@Override
-	public void cancelTrade(long tradeID, long symbolIndex, long time_s, long time_ns, long symbolSeqNumber) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("CALL deleteTrade(?, ?, ?, ?)");
+	public void cancelTrade(long tradeID, long symbolIndex, long time_s,
+			long time_ns, long symbolSeqNumber) throws SQLException {
+		lockTradeTable();
+		PreparedStatement statement = this.connection
+				.prepareStatement("CALL deleteTrade(?, ?, ?, ?)");
 		statement.setLong(1, tradeID);
 		statement.setLong(2, symbolIndex);
 		statement.setLong(3, time_s);
 		statement.setLong(4, symbolSeqNumber);
 		statement.execute();
+		unlockTables();
 	}
 
 	@Override
-	public void addSymbolMappingEntry(long symbolIndex, String symbol, long priceScaleCode, long prevClosingPrice, long prevClosingVolume) throws SQLException {
+	public void addSymbolMappingEntry(long symbolIndex, String symbol,
+			long priceScaleCode, long prevClosingPrice, long prevClosingVolume)
+			throws SQLException {
 		/*
 		 * PreparedStatement statement = this.connection.prepareStatement(
 		 * "INSERT INTO symbol (symbol_id, symbol, company_name, price_scale, open_price) VALUES (?,?,?,?,?)"
@@ -327,7 +407,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public void changeTradeSession(long symbolIndex, long time_s, long time_ns, long symbolSeqNumber, int tradingSession) throws SQLException {
+	public void changeTradeSession(long symbolIndex, long time_s, long time_ns,
+			long symbolSeqNumber, int tradingSession) throws SQLException {
 		// TODO implement method. Not sure how to change over a trade session.
 		// It will probably involve deleting all orders from that expire within
 		// the current trade
@@ -335,8 +416,10 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start, long end) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE symbol_id=? AND offered_s>=? AND offered_s<? AND added=1 AND deleted=0");
+	public ResultSet getTradesInTimeRangeForSymbol(long symbolID, long start,
+			long end) throws SQLException {
+		PreparedStatement statement = this.connection
+				.prepareStatement("SELECT * FROM trade WHERE symbol_id=? AND offered_s>=? AND offered_s<? AND added=1 AND deleted=0");
 		ResultSet result;
 		statement.setLong(1, symbolID);
 		statement.setLong(2, start);
@@ -346,8 +429,10 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public ResultSet getAllTradesInRecentHistory(long start) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM trade WHERE offered_s >= ? AND added=1 AND deleted=0 ORDER BY symbol_id");
+	public ResultSet getAllTradesInRecentHistory(long start)
+			throws SQLException {
+		PreparedStatement statement = this.connection
+				.prepareStatement("SELECT * FROM trade WHERE offered_s >= ? AND added=1 AND deleted=0 ORDER BY symbol_id");
 		ResultSet result;
 		statement.setLong(1, start);
 		result = statement.executeQuery();
@@ -356,17 +441,43 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 
 	@Override
 	public void setConnection(Connection connection) {
-		this.connection = connection;
+		try {
+			synchronized (addOrderBatch) {
+				synchronized (modifyOrderBatch) {
+					synchronized (deleteOrderBatch) {
+						synchronized (addTradeBatch) {
+							executeBatch();
+
+							this.connection = connection;
+							this.addOrderBatch = connection
+									.prepareStatement("CALL addOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+							this.addTradeBatch = connection
+									.prepareStatement("CALL addTrade(?, ?, ?, ?, ?, ?, ?, ?)");
+							this.deleteOrderBatch = connection
+									.prepareStatement("CALL deleteOrder(?, ?, ?, ?)");
+							this.modifyOrderBatch = connection
+									.prepareStatement("CALL modifyOrder(?, ?, ?, ?, ?, ?)");
+						}
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public void addImbalanceMessage(long symbolIndex, long time_s, long time_ns, long symbolSeqNumber, long referencePrice) throws SQLException {
+	public void addImbalanceMessage(long symbolIndex, long time_s,
+			long time_ns, long symbolSeqNumber, long referencePrice)
+			throws SQLException {
 		// not needed (only for testing purposes)
 	}
 
 	@Override
-	public ResultSet getSymbolAndPriceScale(long symbolIndex) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("SELECT symbol,price_scale FROM symbol WHERE symbol_id = ?");
+	public ResultSet getSymbolAndPriceScale(long symbolIndex)
+			throws SQLException {
+		PreparedStatement statement = this.connection
+				.prepareStatement("SELECT symbol,price_scale FROM symbol WHERE symbol_id = ?");
 		ResultSet result;
 		statement.setLong(1, symbolIndex);
 		result = statement.executeQuery();
@@ -379,7 +490,8 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	@Override
 	public long getSpreadOfSymbol(long symbolIndex) throws SQLException {
 		// get the lowest offer and highest bid for a stock:
-		PreparedStatement statement = this.connection.prepareStatement("(SELECT price FROM order_book WHERE symbol_id = ? AND is_ask = 1 AND added=1 AND deleted=0 ORDER BY price LIMIT 1) UNION (SELECT price FROM order_book WHERE symbol_id = ? AND is_ask = 0 AND added=1 AND deleted=0 ORDER BY price DESC LIMIT 1)");
+		PreparedStatement statement = this.connection
+				.prepareStatement("(SELECT price FROM order_book WHERE symbol_id = ? AND is_ask = 1 AND added=1 AND deleted=0 ORDER BY price LIMIT 1) UNION (SELECT price FROM order_book WHERE symbol_id = ? AND is_ask = 0 AND added=1 AND deleted=0 ORDER BY price DESC LIMIT 1)");
 
 		ResultSet result;
 		statement.setLong(1, symbolIndex);
@@ -409,8 +521,10 @@ public class DatabaseConnectionUnit implements DatabaseConnection {
 	}
 
 	@Override
-	public ResultSet getBestOffersForStock(long symbolID, int limit) throws SQLException {
-		PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM order_book WHERE symbol_id=? AND added=1 AND deleted=0 AND is_ask=1 ORDER BY price DESC LIMIT = ?");
+	public ResultSet getBestOffersForStock(long symbolID, int limit)
+			throws SQLException {
+		PreparedStatement statement = this.connection
+				.prepareStatement("SELECT * FROM order_book WHERE symbol_id=? AND added=1 AND deleted=0 AND is_ask=1 ORDER BY price DESC LIMIT = ?");
 		ResultSet result;
 		statement.setLong(1, symbolID);
 		statement.setLong(2, limit);
