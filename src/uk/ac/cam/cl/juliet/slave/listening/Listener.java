@@ -212,11 +212,13 @@ public class Listener {
 			sendThread.interrupt();
 			receiveThread.interrupt();
 			//readThread.interrupt();
-			sendThread.join();
+			//sendThread.join();
 			Debug.println("send joined");
-			receiveThread.join();
+			//receiveThread.join();
 			Debug.println("receive joined");
 			//readThread.join();
+			sendThread.stop();
+			receiveThread.stop();
 			readThread.stop();
 			Debug.println("read joined");
 
