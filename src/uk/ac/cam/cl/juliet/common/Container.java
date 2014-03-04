@@ -8,7 +8,7 @@ import java.io.Serializable;
  * 
  * @author Scott Williams
  */
-public abstract class Container implements Serializable {
+public abstract class Container implements Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
 	private long id;
 	private long timeStampS;
@@ -32,5 +32,8 @@ public abstract class Container implements Serializable {
 	}
 	public boolean isHighPriority() {
 		return highPri;
+	}
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
 	}
 }

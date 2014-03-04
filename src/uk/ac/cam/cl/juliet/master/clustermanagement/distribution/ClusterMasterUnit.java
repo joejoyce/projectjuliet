@@ -56,11 +56,18 @@ class RepeatedSend implements Runnable {
 
 	@Override
 	public void run() {
+		Container ncont = null;
+		try {
+			ncont = (Container) c.clone();
+		} catch (CloneNotSupportedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		try {
 			if(repeat)
-				cm.broadcast(c,cb);
+				cm.broadcast(ncont,cb);
 			else
-				cm.sendPacket(c,cb);
+				cm.sendPacket(ncont,cb);
 		} catch (NoClusterException e) {
 			Debug.println(Debug.ERROR,"Problems sending a packet scheduled for repeated Send");
 			e.printStackTrace();
@@ -243,6 +250,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public int getClientCount() {
 		return clientQueue.size();
 	}
+
 	
 	/**
 	 * Repeatedly send the packet to a client, getting a callback each time.
@@ -254,6 +262,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	 * @return A sechduledFuture - this can be used to cancel it etc...
 	 */
 	public ScheduledFuture<?> repeatedSend(Container c, Callback cb, long timeMs) {
+		c.setPacketId(this.getNextId());
 		RepeatedSend rs = new RepeatedSend(this,c,cb);
 		return workers.scheduleAtFixedRate(rs, 0, timeMs, TimeUnit.MILLISECONDS);
 	}
