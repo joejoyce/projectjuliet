@@ -131,6 +131,6 @@ public interface ClusterMaster {
 	
 	public ScheduledFuture<?> repeatedSend(Container c, Callback cb, long time);
 	
-	public long sendNoIdStamp(Container msg, Callback cb) throws NoClusterException;
+
 
 }

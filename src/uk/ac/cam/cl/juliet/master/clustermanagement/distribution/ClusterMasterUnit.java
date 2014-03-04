@@ -56,11 +56,18 @@ class RepeatedSend implements Runnable {
 
 	@Override
 	public void run() {
+		Container ncont = null;
+		try {
+			ncont = (Container) c.clone();
+		} catch (CloneNotSupportedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		try {
 			if(repeat)
-				cm.broadcast(c,cb);
+				cm.broadcast(ncont,cb);
 			else
-				cm.sendNoIdStamp(c,cb);
+				cm.sendPacket(ncont,cb);
 		} catch (NoClusterException e) {
 			Debug.println(Debug.ERROR,"Problems sending a packet scheduled for repeated Send");
 			e.printStackTrace();
@@ -243,22 +250,7 @@ public class ClusterMasterUnit implements ClusterMaster  {
 	public int getClientCount() {
 		return clientQueue.size();
 	}
-	
 
-	public long sendNoIdStamp(Container msg, Callback cb) throws NoClusterException {
-		Client c = clientQueue.peek();
-		if(null == c)
-			throw new NoClusterException("The Pis have all gone :'(" + clientQueue.size());
-		long l = 0;
-		while(0 > (l = c.broadcast(msg,cb))) {
-			c = clientQueue.peek();
-			if(null == c)
-				throw new NoClusterException("The Pis have all gone :'(: " + clientQueue.size());
-		}
-		currentSystemTime = msg.getTimeStampS();
-		return l;
-	}
-	
 	
 	/**
 	 * Repeatedly send the packet to a client, getting a callback each time.
