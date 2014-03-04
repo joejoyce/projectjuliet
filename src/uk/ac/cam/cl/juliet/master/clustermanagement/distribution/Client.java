@@ -96,11 +96,7 @@ public class Client implements Comparable<Client> {
 	 * @param container
 	 */
 	private void checkoutContainer(InFlightContainer container) {
-		try {
-			sem.acquire();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		
 		jobqueue.add(container);
 		hash.put(container.getPacketId(), container);
 	}
@@ -243,14 +239,20 @@ public class Client implements Comparable<Client> {
 				int packetCounter = 0;
 				while (true) {
 					try {
-
+						boolean highPri = false;
 						InFlightContainer container = null;
 						while (null == container) {
 							if (null == (container = priorityQueue.poll()))
-								container = sendQueue.poll(200,
-										TimeUnit.MILLISECONDS); // Can adjust
-																// length of
-																// time
+								container = sendQueue.poll(200, TimeUnit.MILLISECONDS);
+							else
+								highPri = true;
+						}
+						if(!highPri) {
+							try {
+								sem.acquire();
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
 						}
 						checkoutContainer(container);
 						Container c = container.getContainer();

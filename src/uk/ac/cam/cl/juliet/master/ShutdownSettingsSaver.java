@@ -28,10 +28,19 @@ public class ShutdownSettingsSaver {
         	Debug.println(Debug.INFO,"Saving settings on exit");
 			File f = new File(filename);
 	        FileWriter fw = new FileWriter(f);
+	        
+        	dp.pause = true;
+        	try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+        	
 	        //write config. pack settings:
 	        if(cp == null) {
 	        	Debug.println(Debug.ERROR, "Could not save current settings of clients");
 	        } else {
+
 	        	for (Entry<String, String> entry : cp.getSettings().entrySet()) {
 	        		String key = entry.getKey();
 	        		String value = entry.getValue();
@@ -61,6 +70,12 @@ public class ShutdownSettingsSaver {
 	        fw.close();
 		} catch (IOException e) {
 			Debug.println(Debug.SHOWSTOP,"Error saving settings on exit");
+			e.printStackTrace();
+		}
+        try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
