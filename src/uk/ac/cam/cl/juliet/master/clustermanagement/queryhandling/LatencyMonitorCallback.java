@@ -42,7 +42,7 @@ public class LatencyMonitorCallback extends Callback {
 			LatencyMonitor m = (LatencyMonitor) data;
 			AvMasterOBQTime = average(AvMasterOBQTime,m.outboundDepart - m.outboundQueue);
 			AvClientOBQTime = average(AvClientOBQTime,m.outboundDequeue - m.outboundArrive);
-			AvDatabaseRTTime = average(AvDatabaseRTTime,m.databaseRoundTrip);
+			AvDatabaseRTTime = m.databaseRoundTrip;//average(AvDatabaseRTTime,m.databaseRoundTrip);
 			AvClientIBQTime = average(AvClientIBQTime,m.inboundDepart - m.inboundQueue);
 			AvNetworkRTTime = average(AvNetworkRTTime, m.inboundArrive - m.outboundDepart - m.inboundDepart + m.outboundArrive );
 			numBack++;
