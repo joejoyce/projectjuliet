@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
+import uk.ac.cam.cl.juliet.common.Heartbeat;
 import uk.ac.cam.cl.juliet.master.ShutdownSettingsSaver;
 
 
@@ -123,6 +124,8 @@ public class ClusterMasterUnit implements ClusterMaster  {
 		if(null != socket)
 			socket.close();
 		socket = new ServerSocket(port);
+		
+		repeatedBroadcast(new Heartbeat(),null,1000);
 		
 		Thread t = new Thread () {
 			@Override

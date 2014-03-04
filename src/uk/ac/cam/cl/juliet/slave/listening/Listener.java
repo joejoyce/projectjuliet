@@ -17,6 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import uk.ac.cam.cl.juliet.common.ConfigurationPacket;
 import uk.ac.cam.cl.juliet.common.Container;
 import uk.ac.cam.cl.juliet.common.Debug;
+import uk.ac.cam.cl.juliet.common.Heartbeat;
 import uk.ac.cam.cl.juliet.common.LatencyMonitor;
 import uk.ac.cam.cl.juliet.common.QueryPacket;
 import uk.ac.cam.cl.juliet.common.StringTestPacket;
@@ -119,6 +120,10 @@ public class Listener {
 						o = input.readObject();
 						if (o instanceof Container) {
 							nanosLastReceive = System.nanoTime();
+							if(o instanceof Heartbeat) {
+								responseQueue.put((Container)o);
+								continue;
+							}
 							if (o instanceof LatencyMonitor) {
 								((LatencyMonitor) o).outboundArrive = nanosLastReceive;
 							}
@@ -197,12 +202,11 @@ public class Listener {
 
 		try {
 			nanosLastReceive = System.nanoTime();
-			long fiveseconds = 5000000000L;
+			long threeseconds = 3000000000L;
 			while (true) {
 				boolean send = sendThread.isAlive();
 				boolean rec = receiveThread.isAlive();
-				boolean timeout = true; // System.nanoTime() < (nanosLastReceive
-										// + fiveseconds);
+				boolean timeout = System.nanoTime() < (nanosLastReceive+ threeseconds);
 				if (!send || !rec || !timeout)
 					break;
 				Thread.sleep(500);

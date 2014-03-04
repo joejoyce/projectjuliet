@@ -56,6 +56,7 @@ public class Client implements Comparable<Client> {
 
 	private ScheduledFuture<?> cleaner = null;
 	private ScheduledFuture<?> throughputUpdater = null;
+	private ScheduledFuture<?> heartbeatChecker = null;
 	private ArrayBlockingQueue<InFlightContainer> sendQueue = new ArrayBlockingQueue<InFlightContainer>(
 			200);
 	private ArrayBlockingQueue<InFlightContainer> priorityQueue = new ArrayBlockingQueue<InFlightContainer>(
@@ -79,6 +80,8 @@ public class Client implements Comparable<Client> {
 	private Semaphore sem = new Semaphore(5000); // Allows 5000 at one time
 
 	private boolean amClosing = false;
+	
+	private long lastPacketTime = Long.MAX_VALUE - 20000000000L;
 
 	/**
 	 * Get the IP address of the Client that this Client object is connected to.
@@ -140,6 +143,7 @@ public class Client implements Comparable<Client> {
 
 		parent.removeClient(this);
 		throughputUpdater.cancel(false);
+		heartbeatChecker.cancel(false);
 		cleaner.cancel(false);
 
 		if (0 == numberClients.decrementAndGet()) {
@@ -183,6 +187,14 @@ public class Client implements Comparable<Client> {
 							+ getClientIP().toString());
 			}
 		}, 1, 1, TimeUnit.SECONDS);
+		
+		this.heartbeatChecker = workers.scheduleAtFixedRate(new Runnable() {
+			public void run() {
+				long timeoutlength = 4000000000L;
+				if(System.nanoTime() > lastPacketTime + timeoutlength )
+					closeClient();
+			}
+		}, 1, 1, TimeUnit.SECONDS);
 
 		this.address = s.getInetAddress();
 
@@ -202,6 +214,7 @@ public class Client implements Comparable<Client> {
 					Object recieve = null;
 					try {
 						recieve = in.readObject();
+						lastPacketTime = System.nanoTime();
 						Debug.println("Received an object from client...");
 					} catch (ClassNotFoundException e) {
 						e.printStackTrace();
@@ -218,7 +231,7 @@ public class Client implements Comparable<Client> {
 						Container container = (Container) recieve;
 						if (container instanceof LatencyMonitor) {
 							LatencyMonitor lm = (LatencyMonitor) container;
-							lm.inboundArrive = System.nanoTime();
+							lm.inboundArrive = lastPacketTime;
 							// Identify which Pi this came from
 							lm.addr = getClientIP().toString();
 						}
@@ -394,6 +407,23 @@ public class Client implements Comparable<Client> {
 					e.printStackTrace();
 				}
 			}
+		}
+		while (null != (ifc = sendQueue.poll())) {
+			if (!ifc.getBroadcast()) {
+				Debug.println(Debug.INFO, "Resending packet from waiting: "
+						+ ifc.getPacketId());
+				try {
+					parent.sendPacket(ifc.getContainer(), ifc.getCallback());
+				} catch (NoClusterException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		try {
+			Thread.sleep(4000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 		while (null != (ifc = sendQueue.poll())) {
 			if (!ifc.getBroadcast()) {
