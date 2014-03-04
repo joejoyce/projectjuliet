@@ -40,10 +40,8 @@ public class Listener {
 	private int port;
 	private ObjectInputStream input = null;
 	private ObjectOutputStream output = null;
-	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(
-			5100);
-	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(
-			5100);
+	private ArrayBlockingQueue<Container> responseQueue = new ArrayBlockingQueue<Container>(5100);
+	private ArrayBlockingQueue<Container> receiveQueue = new ArrayBlockingQueue<Container>(5100);
 	private LinkedList<XDPRequest> waitingForBatchQueries = new LinkedList<XDPRequest>();
 	private ReentrantLock waitingForBatchQueriesLock = new ReentrantLock();
 	private DatabaseConnection databaseConnection;
@@ -70,23 +68,20 @@ public class Listener {
 	 * @throws SQLException
 	 */
 	@SuppressWarnings("deprecation")
-	public void listen(String server, int thePort, DatabaseConnection db,
-			XDPProcessor xdpProcessor, QueryProcessor queryProcessor)
-			throws IOException, SQLException {
+	public void listen(String server, int thePort, DatabaseConnection db, XDPProcessor xdpProcessor, QueryProcessor queryProcessor) throws IOException, SQLException {
 		this.ip = server;
 		this.port = thePort;
 		this.databaseConnection = db;
 		this.xdp = xdpProcessor;
 		this.query = queryProcessor;
-		this.databaseConnection
-				.addBatchQueryExecuteStartCallback(new Runnable() {
-					@Override
-					public void run() {
-						// Stop packets from being added to
-						// waitingForBatchQueries
-						waitingForBatchQueriesLock.lock();
-					}
-				});
+		this.databaseConnection.addBatchQueryExecuteStartCallback(new Runnable() {
+			@Override
+			public void run() {
+				// Stop packets from being added to
+				// waitingForBatchQueries
+				waitingForBatchQueriesLock.lock();
+			}
+		});
 		this.databaseConnection.addBatchQueryExecuteEndCallback(new Runnable() {
 			@Override
 			public void run() {
@@ -120,8 +115,8 @@ public class Listener {
 						o = input.readObject();
 						if (o instanceof Container) {
 							nanosLastReceive = System.nanoTime();
-							if(o instanceof Heartbeat) {
-								responseQueue.put((Container)o);
+							if (o instanceof Heartbeat) {
+								responseQueue.put((Container) o);
 								continue;
 							}
 							if (o instanceof LatencyMonitor) {
@@ -129,8 +124,7 @@ public class Listener {
 							}
 							receiveQueue.put((Container) o);
 						} else
-							Debug.println(Debug.ERROR,
-									"Unrecognised object type");
+							Debug.println(Debug.ERROR, "Unrecognised object type");
 					} catch (ClassNotFoundException e) {
 						Debug.println(Debug.ERROR, "Unrecognised object type");
 						e.printStackTrace();
@@ -138,8 +132,7 @@ public class Listener {
 						e.printStackTrace();
 						return;
 					} catch (IOException e) {
-						Debug.println(Debug.ERROR,
-								"An error occurred communicating with the server.");
+						Debug.println(Debug.ERROR, "An error occurred communicating with the server.");
 						e.printStackTrace();
 						// Just attempt to reconnect
 						return;
@@ -185,11 +178,9 @@ public class Listener {
 		};
 
 		this.socket = new Socket(ip, port);
-		this.output = new ObjectOutputStream(new BufferedOutputStream(
-				socket.getOutputStream()));
+		this.output = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		output.flush();
-		this.input = new ObjectInputStream(new BufferedInputStream(
-				socket.getInputStream()));
+		this.input = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
 
 		readThread.start();
 		receiveThread.start();
@@ -206,7 +197,7 @@ public class Listener {
 			while (true) {
 				boolean send = sendThread.isAlive();
 				boolean rec = receiveThread.isAlive();
-				boolean timeout = System.nanoTime() < (nanosLastReceive+ threeseconds);
+				boolean timeout = System.nanoTime() < (nanosLastReceive + threeseconds);
 				if (!send || !rec || !timeout)
 					break;
 				Thread.sleep(500);
@@ -217,12 +208,12 @@ public class Listener {
 			// Kill everything!!
 			sendThread.interrupt();
 			receiveThread.interrupt();
-			//readThread.interrupt();
+			// readThread.interrupt();
 			sendThread.join();
 			Debug.println("send joined");
 			receiveThread.join();
 			Debug.println("receive joined");
-			//readThread.join();
+			// readThread.join();
 			readThread.stop();
 			Debug.println("read joined");
 
@@ -246,14 +237,12 @@ public class Listener {
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-			Debug.println(Debug.ERROR,
-					"WHY, I WAS INTERRUPTED WAITING FOR THEM TO BE INTERRUPTED?!!");
+			Debug.println(Debug.ERROR, "WHY, I WAS INTERRUPTED WAITING FOR THEM TO BE INTERRUPTED?!!");
 		}
 	}
 
 	private void flushWaitingForBatchQueries() {
-		Debug.println(Debug.INFO,
-				"Starting flush: " + waitingForBatchQueries.size());
+		Debug.println(Debug.INFO, "Starting flush: " + waitingForBatchQueries.size());
 		XDPResponse response = null;
 		XDPRequest r = null;
 		while (waitingForBatchQueries.peek() != null) {
@@ -265,15 +254,13 @@ public class Listener {
 				e.printStackTrace();
 			}
 		}
-		Debug.println(Debug.INFO,
-				"Finished flush: " + waitingForBatchQueries.size());
+		Debug.println(Debug.INFO, "Finished flush: " + waitingForBatchQueries.size());
 	}
 
 	private void readPacket() throws InterruptedException {
 		Container container = null;
 
-		while (null == (container = receiveQueue.poll(100,
-				TimeUnit.MILLISECONDS))) {
+		while (null == (container = receiveQueue.poll(100, TimeUnit.MILLISECONDS))) {
 			databaseConnection.maybeEmergencyBatch();
 			if (Thread.interrupted())
 				return;
@@ -299,20 +286,17 @@ public class Listener {
 
 			long diff = Math.abs(System.nanoTime() - then);
 			diff /= 1000000;
-			Debug.println(Debug.INFO, "Time taken for processing: " + diff
-					+ "ms");
+			Debug.println(Debug.INFO, "Time taken for processing: " + diff + "ms");
 		}
 		databaseConnection.maybeEmergencyBatch();
 	}
 
-	private void processXDPRequest(XDPRequest container)
-			throws InterruptedException {
+	private void processXDPRequest(XDPRequest container) throws InterruptedException {
 		boolean result = this.xdp.decode(container);
 		if (result == false) {
 			// The decoding did not require the database - send the response
 			// straight back.
-			XDPResponse response = new XDPResponse(container.getPacketId(),
-					false);
+			XDPResponse response = new XDPResponse(container.getPacketId(), false);
 			// try {
 			responseQueue.put(response);
 			// } catch (InterruptedException e) {
@@ -328,8 +312,7 @@ public class Listener {
 		}
 	}
 
-	private void processQueryPacket(QueryPacket container)
-			throws InterruptedException {
+	private void processQueryPacket(QueryPacket container) throws InterruptedException {
 		// try {
 		responseQueue.put(query.runQuery(container));
 		// } catch (InterruptedException e) {
@@ -341,25 +324,17 @@ public class Listener {
 		String ip = packet.getSetting("db.addr");
 		if (ip != null) {
 			try {
-				this.databaseConnection
-						.setConnection(DriverManager
-								.getConnection(
-										"jdbc:mysql://"
-												+ ip
-												+ ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false",
-										"root", "rootword"));
+				this.databaseConnection.setConnection(DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/juliet?rewriteBatchedStatements=true&useServerPrepStmts=false", "root", "rootword"));
 
 			} catch (SQLException e) {
-				Debug.println(Debug.ERROR,
-						"An error occurred connecting to the database");
+				Debug.println(Debug.ERROR, "An error occurred connecting to the database");
 				e.printStackTrace();
 				System.exit(1);
 			}
 		}
 	}
 
-	private void handleLatencyMonitor(LatencyMonitor m)
-			throws InterruptedException {
+	private void handleLatencyMonitor(LatencyMonitor m) throws InterruptedException {
 		m.outboundDequeue = System.nanoTime();
 		if (null != databaseConnection)
 			m.databaseRoundTrip = databaseConnection.getLastCommitNS();
