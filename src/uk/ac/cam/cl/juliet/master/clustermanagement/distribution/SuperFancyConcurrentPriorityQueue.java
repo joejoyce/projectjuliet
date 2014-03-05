@@ -14,15 +14,15 @@ public class SuperFancyConcurrentPriorityQueue <T extends Comparable<T>>{
 	private LinkedBlockingDeque<T> q;
 	private PriorityBlockingQueue<T>bq;
 	//private Semaphore sem;
-	//private Lock read,write;
+	private Lock read,write;
 	
 	public SuperFancyConcurrentPriorityQueue (/*int limit,*/ Comparator<T> comp, Comparator <T> toArrComp) {
 		q = new LinkedBlockingDeque<T>(20);//,comp);
 		bq = new PriorityBlockingQueue<T>(16,toArrComp);
 		//sem = new Semaphore(limit);
-		//ReentrantReadWriteLock l = new ReentrantReadWriteLock();
-		//read = l.readLock();
-		//write = l.writeLock();
+		ReentrantReadWriteLock l = new ReentrantReadWriteLock();
+		read = l.readLock();
+		write = l.writeLock();
 	}
 	
 	public void push( T elem ) throws InterruptedException {
@@ -41,7 +41,7 @@ public class SuperFancyConcurrentPriorityQueue <T extends Comparable<T>>{
 		return elem;
 	}*/
 	public T peek() {
-		//write.lock();
+		write.lock();
 		T a = q.poll(), b = q.poll(), rtn = null;
 		if(null != a && null != b) {
 			try {
@@ -69,15 +69,15 @@ public class SuperFancyConcurrentPriorityQueue <T extends Comparable<T>>{
 				}
 			}
 		}
-		//write.unlock();
+		write.unlock();
 		return rtn;
 	}
 	public boolean remove( T elem ) {
-		//read.lock();
+		read.lock();
 		boolean rtn = q.remove(elem);
 		bq.remove(elem);
 		//if(rtn) sem.release();
-		//read.unlock();
+		read.unlock();
 		return rtn;
 	}
 	public T[] toArray(T a[]) {
